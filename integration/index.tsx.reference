@@ -1,0 +1,1258 @@
+import React, { StrictMode, useState, useEffect, useRef } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import "./index.css";
+import "./lib/preloader";
+import { supabase, refreshSessionIfNeeded, SESSION_KEY_PENDING_BROWSER_OAUTH, getPublicWebUrl } from "./lib/supabase";
+import { logger } from "./lib/logger";
+import { admobService } from "./lib/admobService";
+import { appInitializer } from "./lib/appInitializer";
+import { shouldSkipBackgroundPrefetch } from "./lib/networkAwareConfig";
+import { applyStatusBarTheme, subscribeStatusBarToSystemTheme } from "./lib/statusBarTheme";
+import { App as CapacitorApp } from "@capacitor/app";
+import { Browser } from "@capacitor/browser";
+import { Capacitor } from "@capacitor/core";
+import { BUILD_TARGET } from "./lib/buildTarget";
+import { webAdService } from "./lib/webAdService";
+import { HomePlayer } from "./screens/HomePlayer";
+import { NavigationBarSection } from "./screens/HomePlayer/sections/NavigationBarSection/NavigationBarSection";
+import { AuthModal } from "./components/AuthModal";
+import { MusicPlayerScreen } from "./screens/MusicPlayerScreen";
+import { MiniMusicPlayer } from "./components/MiniMusicPlayer";
+import { AudioAdCompanionOverlay } from "./components/AudioAdCompanionOverlay";
+import { MusicPlayerProvider, useMusicPlayer } from "./contexts/MusicPlayerContext";
+import { AlertProvider } from "./contexts/AlertContext";
+import { HomeScreenDataProvider } from "./contexts/HomeScreenDataContext";
+import { ConfirmProvider } from "./contexts/ConfirmContext";
+import { UploadProvider } from "./contexts/UploadContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { SplashScreen } from "./components/SplashScreen";
+import UploadProgressModal from "./components/UploadProgressModal";
+import { VideoPlayerErrorBoundary } from "./components/VideoPlayerErrorBoundary";
+import { ScreenErrorBoundary } from "./components/ScreenErrorBoundary";
+import { useAdPlacement } from "./hooks/useAdPlacement";
+import {
+  DEFAULT_BOTTOM_BANNER_AD_UNIT_ID,
+  MAIN_APP_BOTTOM_BANNER_PLACEMENT,
+  resolveRewardedInterstitialAdUnitId,
+} from "./lib/adPlacementConstants";
+import { getBannerPreloadLeadTimeMs, getNextMainTabBannerAutoRefreshDelayMs } from "./lib/bannerRefreshConstants";
+import { AdMob, BannerAdPosition } from "@capacitor-community/admob";
+
+const APP_OPEN_AD_UNIT_ID = 'ca-app-pub-4739421992298461/3885196969';
+
+// Lazy load screens for better performance
+const ExploreScreen = lazy(() => import("./screens/ExploreScreen").then(module => ({ default: module.ExploreScreen })));
+const LibraryScreen = lazy(() => import("./screens/LibraryScreen").then(module => ({ default: module.LibraryScreen })));
+const CreateScreen = lazy(() => import("./screens/CreateScreen").then(module => ({ default: module.CreateScreen })));
+const ProfileScreen = lazy(() => import("./screens/ProfileScreen").then(module => ({ default: module.ProfileScreen })));
+const TreatScreen = lazy(() => import("./screens/TreatScreen").then(module => ({ default: module.TreatScreen })));
+const PublicProfileScreen = lazy(() => import("./screens/PublicProfileScreen").then(module => ({ default: module.PublicProfileScreen })));
+const AlbumPlayerScreen = lazy(() => import("./screens/AlbumPlayerScreen").then(module => ({ default: module.AlbumPlayerScreen })));
+
+// Admin screens - Only load for web builds
+const AdminDashboardScreen = BUILD_TARGET === 'web' ? lazy(() => import("./screens/AdminDashboardScreen")) : null;
+const AdminLoginScreen = BUILD_TARGET === 'web' ? lazy(() => import("./screens/AdminLoginScreen").then(module => ({ default: module.AdminLoginScreen }))) : null;
+
+const ConsoleDashboardScreen = BUILD_TARGET === 'web' ? lazy(() => import("./console/screens/ConsoleDashboardScreen")) : null;
+const ConsoleLoginScreen = BUILD_TARGET === 'web' ? lazy(() => import("./console/screens/ConsoleLoginScreen").then(m => ({ default: m.ConsoleLoginScreen }))) : null;
+const ConsoleOnboardingScreen = BUILD_TARGET === 'web' ? lazy(() => import("./console/screens/ConsoleOnboardingScreen").then(m => ({ default: m.ConsoleOnboardingScreen }))) : null;
+const ConsoleAcceptArtistScreen = BUILD_TARGET === 'web' ? lazy(() => import("./console/screens/ConsoleAcceptInvitationScreen").then(m => ({ default: m.ConsoleAcceptArtistScreen }))) : null;
+const ConsoleAcceptTeamScreen = BUILD_TARGET === 'web' ? lazy(() => import("./console/screens/ConsoleAcceptInvitationScreen").then(m => ({ default: m.ConsoleAcceptTeamScreen }))) : null;
+
+const TrendingViewAllScreen = lazy(() => import("./screens/TrendingViewAllScreen").then(module => ({ default: module.TrendingViewAllScreen })));
+const TrendingNearYouViewAllScreen = lazy(() => import("./screens/TrendingNearYouViewAllScreen").then(module => ({ default: module.TrendingNearYouViewAllScreen })));
+const MustWatchViewAllScreen = lazy(() => import("./screens/MustWatchViewAllScreen").then(module => ({ default: module.MustWatchViewAllScreen })));
+const NewReleaseViewAllScreen = lazy(() => import("./screens/NewReleaseViewAllScreen").then(module => ({ default: module.NewReleaseViewAllScreen })));
+const TrendingAlbumsViewAllScreen = lazy(() => import("./screens/TrendingAlbumsViewAllScreen").then(module => ({ default: module.TrendingAlbumsViewAllScreen })));
+const DailyCheckinScreen = lazy(() => import("./screens/DailyCheckinScreen").then(module => ({ default: module.DailyCheckinScreen })));
+const InviteEarnScreen = lazy(() => import("./screens/InviteEarnScreen").then(module => ({ default: module.InviteEarnScreen })));
+const PromotionCenterScreen = lazy(() => import("./screens/PromotionCenterScreen").then(module => ({ default: module.PromotionCenterScreen })));
+const NotificationScreen = lazy(() => import("./screens/NotificationScreen").then(module => ({ default: module.NotificationScreen })));
+const VideoPlayerScreen = lazy(() => import("./screens/VideoPlayerScreen").then(module => ({ default: module.VideoPlayerScreen })));
+const WithdrawEarningsScreen = lazy(() => import("./screens/WithdrawEarningsScreen").then(module => ({ default: module.WithdrawEarningsScreen })));
+const EditProfileScreen = lazy(() => import("./screens/EditProfileScreen").then(module => ({ default: module.EditProfileScreen })));
+const ArtistRegistrationScreen = lazy(() => import("./screens/ArtistRegistrationScreen").then(module => ({ default: module.ArtistRegistrationScreen })));
+const PlaylistPlayerScreen = lazy(() => import("./screens/PlaylistPlayerScreen").then(module => ({ default: module.PlaylistPlayerScreen })));
+const DailyMixPlayerScreen = lazy(() => import("./screens/DailyMixPlayerScreen").then(module => ({ default: module.DailyMixPlayerScreen })));
+const TransactionHistoryScreen = lazy(() => import("./screens/TransactionHistoryScreen").then(module => ({ default: module.TransactionHistoryScreen })));
+const TreatAnalyticsScreen = lazy(() => import("./screens/TreatAnalyticsScreen").then(module => ({ default: module.TreatAnalyticsScreen })));
+const TermsAndConditionsScreen = lazy(() => import("./screens/TermsAndConditionsScreen/TermsAndConditionsScreen").then(module => ({ default: module.TermsAndConditionsScreen })));
+const MessagesScreen = lazy(() => import("./screens/MessagesScreen").then(module => ({ default: module.MessagesScreen })));
+const MessageThreadScreen = lazy(() => import("./screens/MessageThreadScreen").then(module => ({ default: module.MessageThreadScreen })));
+const SingleUploadScreen = lazy(() => import("./screens/SingleUploadScreen"));
+const AlbumUploadScreen = lazy(() => import("./screens/AlbumUploadScreen"));
+const AlbumDetailScreen = lazy(() => import("./screens/AlbumDetailScreen").then(module => ({ default: module.AlbumDetailScreen })));
+const PlaylistDetailScreen = lazy(() => import("./screens/PlaylistDetailScreen").then(module => ({ default: module.PlaylistDetailScreen })));
+const SongScreen = lazy(() => import("./screens/SongScreen").then(module => ({ default: module.SongScreen })));
+const MoodDiscoveryScreen = lazy(() => import("./screens/MoodDiscoveryScreen").then(module => ({ default: module.MoodDiscoveryScreen })));
+const GenreSongsScreen = lazy(() => import("./screens/GenreSongsScreen").then(module => ({ default: module.GenreSongsScreen })));
+const CollaborateScreen = lazy(() => import("./screens/CollaborateScreen").then(module => ({ default: module.CollaborateScreen })));
+const CollaborationInboxScreen = lazy(() => import("./screens/CollaborationInboxScreen").then(module => ({ default: module.CollaborationInboxScreen })));
+const AuthCallbackScreen = lazy(() => import("./screens/AuthCallbackScreen/AuthCallbackScreen").then(module => ({ default: module.AuthCallbackScreen })));
+const ResetPasswordScreen = lazy(() => import("./screens/ResetPasswordScreen/ResetPasswordScreen").then(module => ({ default: module.ResetPasswordScreen })));
+const BlogIndexScreen = lazy(() => import("./screens/BlogIndexScreen/BlogIndexScreen").then(module => ({ default: module.BlogIndexScreen })));
+const BlogPostScreen = lazy(() => import("./screens/BlogPostScreen/BlogPostScreen").then(module => ({ default: module.BlogPostScreen })));
+
+// Root error boundary: if the app tree throws after splash, show a visible screen instead of black
+class RootErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error?: Error }> {
+  state = { hasError: false as boolean, error: undefined as Error | undefined };
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    logger.error('RootErrorBoundary: app tree error', { error, errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-b from-[#0a0a0a] via-[#0d0d0d] to-[#111111] text-white p-6">
+          <h1 className="text-xl font-semibold mb-2">Something went wrong</h1>
+          <p className="text-white/70 text-sm text-center max-w-sm mb-6">
+            {this.state.error?.message ?? 'The app encountered an error.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-[#309605] hover:bg-[#3ba208] rounded-xl font-medium text-white"
+          >
+            Reload app
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Loading component for lazy-loaded screens - uses splash screen for consistency
+const ScreenLoader = () => (
+  <div className="fixed inset-0 z-50 bg-gradient-to-b from-[#0a0a0a] via-[#0d0d0d] to-[#111111] flex items-center justify-center">
+    <div className="relative">
+      <img
+        src="/official_airaplay_logo.png"
+        alt="Loading"
+        className="w-32 h-32 object-contain drop-shadow-2xl"
+        style={{ animation: 'breathe 3s ease-in-out infinite' }}
+      />
+      <div className="absolute inset-0 -z-10 blur-3xl opacity-30 bg-white scale-75 animate-pulse" />
+    </div>
+    <style>{`
+      @keyframes breathe {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.9; }
+      }
+    `}</style>
+  </div>
+);
+
+function App() {
+  const [showGlobalAuthModal, setShowGlobalAuthModal] = useState(false);
+  const [isAlbumPlayerActive, setIsAlbumPlayerActive] = useState(false);
+  const [isPlaylistPlayerActive, setIsPlaylistPlayerActive] = useState(false);
+  const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
+  const [isTreatModalVisible, setIsTreatModalVisible] = useState(false);
+  const [isTippingModalVisible, setIsTippingModalVisible] = useState(false);
+  const [isGenreModalVisible, setIsGenreModalVisible] = useState(false);
+  const [isTreatAnalyticsModalVisible, setIsTreatAnalyticsModalVisible] = useState(false);
+  const [isTreatTransactionsModalVisible, setIsTreatTransactionsModalVisible] = useState(false);
+  
+  const {
+    currentSong,
+    playlist,
+    currentIndex,
+    isPlaying,
+    currentTime,
+    duration,
+    audioElement,
+    isFullPlayerVisible,
+    isMiniPlayerVisible,
+    error: playerError,
+    playlistContext,
+    albumId,
+    playlistId,
+    playSong,
+    togglePlayPause,
+    hideFullPlayer,
+    hideMiniPlayer,
+    expandFullPlayer,
+    changeSong,
+    seekTo,
+    restorePlaybackState,
+  } = useMusicPlayer();
+  
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { postLoginTransitionActive, startPostLoginTransition } = useAuth();
+  const { showBanner, hideBanner, removeBanner, showInterstitial } = useAdPlacement('App');
+  const adCallbacksRef = useRef({ showBanner, hideBanner, removeBanner });
+  adCallbacksRef.current = { showBanner, hideBanner, removeBanner };
+
+  const hasTriggeredAppOpenAdRef = useRef(false);
+  const has15MinAdTriggeredRef = useRef(false);
+
+  // App-open ad: show once shortly after first screen with a hardcoded app-open unit.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || hasTriggeredAppOpenAdRef.current) return;
+    hasTriggeredAppOpenAdRef.current = true;
+
+    const t = setTimeout(() => {
+      const appOpenApi = AdMob as unknown as {
+        prepareAppOpenAd?: (options: { adId: string }) => Promise<void>;
+        showAppOpenAd?: () => Promise<void>;
+      };
+
+      if (typeof appOpenApi.prepareAppOpenAd !== 'function' || typeof appOpenApi.showAppOpenAd !== 'function') {
+        console.warn('AdMob: App Open API not available in current plugin build');
+        return;
+      }
+
+      void appOpenApi
+        .prepareAppOpenAd({ adId: APP_OPEN_AD_UNIT_ID })
+        .then(() => appOpenApi.showAppOpenAd?.())
+        .catch(() => {});
+    }, 5000); // Delay app-open ad to 5s after launch
+
+    return () => clearTimeout(t);
+  }, [location.pathname]);
+
+  // Trigger additional interstitial after 15 minutes of app usage (AdMob policy-safe, non-rewarded).
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    if (has15MinAdTriggeredRef.current) return;
+
+    const timer = setTimeout(() => {
+      has15MinAdTriggeredRef.current = true;
+      showInterstitial('app_15min_interstitial', {
+        contentType: 'general',
+      }).catch(() => {});
+    }, 15 * 60 * 1000); // 15 minutes
+
+    return () => clearTimeout(timer);
+  }, [showInterstitial]);
+
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isConsoleRoute = location.pathname.startsWith('/console');
+
+  // Block copy/cut globally for the consumer app; admin and console tools need clipboard.
+  useEffect(() => {
+    if (isAdminRoute || isConsoleRoute) {
+      return;
+    }
+
+    const stopEvent = (event: Event) => {
+      event.preventDefault();
+    };
+
+    const stopCopyShortcut = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      if ((event.ctrlKey || event.metaKey) && (key === 'c' || key === 'x')) {
+        event.preventDefault();
+      }
+    };
+
+    document.addEventListener('copy', stopEvent);
+    document.addEventListener('cut', stopEvent);
+    document.addEventListener('contextmenu', stopEvent);
+    document.addEventListener('selectstart', stopEvent);
+    document.addEventListener('keydown', stopCopyShortcut);
+
+    return () => {
+      document.removeEventListener('copy', stopEvent);
+      document.removeEventListener('cut', stopEvent);
+      document.removeEventListener('contextmenu', stopEvent);
+      document.removeEventListener('selectstart', stopEvent);
+      document.removeEventListener('keydown', stopCopyShortcut);
+    };
+  }, [isAdminRoute, isConsoleRoute]);
+
+  const isVideoRoute = location.pathname.startsWith('/video/');
+  const isArtistRegistrationRoute = location.pathname === '/become-artist';
+  const isTransactionHistoryRoute = location.pathname === '/transaction-history';
+  const isTreatAnalyticsRoute = location.pathname === '/treat-analytics';
+  const isTermsRoute = location.pathname.startsWith('/terms/');
+  const isSingleUploadRoute = location.pathname === '/upload/single';
+  const isAlbumUploadRoute = location.pathname === '/upload/album';
+  // Full-screen player routes
+  const isAlbumPlayerRoute = location.pathname.startsWith('/album/');
+  const isPlaylistPlayerRoute = location.pathname.startsWith('/playlist/');
+  const isDailyMixPlayerRoute = location.pathname.startsWith('/daily-mix/');
+
+  // Clear upload-modal flag when entering dedicated upload routes so it doesn’t stay true after going back (nav bar reappears)
+  useEffect(() => {
+    const onUploadRoute = location.pathname === '/upload/single' || location.pathname === '/upload/album';
+    const onCreateWithForm = location.pathname === '/create';
+    if (onUploadRoute) {
+      setIsUploadModalVisible(false);
+    } else if (!onCreateWithForm) {
+      setIsUploadModalVisible(false);
+    }
+  }, [location.pathname]);
+
+  // On app initialization, do NOT auto-restore prior playback into the mini player.
+  // The mini player will remain hidden until the user actively plays a new song in this session.
+
+  // Handle app lifecycle events to refresh session when app comes to foreground
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      return; // Only run on native platforms
+    }
+
+    let appStateListener: any = null;
+    let refreshInterval: ReturnType<typeof setInterval> | null = null;
+
+    const setupAppLifecycle = async () => {
+      try {
+        // Listen for app state changes (foreground/background)
+        appStateListener = await CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
+            if (isActive) {
+            // Re-apply status bar visibility/style only (no setOverlaysWebView) so no layout reflow = no black band
+            setTimeout(() => {
+              applyStatusBarTheme({ onResume: true }).catch(() => {});
+            }, 100);
+            // Refresh session if needed
+            try {
+              await refreshSessionIfNeeded();
+            } catch (error) {
+              logger.error('App: Error refreshing session on foreground', error);
+            }
+          }
+        });
+
+        // Also refresh session periodically while app is active (every 10 minutes)
+        refreshInterval = setInterval(async () => {
+          try {
+            await refreshSessionIfNeeded();
+          } catch (error) {
+            logger.error('App: Error in periodic session refresh', error);
+          }
+        }, 10 * 60 * 1000); // 10 minutes
+      } catch (error) {
+        logger.error('App: Error setting up app lifecycle listener', error);
+      }
+    };
+
+    setupAppLifecycle();
+
+    return () => {
+      if (appStateListener) {
+        appStateListener.remove();
+      }
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const handlePaymentCallback = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const paymentStatus = params.get('payment');
+      const provider = params.get('provider');
+      const reference = params.get('ref') || params.get('reference');
+
+      if (paymentStatus && reference && provider === 'flutterwave') {
+        if (paymentStatus === 'success') {
+          // Clear URL parameters
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          // Redirect to home screen
+          navigate('/', { replace: true });
+        } else if (paymentStatus === 'failed') {
+          // Clear URL parameters
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          // Redirect to home screen
+          navigate('/', { replace: true });
+        }
+      }
+    };
+
+    handlePaymentCallback();
+  }, [location, navigate]);
+
+  // Handle deep links for payment callbacks (mobile app)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
+
+    // Allowed origins for auth deep links (prevent open redirect / token leakage)
+    const authAllowedOrigins: string[] = (() => {
+      const list: string[] = [];
+      try {
+        // Always include the canonical public web URL (native builds have origin=capacitor://localhost).
+        list.push(new URL(getPublicWebUrl()).origin);
+      } catch {
+        // ignore invalid env URL
+      }
+      if (typeof window !== 'undefined' && window.location?.origin) list.push(window.location.origin);
+      return list;
+    })();
+
+    // Process deep link URLs
+    const handleDeepLink = (url: string) => {
+      try {
+        // For auth-related flows we must preserve the full URL (including hash)
+        // so Supabase can read the token and create the correct session.
+        // Only allow our own origin to prevent redirecting to attacker-controlled URLs.
+        if (url.includes('/auth/callback') || url.includes('/reset-password')) {
+          try {
+            const parsed = new URL(url);
+            const isCustomAppScheme = parsed.protocol === 'airaplay:';
+            if (!isCustomAppScheme && (!authAllowedOrigins.length || !authAllowedOrigins.includes(parsed.origin))) {
+              logger.warn('Deep link auth URL rejected: origin not allowed', { origin: parsed.origin });
+              navigate('/', { replace: true });
+              return;
+            }
+            if (isCustomAppScheme) {
+              // Close in-app browser from Google OAuth (iOS; Android Custom Tab usually dismisses with the intent).
+              void Browser.close().catch(() => {});
+              // Convert custom deep link to an internal route so the SPA callback screen can process it.
+              const internalPath =
+                parsed.host === 'localhost'
+                  ? `${parsed.pathname}${parsed.search}${parsed.hash}`
+                  : `/${parsed.host}${parsed.pathname}${parsed.search}${parsed.hash}`;
+              navigate(internalPath, { replace: true });
+              return;
+            }
+            // Web App Links (https://airaplay.com/...) should be converted to an internal route
+            // so the in-app screens can process the auth/recovery tokens.
+            const internalPath = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+            navigate(internalPath, { replace: true });
+            return;
+          } catch {
+            navigate('/', { replace: true });
+            return;
+          }
+        }
+
+        const urlObj = new URL(url);
+
+        // Handle payment callbacks
+        if (urlObj.pathname.includes('/payment/')) {
+          const params = new URLSearchParams(urlObj.search);
+          const paymentStatus = urlObj.pathname.includes('/success') ? 'success' : 'failed';
+          const provider = params.get('provider');
+          const reference = params.get('ref') || params.get('reference');
+
+          if (reference && provider === 'flutterwave') {
+            // Navigate to home - payment monitoring will detect completion
+            navigate('/', { replace: true });
+          }
+          return;
+        }
+
+        // Handle content sharing deep links
+        const contentPatterns = [
+          { pattern: /\/song\/([a-z0-9-]+)/, route: '/song/' },
+          { pattern: /\/album\/([a-z0-9-]+)/, route: '/album/' },
+          { pattern: /\/playlist\/([a-z0-9-]+)/, route: '/playlist/' },
+          { pattern: /\/video\/([a-z0-9-]+)/, route: '/video/' },
+          { pattern: /\/user\/([a-z0-9-]+)/, route: '/user/' }
+        ];
+
+        for (const { pattern, route } of contentPatterns) {
+          const match = urlObj.pathname.match(pattern);
+          if (match && match[1]) {
+            navigate(`${route}${match[1]}`, { replace: true });
+            return;
+          }
+        }
+
+        // Handle referral links
+        const refParam = urlObj.searchParams.get('ref');
+        if (refParam) {
+          navigate(`/?ref=${refParam}`, { replace: true });
+          return;
+        }
+
+        // Default: navigate to home
+        navigate('/', { replace: true });
+      } catch (error) {
+        logger.error('Error handling deep link', error);
+        navigate('/', { replace: true });
+      }
+    };
+
+    // Handle app opened via deep link on launch
+    const checkLaunchUrl = async () => {
+      try {
+        const launch = await CapacitorApp.getLaunchUrl();
+        const url = launch?.url;
+        if (url) {
+          handleDeepLink(url);
+        }
+      } catch (error) {
+        // No launch URL, that's fine
+      }
+    };
+
+    // Handle deep links while app is running
+    const listenerHandlePromise = CapacitorApp.addListener('appUrlOpen', (event) => {
+      handleDeepLink(event.url);
+    });
+
+    // Check for launch URL on app start
+    checkLaunchUrl();
+
+    return () => {
+      void listenerHandlePromise.then((h) => h.remove());
+    };
+  }, [navigate]);
+
+  // Handle referral link - Auto-open auth modal when ref parameter is present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get('ref');
+    const authMode = params.get('auth');
+
+    if (refCode) {
+      // Check if user is already logged in
+      const checkAuth = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        // Only show auth modal if user is not logged in
+        if (!user) {
+          setShowGlobalAuthModal(true);
+        }
+      };
+
+      checkAuth();
+    }
+
+    if (authMode === 'login') {
+      // Explicit request to show the login modal (e.g. after email confirmation)
+      setShowGlobalAuthModal(true);
+      // Optional: clean the query param from the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [location.search]);
+  
+  // Listen for album player visibility changes from components
+  useEffect(() => {
+    const handleAlbumPlayerVisibility = (event: CustomEvent) => {
+      setIsAlbumPlayerActive(event.detail.isVisible);
+    };
+
+    const handlePlaylistPlayerVisibility = (event: CustomEvent) => {
+      setIsPlaylistPlayerActive(event.detail.isVisible);
+    };
+
+    const handleTreatAnalyticsModalVisibility = (event: CustomEvent) => {
+      setIsTreatAnalyticsModalVisible(event.detail.isVisible);
+    };
+
+    const handleTreatTransactionsModalVisibility = (event: CustomEvent) => {
+      setIsTreatTransactionsModalVisible(event.detail.isVisible);
+    };
+
+    window.addEventListener('albumPlayerVisibilityChange', handleAlbumPlayerVisibility as EventListener);
+    window.addEventListener('playlistPlayerVisibilityChange', handlePlaylistPlayerVisibility as EventListener);
+    window.addEventListener('treatAnalyticsModalVisibilityChange', handleTreatAnalyticsModalVisibility as EventListener);
+    window.addEventListener('treatTransactionsModalVisibilityChange', handleTreatTransactionsModalVisibility as EventListener);
+
+    return () => {
+      window.removeEventListener('albumPlayerVisibilityChange', handleAlbumPlayerVisibility as EventListener);
+      window.removeEventListener('playlistPlayerVisibilityChange', handlePlaylistPlayerVisibility as EventListener);
+      window.removeEventListener('treatAnalyticsModalVisibilityChange', handleTreatAnalyticsModalVisibility as EventListener);
+      window.removeEventListener('treatTransactionsModalVisibilityChange', handleTreatTransactionsModalVisibility as EventListener);
+    };
+  }, []);
+  // Stop music playback when video player becomes active
+  useEffect(() => {
+    if (isVideoRoute) {
+      // Stop any playing music when video player is active
+      hideMiniPlayer();
+    }
+  }, [isVideoRoute, hideMiniPlayer]);
+
+  // Check if any form is active based on URL or form state,
+  // or if a full-screen player experience is active (music, album, playlist, video, daily-mix).
+  // On these screens we hide the bottom navigation bar so the dedicated UI + banner can use full height.
+  const shouldHideNavigation = isArtistRegistrationRoute ||
+                              isTransactionHistoryRoute ||
+                              isTreatAnalyticsRoute ||
+                              isTermsRoute ||
+                              showGlobalAuthModal ||
+                              isUploadModalVisible ||
+                              isTippingModalVisible ||
+                              isFullPlayerVisible ||
+                              isAlbumPlayerActive ||
+                              isPlaylistPlayerActive ||
+                              isVideoRoute ||
+                              isAlbumPlayerRoute ||
+                              isPlaylistPlayerRoute ||
+                              isDailyMixPlayerRoute;
+
+  // Determine when to hide mini player.
+  // Full-screen player routes (album/playlist/daily-mix/music full player) must never show the mini player
+  // so the dedicated player UI + bottom banner can occupy the full experience without overlap or flicker.
+  const shouldHideMiniPlayer = isVideoRoute ||
+                              isTreatModalVisible ||
+                              isGenreModalVisible ||
+                              isFullPlayerVisible ||
+                              isAlbumPlayerActive ||
+                              isPlaylistPlayerActive ||
+                              isAlbumPlayerRoute ||
+                              isPlaylistPlayerRoute ||
+                              isDailyMixPlayerRoute ||
+                              isTreatAnalyticsModalVisible ||
+                              isTreatTransactionsModalVisible ||
+                              isTransactionHistoryRoute ||
+                              isTreatAnalyticsRoute ||
+                              isArtistRegistrationRoute ||
+                              isSingleUploadRoute;
+
+  // Update body class when mini player visibility changes
+  useEffect(() => {
+    if (isMiniPlayerVisible && !shouldHideMiniPlayer) {
+      document.body.classList.add('mini-player-active');
+    } else {
+      document.body.classList.remove('mini-player-active');
+    }
+
+    return () => {
+      document.body.classList.remove('mini-player-active');
+    };
+  }, [isMiniPlayerVisible, shouldHideMiniPlayer]);
+
+  // Global bottom banner:
+  // - Show on main tab screens (when nav is visible and not in a full-screen player route).
+  // - Also show on ANY screen while music is actively playing (mini/full/album/playlist), per product requirement.
+  const isHome = location.pathname === '/' || location.pathname === '' || location.pathname === '/home';
+  const isExplore = location.pathname === '/explore';
+  const isLibrary = location.pathname === '/library';
+  const isCreate = location.pathname === '/create';
+  const isProfile = location.pathname === '/profile';
+  const isOnMessageThread = location.pathname.startsWith('/messages/');
+  const isBlogRoute = location.pathname === '/blog' || location.pathname.startsWith('/blog/');
+  const navVisible = !shouldHideNavigation && !isAdminRoute;
+  const fullScreenPlayerOpen =
+    isFullPlayerVisible ||
+    isAlbumPlayerActive ||
+    isPlaylistPlayerActive ||
+    isVideoRoute ||
+    isAlbumPlayerRoute ||
+    isPlaylistPlayerRoute ||
+    isDailyMixPlayerRoute;
+  const bannerDisabledByEnv = import.meta.env.VITE_DISABLE_BOTTOM_BANNER === 'true' || import.meta.env.VITE_DISABLE_BOTTOM_BANNER === '1';
+
+  // Banner never requires music to be playing.
+  // Full-screen players use distinct placement keys (see usePlayerBottomBanner + adPlacementConstants).
+  // admobService resolves a separate native ad unit from main_app_bottom_banner (or VITE_ADMOB_PLAYER_BANNER_ID).
+  const shouldUseMainBannerOnThisRoute = (navVisible && !fullScreenPlayerOpen) || isVideoRoute;
+  const showMainBanner =
+    !bannerDisabledByEnv &&
+    !isOnMessageThread &&
+    !isBlogRoute &&
+    !isAdminRoute &&
+    shouldUseMainBannerOnThisRoute;
+
+  // Approximate heights (in dp) for bottom navigation and mini player,
+  // used to position the native banner so it sits directly above them.
+  // Kept tight to avoid visible gap between banner and mini player.
+  const NAV_HEIGHT_DP = 72;
+  const MINI_PLAYER_HEIGHT_DP = 70;
+  const lastMainBannerMarginRef = useRef<number | null>(null);
+  const prevFullScreenPlayerOpenRef = useRef<boolean>(fullScreenPlayerOpen);
+  const shouldForceMainBannerShowRef = useRef<boolean>(false);
+  const repositionTimerRef = useRef<number | null>(null);
+
+  // Track full-screen player transitions so we can force a main-banner re-show after closing
+  // the full player, even if computed margin is unchanged.
+  useEffect(() => {
+    if (prevFullScreenPlayerOpenRef.current && !fullScreenPlayerOpen) {
+      shouldForceMainBannerShowRef.current = true;
+    }
+    prevFullScreenPlayerOpenRef.current = fullScreenPlayerOpen;
+  }, [fullScreenPlayerOpen]);
+
+  // Only hide when we navigate TO a no-banner screen; never hide in cleanup so banner continues
+  // when moving between two banner screens (e.g. Explore → Library).
+  useEffect(() => {
+    const { showBanner: sb, hideBanner: hb } = adCallbacksRef.current;
+    try {
+      const isHome = location.pathname === '/' || location.pathname === '' || location.pathname === '/home';
+      const isBlog = location.pathname === '/blog' || location.pathname.startsWith('/blog/');
+      const isFullScreenPlayerRoute =
+        isFullPlayerVisible ||
+        isAlbumPlayerActive ||
+        isPlaylistPlayerActive ||
+        isVideoRoute ||
+        isAlbumPlayerRoute ||
+        isPlaylistPlayerRoute ||
+        isDailyMixPlayerRoute;
+
+      // Only hide when we're ON a no-banner screen (blog, or non-player route with no main banner).
+      if (isBlog) {
+        hb?.();
+        return;
+      }
+      if (!showMainBanner) {
+        if (!isFullScreenPlayerRoute) {
+          // Don't hide a modal-specific banner ad while treat/tipping modals are mounted.
+          if (!document.body.classList.contains('modal-ad-banner-active')) {
+            hb?.();
+          }
+        }
+        return;
+      }
+
+      // Show or refresh main banner; if already visible, native layer no-ops so banner continues displaying.
+      const margin =
+        navVisible
+          ? NAV_HEIGHT_DP + (isMiniPlayerVisible && !shouldHideMiniPlayer ? MINI_PLAYER_HEIGHT_DP : 0)
+          : 0;
+      const didExitFullScreenPlayer = shouldForceMainBannerShowRef.current;
+      // Avoid duplicate calls (helps reduce visible "blink" on some devices).
+      if (lastMainBannerMarginRef.current === margin && !didExitFullScreenPlayer) return;
+      lastMainBannerMarginRef.current = margin;
+      shouldForceMainBannerShowRef.current = false;
+      if (didExitFullScreenPlayer) {
+        void admobService.repositionActiveBottomBanner(margin);
+      } else {
+        sb?.(MAIN_APP_BOTTOM_BANNER_PLACEMENT, BannerAdPosition.BOTTOM_CENTER, undefined, margin)?.catch(() => {});
+      }
+    } catch (_) {
+      // Banner logic must never crash the app
+    }
+    // No cleanup hide: when navigating between two banner screens we keep the banner visible.
+  }, [showMainBanner, location.pathname, fullScreenPlayerOpen]);
+
+  // When the mini player visibility changes while a main banner is active (e.g. on Home/Create/Library/Profile),
+  // re-position the banner so it always sits directly above nav+mini (if mini is showing) or just above nav
+  // when the mini player is closed.
+  const miniActiveForBanner = isMiniPlayerVisible && !shouldHideMiniPlayer;
+  useEffect(() => {
+    if (bannerDisabledByEnv) return;
+    if (!navVisible || !showMainBanner) return;
+    if (fullScreenPlayerOpen) return;
+    try {
+      const margin =
+        navVisible
+          ? NAV_HEIGHT_DP + (miniActiveForBanner ? MINI_PLAYER_HEIGHT_DP : 0)
+          : 0;
+      // If the margin didn't change, don't touch the banner.
+      if (lastMainBannerMarginRef.current === margin) return;
+
+      // Debounce repositioning to avoid flicker when multiple UI flags change
+      // during a single navigation/animation frame (e.g. route change + mini player open).
+      if (repositionTimerRef.current != null) {
+        window.clearTimeout(repositionTimerRef.current);
+        repositionTimerRef.current = null;
+      }
+      repositionTimerRef.current = window.setTimeout(() => {
+        repositionTimerRef.current = null;
+        lastMainBannerMarginRef.current = margin;
+        // Reposition currently active banner so transition keeps the same visible ad surface.
+        void admobService.repositionActiveBottomBanner(margin);
+      }, 120);
+    } catch (_) {
+      // Reposition logic must never crash the app
+    }
+  }, [miniActiveForBanner, navVisible, showMainBanner, fullScreenPlayerOpen, bannerDisabledByEnv]);
+
+  // Transition watchdog: on Home/main-tab with mini player visible, re-assert banner position
+  // for a short window so late full-player cleanup cannot leave the ad surface blank.
+  useEffect(() => {
+    if (bannerDisabledByEnv) return;
+    if (!showMainBanner || !navVisible || fullScreenPlayerOpen) return;
+    if (!miniActiveForBanner) return;
+
+    const margin = NAV_HEIGHT_DP + MINI_PLAYER_HEIGHT_DP;
+    const t1 = window.setTimeout(() => {
+      void admobService.repositionActiveBottomBanner(margin);
+    }, 600);
+    const t2 = window.setTimeout(() => {
+      void admobService.repositionActiveBottomBanner(margin);
+    }, 1800);
+    const t3 = window.setTimeout(() => {
+      void admobService.repositionActiveBottomBanner(margin);
+    }, 3600);
+
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
+    };
+  }, [
+    miniActiveForBanner,
+    navVisible,
+    showMainBanner,
+    fullScreenPlayerOpen,
+    bannerDisabledByEnv,
+    location.pathname,
+  ]);
+
+  // Refresh the main tab banner faster + more persistently on Home.
+  useEffect(() => {
+    const shouldPauseMainRefresh = fullScreenPlayerOpen && !isVideoRoute;
+    if (!showMainBanner || shouldPauseMainRefresh || bannerDisabledByEnv) return;
+
+    // Faster + more persistent refresh for the Home experience:
+    // - preloadNextBannerRefresh pre-resolves params before the swap.
+    // - refreshBannerAd keeps `bannerShouldBeVisible` true and refreshes with no explicit remove step.
+    let refreshTimer: number | null = null;
+    let preloadTimer: number | null = null;
+    const scheduleNext = (): void => {
+      const refreshDelayMs = getNextMainTabBannerAutoRefreshDelayMs();
+      const preloadLeadMs = getBannerPreloadLeadTimeMs(refreshDelayMs);
+      preloadTimer = window.setTimeout(() => {
+        preloadTimer = null;
+        void admobService.preloadNextBannerRefresh().catch(() => {});
+      }, Math.max(500, refreshDelayMs - preloadLeadMs));
+      refreshTimer = window.setTimeout(() => {
+        refreshTimer = null;
+        void admobService.refreshBannerAd().catch(() => {});
+        scheduleNext();
+      }, refreshDelayMs);
+    };
+
+    scheduleNext();
+
+    return () => {
+      if (refreshTimer != null) window.clearTimeout(refreshTimer);
+      if (preloadTimer != null) window.clearTimeout(preloadTimer);
+    };
+  }, [showMainBanner, fullScreenPlayerOpen, isVideoRoute, bannerDisabledByEnv, navVisible, miniActiveForBanner]);
+
+  // Listen for auth state changes globally to clear any cached data
+  // IMPORTANT: Callback must NOT be async to avoid deadlocks (per Supabase docs)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'TOKEN_REFRESHED') {
+        return;
+      }
+
+      if (event === 'SIGNED_OUT') {
+        hideMiniPlayer();
+        hideFullPlayer();
+
+        const keysToRemove = ['downloaded_songs'];
+        keysToRemove.forEach(key => {
+          try {
+            localStorage.removeItem(key);
+          } catch (error) {
+            logger.warn(`Failed to remove ${key} from localStorage`, error);
+          }
+        });
+      } else if (event === 'SIGNED_IN' && session) {
+        // Capacitor OAuth often remounts the WebView: AuthModal's ref is lost but the global modal flag stays true.
+        try {
+          if (sessionStorage.getItem(SESSION_KEY_PENDING_BROWSER_OAUTH) === '1') {
+            sessionStorage.removeItem(SESSION_KEY_PENDING_BROWSER_OAUTH);
+            startPostLoginTransition();
+            setShowGlobalAuthModal(false);
+          }
+        } catch {
+          /* ignore */
+        }
+
+        import('./lib/prefetchOnLogin').then(({ prefetchOnLogin: prefetch }) => prefetch(session.user.id));
+
+        if (session.user.app_metadata?.provider === 'google') {
+          (async () => {
+            try {
+              const { error: upsertError } = await supabase
+                .from('users')
+                .upsert(
+                  {
+                    id: session.user.id,
+                    email: session.user.email || '',
+                    display_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || null,
+                    role: 'listener',
+                  },
+                  { onConflict: 'id', ignoreDuplicates: false }
+                );
+
+              if (upsertError) {
+                logger.error('Auth: Error creating/updating user record for Google auth', upsertError);
+              }
+            } catch (error) {
+              logger.error('Auth: Error handling Google sign-in', error);
+            }
+          })();
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [hideMiniPlayer, hideFullPlayer, startPostLoginTransition]);
+
+  const handleGlobalAuthSuccess = () => {
+    setShowGlobalAuthModal(false);
+  };
+
+  const handleShowGlobalAuthModal = () => {
+    setShowGlobalAuthModal(true);
+  };
+
+  const handleOpenMusicPlayer = (song: any, playlist: any[] = [], context: string = 'unknown') => {
+    const songIndex = playlist.findIndex(s => s.id === song.id);
+    const nextIndex = songIndex !== -1 ? songIndex : 0;
+    playSong(song, false, playlist, nextIndex, context, null);
+  };
+
+  const handleOpenMusicPlayerFromHome = (song: any, playlist: any[] = [], context: string = 'unknown') => {
+    const songIndex = playlist.findIndex(s => s.id === song.id);
+    const nextIndex = songIndex !== -1 ? songIndex : 0;
+
+    // 1) Immediately open full MusicPlayerScreen and start playback
+    playSong(song, true, playlist, nextIndex, context, null);
+
+    // 2) Fire-and-forget interstitial when opening from Home.
+    //    Important: we do NOT mute app audio here so the song keeps playing under the ad.
+    showInterstitial('home_song_open_interstitial', {
+      contentId: song.id,
+      contentType: 'song',
+    }, { muteAppAudio: false }).catch(() => {
+      // Ad failures or cooldown skips must never affect playback
+    });
+  };
+
+  return (
+    <div className="bg-gradient-to-b from-[#0a0a0a] via-[#0d0d0d] to-[#111111] flex flex-row justify-center w-full min-h-screen min-h-[100dvh]">
+      {postLoginTransitionActive && (
+        <div
+          className="fixed inset-0 z-[10050] bg-gradient-to-b from-[#0a0a0a] via-[#0d0d0d] to-[#111111] flex items-center justify-center"
+          aria-hidden
+        >
+          <div className="relative">
+            <img
+              src="/official_airaplay_logo.png"
+              alt=""
+              className="w-32 h-32 object-contain drop-shadow-2xl"
+              style={{ animation: 'breathe 3s ease-in-out infinite' }}
+            />
+            <div className="absolute inset-0 -z-10 blur-3xl opacity-30 bg-white scale-75 animate-pulse" />
+          </div>
+          <style>{`
+            @keyframes breathe {
+              0%, 100% { transform: scale(1); opacity: 1; }
+              50% { transform: scale(1.05); opacity: 0.9; }
+            }
+          `}</style>
+        </div>
+      )}
+      {isConsoleRoute && BUILD_TARGET === 'web' ? (
+        <Suspense fallback={<ScreenLoader />}>
+          <Routes>
+            <Route path="/console" element={ConsoleDashboardScreen ? <ConsoleDashboardScreen /> : <div>Console not available</div>} />
+            <Route path="/console/login" element={ConsoleLoginScreen ? <ConsoleLoginScreen /> : <div>Console not available</div>} />
+            <Route path="/console/onboarding" element={ConsoleOnboardingScreen ? <ConsoleOnboardingScreen /> : <div>Console not available</div>} />
+            <Route path="/console/accept-artist" element={ConsoleAcceptArtistScreen ? <ConsoleAcceptArtistScreen /> : <div>Console not available</div>} />
+            <Route path="/console/accept-team" element={ConsoleAcceptTeamScreen ? <ConsoleAcceptTeamScreen /> : <div>Console not available</div>} />
+          </Routes>
+        </Suspense>
+      ) : isAdminRoute && BUILD_TARGET === 'web' ? (
+        // Admin routes - Only available in web build
+        <Suspense fallback={<ScreenLoader />}>
+          <Routes>
+            <Route path="/admin" element={AdminDashboardScreen ? <AdminDashboardScreen /> : <div>Admin not available</div>} />
+            <Route path="/admin/login" element={AdminLoginScreen ? <AdminLoginScreen /> : <div>Admin not available</div>} />
+          </Routes>
+        </Suspense>
+      ) : (
+        // App routes - responsive shell width; fixed height so inner content can scroll
+        <div className="app-shell flex flex-col bg-transparent relative h-[100dvh] min-h-0">
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <Suspense fallback={<ScreenLoader />}>
+              <Routes>
+              <Route path="/" element={<HomePlayer onOpenMusicPlayer={handleOpenMusicPlayerFromHome} onFormVisibilityChange={setIsUploadModalVisible} />} />
+              <Route path="/auth/callback" element={<AuthCallbackScreen />} />
+              <Route path="/reset-password" element={<ResetPasswordScreen />} />
+              <Route path="/explore" element={<ExploreScreen onFormVisibilityChange={setIsUploadModalVisible} onOpenMusicPlayer={handleOpenMusicPlayer} onModalVisibilityChange={setIsGenreModalVisible} />} />
+              <Route path="/library" element={<LibraryScreen onFormVisibilityChange={setIsUploadModalVisible} onOpenMusicPlayer={handleOpenMusicPlayer} />} />
+              <Route path="/create" element={<CreateScreen onFormVisibilityChange={setIsUploadModalVisible} />} />
+              <Route path="/profile" element={<ProfileScreen onFormVisibilityChange={setIsUploadModalVisible} />} />
+              <Route path="/user/:userId" element={<PublicProfileScreen onOpenMusicPlayer={handleOpenMusicPlayer} isMiniPlayerVisible={isMiniPlayerVisible && !shouldHideMiniPlayer} onTippingModalVisibilityChange={setIsTippingModalVisible} />} />
+              <Route path="/album/:albumId" element={<AlbumPlayerScreen onPlayerVisibilityChange={setIsAlbumPlayerActive} onOpenMusicPlayer={handleOpenMusicPlayer} />} />
+              <Route path="/album-detail/:albumId" element={<AlbumDetailScreen />} />
+              <Route path="/playlist/:playlistId" element={<PlaylistPlayerScreen onPlayerVisibilityChange={setIsPlaylistPlayerActive} onOpenMusicPlayer={handleOpenMusicPlayer} />} />
+              <Route path="/playlist-detail/:playlistId" element={<PlaylistDetailScreen />} />
+              <Route path="/daily-mix/:mixId" element={<DailyMixPlayerScreen />} />
+              <Route path="/daily-mix/global/:mixId" element={<DailyMixPlayerScreen />} />
+              <Route path="/treats" element={<TreatScreen onFormVisibilityChange={setIsTreatModalVisible} />} />
+              <Route path="/promotion-center" element={<PromotionCenterScreen />} />
+              <Route path="/daily-checkin" element={<DailyCheckinScreen />} />
+              <Route path="/invite-earn" element={<InviteEarnScreen />} />
+              <Route path="/trending" element={<TrendingViewAllScreen onOpenMusicPlayer={handleOpenMusicPlayer} />} />
+              <Route path="/trending-near-you" element={<TrendingNearYouViewAllScreen onOpenMusicPlayer={handleOpenMusicPlayer} />} />
+              <Route path="/must-watch" element={<MustWatchViewAllScreen />} />
+              <Route path="/new-releases" element={<NewReleaseViewAllScreen onOpenMusicPlayer={handleOpenMusicPlayer} />} />
+              <Route path="/trending-albums" element={<TrendingAlbumsViewAllScreen />} />
+              <Route path="/video/:videoId" element={<VideoPlayerErrorBoundary><VideoPlayerScreen /></VideoPlayerErrorBoundary>} />
+              <Route path="/notifications" element={<NotificationScreen />} />
+              <Route path="/withdraw-earnings" element={<WithdrawEarningsScreen />} />
+              <Route path="/edit-profile" element={<EditProfileScreen />} />
+              <Route path="/become-artist" element={<ArtistRegistrationScreen />} />
+              <Route path="/transaction-history" element={<TransactionHistoryScreen />} />
+              <Route path="/treat-analytics" element={<TreatAnalyticsScreen />} />
+              <Route path="/terms/:type" element={<ScreenErrorBoundary fallbackMessage="The terms screen encountered an error. Use the back button to return."><TermsAndConditionsScreen /></ScreenErrorBoundary>} />
+              <Route path="/blog" element={<BlogIndexScreen />} />
+              <Route path="/blog/:slug" element={<BlogPostScreen />} />
+              <Route path="/messages" element={<MessagesScreen />} />
+              <Route path="/messages/:threadId" element={<MessageThreadScreen />} />
+              <Route path="/upload/single" element={<SingleUploadScreen />} />
+              <Route path="/upload/album" element={<AlbumUploadScreen />} />
+              <Route path="/song/:songId" element={<SongScreen />} />
+              <Route path="/mood-discovery/:moodId" element={<MoodDiscoveryScreen />} />
+              <Route path="/mood-discovery" element={<MoodDiscoveryScreen />} />
+              <Route path="/genre/:genreId" element={<GenreSongsScreen />} />
+              <Route path="/collaborate" element={<CollaborateScreen />} />
+              <Route path="/collaboration-inbox" element={<CollaborationInboxScreen />} />
+              </Routes>
+            </Suspense>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom Navigation Bar - Positioned outside container for edge-to-edge rendering */}
+      {!shouldHideNavigation && !isAdminRoute && <NavigationBarSection />}
+
+      {/* Mini Music Player */}
+      {(() => {
+        const shouldShow = isMiniPlayerVisible && currentSong && !shouldHideMiniPlayer;
+
+        return shouldShow ? (
+          <MiniMusicPlayer
+            song={currentSong}
+            isVisible={isMiniPlayerVisible}
+            isPlaying={isPlaying}
+            currentTime={currentTime}
+            duration={duration}
+            error={playerError}
+            albumId={albumId}
+            playlistId={playlistId}
+            playlistContext={playlistContext}
+            onTogglePlayPause={togglePlayPause}
+            onExpand={() => {
+              expandFullPlayer();
+            }}
+            onClose={() => {
+              hideMiniPlayer();
+            }}
+          />
+        ) : null;
+      })()}
+
+      {isFullPlayerVisible && currentSong && (
+        <MusicPlayerScreen
+          song={currentSong}
+          playlist={playlist}
+          currentIndex={currentIndex}
+          playlistContext={playlistContext}
+          isPlaying={isPlaying}
+          currentTime={currentTime}
+          duration={duration}
+          audioElement={audioElement}
+          onClose={hideFullPlayer}
+          onPlayPause={togglePlayPause}
+          onSeek={seekTo}
+          onSongChange={changeSong}
+          onShowAuthModal={handleShowGlobalAuthModal}
+        />
+      )}
+
+      {/* Auth Modal - Rendered at the root level outside the max-width container */}
+      {showGlobalAuthModal && (
+        <AuthModal
+          onClose={() => setShowGlobalAuthModal(false)}
+          onSuccess={handleGlobalAuthSuccess}
+        />
+      )}
+
+      {/* Upload Progress Modal */}
+      <UploadProgressModal />
+
+      {/* Audio ad companion overlay (image + CTA while audio ad is playing) */}
+      <AudioAdCompanionOverlay />
+    </div>
+  );
+}
+
+function AppWithRouter() {
+  const [showSplash, setShowSplash] = useState(true);
+  const [isAppReady, setIsAppReady] = useState(false);
+
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        await appInitializer.initialize();
+      } catch (err) {
+        logger.error('App: Initialization error', err);
+      }
+
+      if (BUILD_TARGET === 'web') {
+        webAdService.initialize().catch((err) => {
+          logger.error('App: webAdService initialization error', err);
+        });
+      }
+
+      setIsAppReady(true);
+
+      // Defer AdMob init so the app UI shows first; if the native plugin crashes, the app has already rendered
+      const initAdMob = () => {
+        if (BUILD_TARGET === 'web') return;
+        try {
+          admobService.initialize({
+            bannerAdId:
+              import.meta.env.MODE === 'development'
+                ? 'ca-app-pub-3940256099942544/6300978111'
+                : import.meta.env.VITE_ADMOB_BANNER_ID || DEFAULT_BOTTOM_BANNER_AD_UNIT_ID,
+            /** Full-screen players: optional `VITE_ADMOB_PLAYER_BANNER_ID`; defaults to main bottom unit. */
+            playerBannerAdId:
+              import.meta.env.MODE === 'development'
+                ? 'ca-app-pub-3940256099942544/6300978111'
+                : import.meta.env.VITE_ADMOB_PLAYER_BANNER_ID ||
+                  import.meta.env.VITE_ADMOB_BANNER_ID ||
+                  DEFAULT_BOTTOM_BANNER_AD_UNIT_ID,
+            interstitialAdId: import.meta.env.MODE === 'development' ? 'ca-app-pub-3940256099942544/1033173712' : import.meta.env.VITE_ADMOB_INTERSTITIAL_ID,
+            rewardedAdId: import.meta.env.MODE === 'development' ? 'ca-app-pub-3940256099942544/5224354917' : import.meta.env.VITE_ADMOB_REWARDED_ID,
+            rewardedInterstitialAdId: resolveRewardedInterstitialAdUnitId(),
+            testMode: import.meta.env.MODE === 'development',
+          }).catch((err) => {
+            logger.error('App: AdMob initialization error', err);
+          });
+        } catch (err) {
+          logger.error('App: AdMob initialization error (sync)', err);
+        }
+      };
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(initAdMob, { timeout: 1500 });
+      } else {
+        setTimeout(initAdMob, 400);
+      }
+    };
+
+    initializeApp();
+  }, []);
+
+  // Mark native builds so CSS can apply safe-area tweaks
+  useEffect(() => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        document.body.classList.add('is-native');
+        return () => document.body.classList.remove('is-native');
+      }
+    } catch {
+      // ignore
+    }
+    return;
+  }, []);
+
+  // Apply status bar (white icons, visible) as soon as app mounts on native — don't wait for isAppReady
+  useEffect(() => {
+    try {
+      applyStatusBarTheme();
+    } catch (_) {
+      // Must not crash app if status bar API fails on some devices
+    }
+  }, []);
+
+  const handleSplashFinished = () => {
+    setShowSplash(false);
+    // Re-apply status bar after splash hides — Android can reset it; ensures white icons always
+    applyStatusBarTheme({ onResume: true }).catch(() => {});
+  };
+
+  // Subscribe to system theme changes for status bar (native only)
+  useEffect(() => {
+    if (!isAppReady) return;
+    const unsubscribe = subscribeStatusBarToSystemTheme();
+    return unsubscribe;
+  }, [isAppReady]);
+
+  // Prefetch main tab screens when app is ready (skip on 2G to avoid competing with critical requests)
+  useEffect(() => {
+    if (!isAppReady || shouldSkipBackgroundPrefetch()) return;
+    const prefetchTabs = () => {
+      import("./screens/ExploreScreen").catch(() => {});
+      import("./screens/LibraryScreen").catch(() => {});
+      import("./screens/CreateScreen").catch(() => {});
+      import("./screens/ProfileScreen").catch(() => {});
+    };
+    const prefetchDetailScreens = () => {
+      import("./screens/AlbumPlayerScreen").catch(() => {});
+      import("./screens/PlaylistPlayerScreen").catch(() => {});
+      import("./screens/VideoPlayerScreen").catch(() => {});
+    };
+    if (typeof requestIdleCallback !== "undefined") {
+      requestIdleCallback(prefetchTabs, { timeout: 2500 });
+      requestIdleCallback(prefetchDetailScreens, { timeout: 5000 });
+    } else {
+      setTimeout(prefetchTabs, 1500);
+      setTimeout(prefetchDetailScreens, 4000);
+    }
+  }, [isAppReady]);
+
+  return (
+    <>
+      {showSplash && <SplashScreen onFinished={handleSplashFinished} minDisplayTime={2000} appReady={isAppReady} />}
+      <BrowserRouter>
+        <RootErrorBoundary>
+          <AuthProvider>
+            <AlertProvider>
+              <ConfirmProvider>
+                <HomeScreenDataProvider>
+                <MusicPlayerProvider>
+                  <UploadProvider>
+                    <App />
+                  </UploadProvider>
+                </MusicPlayerProvider>
+              </HomeScreenDataProvider>
+              </ConfirmProvider>
+            </AlertProvider>
+          </AuthProvider>
+        </RootErrorBoundary>
+      </BrowserRouter>
+    </>
+  );
+}
+
+// Global error handlers — log and, where possible, prevent process exit
+window.addEventListener('error', (event) => {
+  logger.error('Global error', event.error ?? event.message);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  logger.error('Unhandled promise rejection', event.reason);
+  event.preventDefault?.();
+});
+
+const appElement = document.getElementById("app");
+
+if (!appElement) {
+  document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0a;color:#fff;font-family:sans-serif;padding:20px;text-align:center;"><div><h1>App failed to start</h1><p>Root element #app not found.</p><button onclick="location.reload()" style="margin-top:16px;padding:10px 20px;background:#309605;color:#fff;border:none;border-radius:8px;cursor:pointer;">Reload</button></div></div>';
+} else {
+  try {
+    createRoot(appElement).render(
+      <StrictMode>
+        <AppWithRouter />
+      </StrictMode>
+    );
+  } catch (error) {
+    logger.error('FATAL: App mount failed', error);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    const escaped = String(errMsg)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+    (appElement as HTMLElement).innerHTML = `
+      <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; background: #0a0a0a; color: white; padding: 20px; text-align: center;">
+        <h1 style="font-size: 24px; margin-bottom: 20px; color: #ff4444;">App Failed to Load</h1>
+        <p style="margin-bottom: 10px;">Error: ${escaped}</p>
+        <p style="color: #666; font-size: 14px;">Check the browser console (F12) for more details</p>
+        <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #309605; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px;">
+          Reload Page
+        </button>
+      </div>
+    `;
+  }
+}
