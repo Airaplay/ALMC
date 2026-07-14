@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import { X, Link2, UserPlus, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
+import { X, Link2, UserPlus, Copy, Check, Loader2, AlertCircle, Mail } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import {
   ArtistInviteCandidate,
   inviteArtistToOrganization,
   lookupArtistInviteCandidate,
 } from '../../lib/orgAccess';
-import { almcRoutes } from '../../lib/almcRoutes';
 import { consoleTheme } from '../consoleTheme';
 import { ConsolePrimaryButton, ConsoleSubmitArrow } from './ConsoleFormControls';
 
@@ -33,7 +32,8 @@ export function AddArtistModal({
   const [lookupLoading, setLookupLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [invitationCode, setInvitationCode] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -44,7 +44,8 @@ export function AddArtistModal({
       setCountry('');
       setLookup(null);
       setError(null);
-      setInviteLink(null);
+      setInvitationCode(null);
+      setEmailSent(false);
       setCopied(false);
     }
   }, [open]);
@@ -61,9 +62,6 @@ export function AddArtistModal({
       try {
         const result = await lookupArtistInviteCandidate(organizationId, email.trim());
         setLookup(result);
-        if (result.recommended_invitation_type === 'create_new' && mode === 'link_existing' && !result.has_artist_profile) {
-          // Keep mode but show guidance in UI
-        }
       } catch (err) {
         setLookup(null);
         setError(err instanceof Error ? err.message : 'Lookup failed');
@@ -78,8 +76,8 @@ export function AddArtistModal({
   if (!open) return null;
 
   const handleCopy = async () => {
-    if (!inviteLink) return;
-    await navigator.clipboard.writeText(inviteLink);
+    if (!invitationCode) return;
+    await navigator.clipboard.writeText(invitationCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -88,28 +86,27 @@ export function AddArtistModal({
     e.preventDefault();
     if (!email.trim()) return;
 
+    if (mode === 'create_new' && !stageName.trim()) {
+      setError('Stage name is required for new artist invites.');
+      return;
+    }
+
+    if (lookup?.pending_invitation_id) {
+      setError('An invitation is already pending for this email.');
+      return;
+    }
+
+    if (lookup?.link_status === 'active') {
+      setError('This artist is already linked to your organization.');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     try {
-      const invitationType =
-        mode === 'create_new' ? 'create_new' : 'link_existing';
+      const invitationType = mode === 'create_new' ? 'create_new' : 'link_existing';
 
-      if (mode === 'create_new' && !stageName.trim()) {
-        setError('Stage name is required for new artist invites.');
-        return;
-      }
-
-      if (lookup?.pending_invitation_id) {
-        setError('An invitation is already pending for this email.');
-        return;
-      }
-
-      if (lookup?.link_status === 'active') {
-        setError('This artist is already linked to your organization.');
-        return;
-      }
-
-      const { token } = await inviteArtistToOrganization(
+      const result = await inviteArtistToOrganization(
         organizationId,
         email.trim(),
         invitationType,
@@ -118,7 +115,8 @@ export function AddArtistModal({
           : {}
       );
 
-      setInviteLink(almcRoutes.acceptArtistInviteUrl(token));
+      setInvitationCode(result.invitation_code);
+      setEmailSent(result.email_sent !== false);
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send invitation');
@@ -132,7 +130,7 @@ export function AddArtistModal({
     if (!lookup) return null;
     if (lookup.link_status === 'active') return 'Already linked to your roster.';
     if (lookup.link_status === 'pending_invite') return 'Invitation already pending for this artist.';
-    if (lookup.pending_invitation_id) return 'An invitation email is already pending.';
+    if (lookup.pending_invitation_id) return 'An invitation is already pending for this email.';
     if (lookup.has_artist_profile) {
       return `Found artist profile: ${lookup.stage_name ?? lookup.display_name ?? 'Artist'}`;
     }
@@ -195,16 +193,27 @@ export function AddArtistModal({
           </div>
         </div>
 
-        {inviteLink ? (
+        {invitationCode ? (
           <div className="space-y-4 px-6 py-6">
             <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
-              <p className="text-sm font-medium text-foreground">Invitation sent</p>
+              <p className="text-sm font-medium text-foreground">Invitation created</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Share this link with the artist. They keep full ownership of their profile and catalog.
+                {emailSent
+                  ? `We emailed this code to ${email.trim()}. The artist can also enter it manually after signing in.`
+                  : `Share this code with ${email.trim()}. They must sign in with that email to accept.`}
               </p>
-              <code className="mt-3 block break-all rounded-lg bg-black/30 p-3 text-xs text-[#3ba208]">
-                {inviteLink}
-              </code>
+              <div className="mt-4 rounded-xl border-2 border-dashed border-[#309605]/50 bg-black/30 px-4 py-5 text-center">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">Invitation code</p>
+                <p className="mt-2 font-mono text-3xl font-bold tracking-[0.25em] text-[#3ba208]">
+                  {invitationCode}
+                </p>
+              </div>
+              {emailSent && (
+                <p className="mt-3 flex items-center gap-2 text-xs text-emerald-400">
+                  <Mail className="h-3.5 w-3.5" />
+                  Invitation email queued for delivery
+                </p>
+              )}
               <div className="mt-4 flex gap-2">
                 <button
                   type="button"
@@ -212,7 +221,7 @@ export function AddArtistModal({
                   className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-secondary py-2.5 text-sm text-foreground hover:bg-muted"
                 >
                   {copied ? <Check className="h-4 w-4 text-[#3ba208]" /> : <Copy className="h-4 w-4" />}
-                  {copied ? 'Copied' : 'Copy link'}
+                  {copied ? 'Copied' : 'Copy code'}
                 </button>
                 <ConsolePrimaryButton type="button" onClick={onClose} className="flex-1">
                   Done
@@ -278,14 +287,14 @@ export function AddArtistModal({
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  They will sign up on Airaplay, create their artist profile, then accept the invitation to join your roster.
+                  They will sign up on Airaplay, create their artist profile, then enter the invitation code to join your roster.
                 </p>
               </>
             )}
 
             {mode === 'link_existing' && (
               <p className="text-xs text-muted-foreground">
-                The artist must already have an Airaplay artist profile on this email. They accept the invite to grant your organization management access.
+                The artist must already have an Airaplay artist profile on this email. They enter the invitation code to grant your organization management access.
               </p>
             )}
 
@@ -303,7 +312,7 @@ export function AddArtistModal({
                 loading={submitting}
                 className="flex-1"
               >
-                <ConsoleSubmitArrow label={mode === 'create_new' ? 'Send invite' : 'Send link invite'} />
+                <ConsoleSubmitArrow label="Send invitation" />
               </ConsolePrimaryButton>
             </div>
           </form>

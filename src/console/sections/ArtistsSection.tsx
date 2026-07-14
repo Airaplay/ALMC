@@ -196,7 +196,14 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
                     )}
                     {artist.is_pending_invitation && (
                       <p className="mt-1 text-xs text-amber-400/90">
-                        Waiting for artist to accept invitation
+                        Waiting for artist to accept
+                        {artist.invitation_code ? (
+                          <>
+                            {' '}
+                            · Code:{' '}
+                            <span className="font-mono tracking-wider text-amber-300">{artist.invitation_code}</span>
+                          </>
+                        ) : null}
                       </p>
                     )}
                   </div>

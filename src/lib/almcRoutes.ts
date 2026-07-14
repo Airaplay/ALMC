@@ -19,8 +19,8 @@ export const almcRoutes = {
   onboarding: almcPath('onboarding'),
   acceptArtist: almcPath('accept-artist'),
   acceptTeam: almcPath('accept-team'),
-  acceptArtistInviteUrl: (token: string) =>
-    `${window.location.origin}${almcPath('accept-artist')}?token=${encodeURIComponent(token)}`,
+  acceptArtistInviteUrl: (code: string) =>
+    `${window.location.origin}${almcPath('accept-artist')}?code=${encodeURIComponent(code)}`,
   acceptTeamInviteUrl: (token: string) =>
     `${window.location.origin}${almcPath('accept-team')}?token=${encodeURIComponent(token)}`,
   consumerHome: () => consumerBase() || '/',

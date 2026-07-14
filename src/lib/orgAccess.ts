@@ -56,6 +56,7 @@ export interface OrgArtistItem {
   is_pending_invitation?: boolean;
   invitation_id?: string | null;
   invitation_type?: 'link_existing' | 'create_new' | null;
+  invitation_code?: string | null;
   artist_profile_id: string | null;
   stage_name: string;
   profile_photo_url: string | null;
@@ -187,23 +188,50 @@ export async function listOrganizationArtists(
   };
 }
 
+export function formatInvitationCodeInput(value: string): string {
+  const raw = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8);
+  if (raw.length <= 4) return raw;
+  return `${raw.slice(0, 4)}-${raw.slice(4)}`;
+}
+
+export function normalizeInvitationCode(value: string): string {
+  return value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+}
+
+function rpcErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return fallback;
+}
+
 export async function inviteArtistToOrganization(
   orgId: string,
   email: string,
   invitationType: 'link_existing' | 'create_new' = 'link_existing',
   artistMetadata: Record<string, unknown> = {}
-): Promise<{ invitation_id: string; token: string; invitation_type: string }> {
+): Promise<{ invitation_id: string; invitation_code: string; invitation_type: string; email_sent?: boolean }> {
   const { data, error } = await supabase.rpc('invite_artist_to_organization', {
     p_org_id: orgId,
     p_email: email,
     p_invitation_type: invitationType,
     p_artist_metadata: artistMetadata,
   });
-  if (error) throw error;
+  if (error) throw new Error(rpcErrorMessage(error, 'Failed to send invitation'));
+  if (!data || data.success === false) {
+    throw new Error((data?.message as string) || 'Failed to send invitation');
+  }
+  const invitationCode =
+    (data.invitation_code as string) ||
+    formatInvitationCodeInput((data.token as string) || '');
+  if (!data.invitation_id || !invitationCode) {
+    throw new Error('Invitation was not created. Please try again.');
+  }
   return {
     invitation_id: data.invitation_id as string,
-    token: data.token as string,
+    invitation_code: invitationCode,
     invitation_type: (data.invitation_type as string) ?? invitationType,
+    email_sent: data.email_sent as boolean | undefined,
   };
 }
 
@@ -273,13 +301,16 @@ export function orgHasPermission(
   return (permissions ?? []).includes(permission);
 }
 
-export async function acceptArtistOrganizationInvitation(token: string): Promise<{
+export async function acceptArtistOrganizationInvitation(code: string): Promise<{
   organization_id: string;
   requires_artist_profile?: boolean;
 }> {
-  const { data, error } = await supabase.rpc('accept_artist_organization_invitation', { p_token: token });
-  if (error) throw error;
-  if (data?.requires_artist_profile) {
+  const normalized = normalizeInvitationCode(code);
+  const { data, error } = await supabase.rpc('accept_artist_organization_invitation', {
+    p_token: normalized || code.trim(),
+  });
+  if (error) throw new Error(rpcErrorMessage(error, 'Failed to accept invitation'));
+  if (data?.requires_artist_profile || data?.success === false) {
     return {
       organization_id: data.organization_id as string,
       requires_artist_profile: true,
