@@ -1,0 +1,38 @@
+{
+  "name": "almc",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --incremental && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --max-warnings 0"
+  },
+  "dependencies": {
+    "@radix-ui/react-avatar": "^1.1.1",
+    "@radix-ui/react-scroll-area": "^1.2.0",
+    "@radix-ui/react-tabs": "^1.1.1",
+    "@supabase/supabase-js": "^2.39.3",
+    "@types/node": "^20.11.5",
+    "clsx": "^2.1.0",
+    "date-fns": "^3.3.1",
+    "lodash-es": "^4.17.21",
+    "lucide-react": "^0.263.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.28.0",
+    "tailwind-merge": "^2.2.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "~5.6.2",
+    "typescript-eslint": "^8.10.0",
+    "vite": "^7.2.2"
+  }
+}

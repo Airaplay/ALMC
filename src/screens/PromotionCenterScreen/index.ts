@@ -1,0 +1,1 @@
+export { PromotionCenterScreen } from './PromotionCenterScreen';

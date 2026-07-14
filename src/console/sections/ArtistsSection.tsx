@@ -7,6 +7,7 @@ import {
   OrgArtistItem,
   revokeOrganizationArtistAccess,
 } from '../../lib/orgAccess';
+import { almcRoutes } from '../../lib/almcRoutes';
 import { LoadingLogo } from '../../components/LoadingLogo';
 
 interface ArtistsSectionProps {
@@ -60,8 +61,7 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
     setError(null);
     try {
       const { token } = await inviteArtistToOrganization(organization.id, inviteEmail.trim());
-      const link = `${window.location.origin}/console/accept-artist?token=${token}`;
-      setInviteLink(link);
+      setInviteLink(almcRoutes.acceptArtistInviteUrl(token));
       setInviteEmail('');
       await loadArtists();
     } catch (err) {

@@ -1,0 +1,237 @@
+/* ==============================================
+   Airaplay Loading Animation
+   Inspired by Audiomack's smooth loading experience
+   ============================================== */
+
+.loading-animation-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.loading-animation {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+}
+
+/* Logo Wrapper with Primary Animation */
+.logo-wrapper {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: logoBreath 2.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba(48, 150, 5, 0.3));
+  animation: logoGlow 2.5s ease-in-out infinite;
+}
+
+/* Animated Ring Effects */
+.ring-effect {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(48, 150, 5, 0.2);
+  animation: ringPulse 2.5s ease-out infinite;
+  will-change: transform, opacity;
+}
+
+.ring-1 {
+  width: 100%;
+  height: 100%;
+  animation-delay: 0s;
+}
+
+.ring-2 {
+  width: 120%;
+  height: 120%;
+  animation-delay: 0.4s;
+}
+
+.ring-3 {
+  width: 140%;
+  height: 140%;
+  animation-delay: 0.8s;
+}
+
+/* Pulse Backdrop Effect */
+.pulse-backdrop {
+  position: absolute;
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(
+    circle,
+    rgba(48, 150, 5, 0.15) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  animation: backdropPulse 2.5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* Loading Text */
+.loading-text {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.5px;
+  animation: textFade 2.5s ease-in-out infinite;
+  margin: 0;
+}
+
+/* ==============================================
+   Keyframe Animations
+   ============================================== */
+
+/* Logo Breathing Effect - Smooth scale in/out */
+@keyframes logoBreath {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+/* Logo Glow Effect - Synchronized with breath */
+@keyframes logoGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 20px rgba(48, 150, 5, 0.3));
+    opacity: 1;
+  }
+  50% {
+    filter: drop-shadow(0 0 30px rgba(48, 150, 5, 0.5));
+    opacity: 0.95;
+  }
+}
+
+/* Ring Pulse - Expanding waves */
+@keyframes ringPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Backdrop Pulse - Soft rhythmic glow */
+@keyframes backdropPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.3;
+  }
+}
+
+/* Text Fade - Subtle pulsing */
+@keyframes textFade {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ==============================================
+   Reduced Motion Support
+   ============================================== */
+
+.loading-animation.reduced-motion .logo-wrapper,
+.loading-animation.reduced-motion .logo-image,
+.loading-animation.reduced-motion .ring-effect,
+.loading-animation.reduced-motion .pulse-backdrop,
+.loading-animation.reduced-motion + .loading-text {
+  animation: none;
+}
+
+.loading-animation.reduced-motion .logo-image {
+  opacity: 0.9;
+}
+
+/* ==============================================
+   Performance Optimizations
+   ============================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* GPU Acceleration */
+.loading-animation,
+.logo-wrapper,
+.ring-effect,
+.pulse-backdrop {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* ==============================================
+   Dark/Light Theme Support
+   ============================================== */
+
+/* Light theme adjustments */
+@media (prefers-color-scheme: light) {
+  .loading-text {
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  .ring-effect {
+    border-color: rgba(48, 150, 5, 0.3);
+  }
+}
+
+/* ==============================================
+   Responsive Sizing
+   ============================================== */
+
+@media (max-width: 640px) {
+  .loading-animation-container {
+    padding: 1.5rem;
+  }
+
+  .loading-text {
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .loading-animation-container {
+    padding: 1rem;
+  }
+}

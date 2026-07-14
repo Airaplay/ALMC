@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, AlertCircle, Building2 } from 'lucide-react';
 import { acceptArtistOrganizationInvitation, acceptOrganizationMemberInvitation } from '../../lib/orgAccess';
+import { almcRoutes } from '../../lib/almcRoutes';
 import { supabase } from '../../lib/supabase';
 import { LoadingLogo } from '../../components/LoadingLogo';
 
@@ -65,7 +66,7 @@ export function ConsoleAcceptInvitationScreen({ type }: { type: AcceptType }): J
           </p>
           <button
             type="button"
-            onClick={() => navigate(`/console/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`)}
+            onClick={() => navigate(`${almcRoutes.login}?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`)}
             className="mt-6 w-full rounded-xl bg-[#FF3366] py-3 text-sm font-semibold text-white"
           >
             Sign in
@@ -90,7 +91,7 @@ export function ConsoleAcceptInvitationScreen({ type }: { type: AcceptType }): J
         {status === 'success' && (
           <button
             type="button"
-            onClick={() => navigate(type === 'team' ? '/console' : '/profile')}
+            onClick={() => navigate(type === 'team' ? almcRoutes.home : almcRoutes.consumerProfile())}
             className="mt-6 w-full rounded-xl bg-[#FF3366] py-3 text-sm font-semibold text-white"
           >
             {type === 'team' ? 'Go to Console' : 'Go to Profile'}

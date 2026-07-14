@@ -1,0 +1,1 @@
+export { TopArtisteSection } from "./TopArtisteSection";

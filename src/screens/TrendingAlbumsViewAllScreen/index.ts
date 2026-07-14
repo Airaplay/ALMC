@@ -1,0 +1,1 @@
+export { TrendingAlbumsViewAllScreen } from './TrendingAlbumsViewAllScreen';;

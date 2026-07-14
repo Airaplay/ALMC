@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, Music2, Users, Package, Film } from 'lucide-react';
 import { createOrganization, getMyOrganizations, OrgType, setStoredOrgId } from '../../lib/orgAccess';
+import { almcRoutes } from '../../lib/almcRoutes';
 import { supabase } from '../../lib/supabase';
 import { LoadingLogo } from '../../components/LoadingLogo';
 
@@ -32,12 +33,12 @@ export function ConsoleOnboardingScreen(): JSX.Element {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
-        navigate('/console/login', { replace: true });
+        navigate(almcRoutes.login, { replace: true });
         return;
       }
       const orgs = await getMyOrganizations();
       if (orgs.length > 0) {
-        navigate('/console', { replace: true });
+        navigate(almcRoutes.home, { replace: true });
         return;
       }
       setAuthChecked(true);
@@ -60,7 +61,7 @@ export function ConsoleOnboardingScreen(): JSX.Element {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate('/console/login', { replace: true });
+        navigate(almcRoutes.login, { replace: true });
         return;
       }
 
@@ -76,7 +77,7 @@ export function ConsoleOnboardingScreen(): JSX.Element {
       });
 
       setStoredOrgId(result.organization_id);
-      navigate('/console', { replace: true });
+      navigate(almcRoutes.home, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create organization');
     } finally {

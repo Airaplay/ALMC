@@ -1,0 +1,1 @@
+export { NewReleaseViewAllScreen } from './NewReleaseViewAllScreen';;

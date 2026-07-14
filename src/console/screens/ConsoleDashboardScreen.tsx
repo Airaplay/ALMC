@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, ChevronDown } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { performCompleteLogout } from '../../lib/logoutService';
+import { almcRoutes } from '../../lib/almcRoutes';
 import { LoadingLogo } from '../../components/LoadingLogo';
 import { OrganizationProvider, useOrganization } from '../contexts/OrganizationContext';
 import {
@@ -53,7 +54,7 @@ function ConsoleDashboardContent(): JSX.Element {
 
   const handleLogout = async () => {
     await performCompleteLogout();
-    navigate('/console/login', { replace: true });
+    navigate(almcRoutes.login, { replace: true });
   };
 
   const handleUploadArtist = useCallback((artist: OrgArtistItem) => {
@@ -77,7 +78,7 @@ function ConsoleDashboardContent(): JSX.Element {
   }
 
   if (organizations.length === 0) {
-    navigate('/console/onboarding', { replace: true });
+    navigate(almcRoutes.onboarding, { replace: true });
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b]">
         <LoadingLogo />
@@ -210,7 +211,7 @@ export function ConsoleDashboardScreen(): JSX.Element {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
-        navigate('/console/login', { replace: true });
+        navigate(almcRoutes.login, { replace: true });
       } else {
         setAuthChecked(true);
       }

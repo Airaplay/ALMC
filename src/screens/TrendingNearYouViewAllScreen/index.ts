@@ -1,0 +1,2 @@
+export { TrendingNearYouViewAllScreen } from './TrendingNearYouViewAllScreen';
+

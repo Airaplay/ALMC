@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { UserPlus } from 'lucide-react';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { inviteOrganizationMember, listOrganizationMembers, OrgMemberItem } from '../../lib/orgAccess';
+import { almcRoutes } from '../../lib/almcRoutes';
 import { LoadingLogo } from '../../components/LoadingLogo';
 
 const INVITE_ROLES = [
@@ -44,7 +45,7 @@ export function TeamSection() {
     setError(null);
     try {
       const { token } = await inviteOrganizationMember(organization.id, email.trim(), roleKey);
-      setInviteLink(`${window.location.origin}/console/accept-team?token=${token}`);
+      setInviteLink(almcRoutes.acceptTeamInviteUrl(token));
       setEmail('');
       await loadMembers();
     } catch (err) {

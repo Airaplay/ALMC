@@ -1,0 +1,1 @@
+export { TreatScreen } from './TreatScreen';;

@@ -1,0 +1,356 @@
+import { supabase } from './supabase';
+import { getUserLocation } from './locationDetection';
+import { updateUserMoodPreference } from './moodAnalysisService';
+
+const MIN_SONG_PLAY_DURATION = 65;
+const MIN_VIDEO_PLAY_DURATION = 60;
+const MIN_CLIP_PLAY_DURATION = 5;
+
+interface PlaybackValidationResult {
+  success: boolean;
+  reason?: string;
+  own_content?: boolean;
+  validation?: {
+    is_valid: boolean;
+    is_suspicious: boolean;
+    fraud_score: number;
+    validation_score: number;
+    reasons: string[];
+    own_content?: boolean;
+  };
+}
+
+export const recordPlayback = async (
+  contentId: string,
+  durationListened: number,
+  isVideo: boolean = false,
+  isClip: boolean = false
+): Promise<void> => {
+  try {
+    let minDuration = MIN_SONG_PLAY_DURATION;
+    if (isClip) {
+      minDuration = MIN_CLIP_PLAY_DURATION;
+    } else if (isVideo) {
+      minDuration = MIN_VIDEO_PLAY_DURATION;
+    }
+
+    if (durationListened < minDuration) {
+      console.log(`Playback duration (${durationListened}s) did not meet minimum threshold (${minDuration}s) for ${isClip ? 'clip' : isVideo ? 'video' : 'song'}`);
+      return;
+    }
+
+    console.log(`Recording playback for ${isClip ? 'clip' : isVideo ? 'video' : 'song'} ${contentId} with duration ${durationListened}s`);
+
+    const { data: { session } } = await supabase.auth.getSession();
+
+    const userAgent = navigator?.userAgent || null;
+
+    let detectedCountry: string | null = null;
+    let detectedCountryCode: string | null = null;
+
+    try {
+      const locationResult = await getUserLocation();
+      if (locationResult.detected) {
+        detectedCountry = locationResult.location.country;
+        detectedCountryCode = locationResult.location.countryCode;
+      }
+    } catch (error) {
+      console.warn('Failed to detect location for playback tracking:', error);
+    }
+
+    if (session?.user) {
+      if (isVideo || isClip) {
+        const contentType = isClip ? 'clip' : 'video';
+
+        const { data: validationResult, error: validationError } = await supabase.rpc(
+          'increment_clip_play_count_validated',
+          {
+            p_content_id: contentId,
+            p_user_id: session.user.id,
+            p_duration: Math.floor(durationListened),
+            p_content_type: contentType,
+            p_ip_address: null,
+            p_user_agent: userAgent
+          }
+        ) as { data: PlaybackValidationResult | null; error: any };
+
+        if (validationError) {
+          console.error('Error validating video/clip play:', validationError);
+          return;
+        }
+
+        if (validationResult?.success) {
+          if (validationResult.own_content) {
+            console.log('Playing own content - not counted in statistics');
+          } else {
+            const { error: historyError } = await supabase
+              .from('video_playback_history')
+              .insert({
+                user_id: session.user.id,
+                content_id: contentId,
+                duration_watched: Math.floor(durationListened),
+                user_agent: userAgent,
+                is_validated: true,
+                validation_score: validationResult.validation?.validation_score || 100.0,
+                detected_country: detectedCountry,
+                detected_country_code: detectedCountryCode
+              });
+
+            if (historyError) {
+              console.error('Error recording video/clip playback history:', historyError);
+            } else {
+              console.log('Successfully recorded validated video/clip play');
+
+              // Track early discovery for Fan Influence Meter (async, don't wait)
+              if (!isClip) {
+                trackEarlyDiscovery(session.user.id, contentId, true).catch(error => {
+                  console.warn('Failed to track early discovery:', error);
+                });
+              }
+
+              // Update listener stats for Top 1% Club (async, don't wait)
+              updateListenerStatsForVideo(session.user.id, contentId).catch(error => {
+                console.warn('Failed to update listener stats:', error);
+              });
+            }
+          }
+        } else {
+          console.warn('Play not counted - flagged as suspicious:', validationResult?.reason);
+          if (validationResult?.validation?.reasons) {
+            console.warn('Fraud reasons:', validationResult.validation.reasons);
+          }
+        }
+      } else {
+        const { data: validationResult, error: validationError } = await supabase.rpc(
+          'increment_play_count_validated',
+          {
+            p_song_id: contentId,
+            p_user_id: session.user.id,
+            p_duration: Math.floor(durationListened),
+            p_ip_address: null,
+            p_user_agent: userAgent
+          }
+        ) as { data: PlaybackValidationResult | null; error: any };
+
+        if (validationError) {
+          console.error('Error validating song play:', validationError);
+          return;
+        }
+
+        if (validationResult?.success) {
+          if (validationResult.own_content) {
+            console.log('Playing own content - not counted in statistics');
+          } else {
+            const { error: historyError } = await supabase
+              .from('listening_history')
+              .insert({
+                user_id: session.user.id,
+                song_id: contentId,
+                duration_listened: Math.floor(durationListened),
+                user_agent: userAgent,
+                is_validated: true,
+                validation_score: validationResult.validation?.validation_score || 100.0,
+                detected_country: detectedCountry,
+                detected_country_code: detectedCountryCode
+              });
+
+            if (historyError) {
+              console.error('Error recording song listening history:', historyError);
+            } else {
+              console.log('Successfully recorded validated song play');
+
+              // Track early discovery for Fan Influence Meter (async, don't wait)
+              trackEarlyDiscovery(session.user.id, contentId, false).catch(error => {
+                console.warn('Failed to track early discovery:', error);
+              });
+
+              // Update mood preference based on song's mood analysis
+              updateMoodPreferenceForSong(session.user.id, contentId).catch(error => {
+                console.warn('Failed to update mood preference:', error);
+              });
+
+              // Update listener stats for Top 1% Club (async, don't wait)
+              updateListenerStatsForSong(session.user.id, contentId).catch(error => {
+                console.warn('Failed to update listener stats:', error);
+              });
+            }
+          }
+        } else {
+          console.warn('Play not counted - flagged as suspicious:', validationResult?.reason);
+          if (validationResult?.validation?.reasons) {
+            console.warn('Fraud reasons:', validationResult.validation.reasons);
+          }
+        }
+      }
+    } else {
+      if (isVideo || isClip) {
+        const { data: result, error: updateError } = await supabase.rpc(
+          'increment_clip_play_count_validated',
+          {
+            p_content_id: contentId,
+            p_user_id: null,
+            p_duration: Math.floor(durationListened),
+            p_content_type: isClip ? 'clip' : 'video',
+            p_ip_address: null,
+            p_user_agent: userAgent
+          }
+        );
+
+        if (updateError) {
+          console.error('Error incrementing video/clip play count:', updateError);
+        } else if (result?.success) {
+          console.log('Successfully incremented video/clip play count (anonymous)');
+        }
+      } else {
+        const { data: result, error: updateError } = await supabase.rpc(
+          'increment_play_count_validated',
+          {
+            p_song_id: contentId,
+            p_user_id: null,
+            p_duration: Math.floor(durationListened),
+            p_ip_address: null,
+            p_user_agent: userAgent
+          }
+        );
+
+        if (updateError) {
+          console.error('Error incrementing song play count:', updateError);
+        } else if (result?.success) {
+          console.log('Successfully incremented song play count (anonymous)');
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error in recordPlayback:', error);
+  }
+};
+
+/**
+ * Update user mood preference based on song played
+ */
+async function updateMoodPreferenceForSong(userId: string, songId: string): Promise<void> {
+  try {
+    // Get mood analysis for this song
+    const { data: analysis, error: analysisError } = await supabase
+      .from('song_mood_analysis')
+      .select('primary_mood')
+      .eq('song_id', songId)
+      .maybeSingle();
+
+    if (analysisError || !analysis || !analysis.primary_mood) {
+      return;
+    }
+
+    // Get mood category ID
+    const { data: category, error: categoryError } = await supabase
+      .from('mood_categories')
+      .select('id')
+      .eq('name', analysis.primary_mood)
+      .maybeSingle();
+
+    if (categoryError || !category) {
+      return;
+    }
+
+    // Update user preference
+    await updateUserMoodPreference(userId, category.id, 1);
+  } catch (error) {
+    console.error('Error updating mood preference:', error);
+  }
+}
+
+/**
+ * Update listener stats for Top 1% Club when song is played
+ */
+async function updateListenerStatsForSong(userId: string, songId: string): Promise<void> {
+  try {
+    // Get the artist ID for this song
+    const { data: song, error: songError } = await supabase
+      .from('songs')
+      .select('artist_id')
+      .eq('id', songId)
+      .maybeSingle();
+
+    if (songError || !song?.artist_id) {
+      return;
+    }
+
+    // Update listener stats
+    const { error: statsError } = await supabase.rpc('update_listener_stats', {
+      p_user_id: userId,
+      p_artist_id: song.artist_id,
+      p_plays_increment: 1,
+      p_treats_increment: 0
+    });
+
+    if (statsError) {
+      console.error('Error updating listener stats:', statsError);
+    }
+  } catch (error) {
+    console.error('Error in updateListenerStatsForSong:', error);
+  }
+}
+
+/**
+ * Update listener stats for Top 1% Club when video is played
+ */
+async function updateListenerStatsForVideo(userId: string, videoId: string): Promise<void> {
+  try {
+    // Get the artist ID for this video (user_id from content_uploads)
+    const { data: video, error: videoError } = await supabase
+      .from('content_uploads')
+      .select('user_id')
+      .eq('id', videoId)
+      .eq('content_type', 'video')
+      .maybeSingle();
+
+    if (videoError || !video?.user_id) {
+      return;
+    }
+
+    // Get the artist profile ID for this user
+    const { data: artist, error: artistError } = await supabase
+      .from('artist_profiles')
+      .select('id')
+      .eq('user_id', video.user_id)
+      .maybeSingle();
+
+    if (artistError || !artist?.id) {
+      return;
+    }
+
+    // Update listener stats
+    const { error: statsError } = await supabase.rpc('update_listener_stats', {
+      p_user_id: userId,
+      p_artist_id: artist.id,
+      p_plays_increment: 1,
+      p_treats_increment: 0
+    });
+
+    if (statsError) {
+      console.error('Error updating listener stats:', statsError);
+    }
+  } catch (error) {
+    console.error('Error in updateListenerStatsForVideo:', error);
+  }
+}
+
+/**
+ * Track early discovery for Fan Influence Meter
+ * Tracks when user discovers content with <50 plays
+ */
+async function trackEarlyDiscovery(userId: string, contentId: string, isVideo: boolean): Promise<void> {
+  try {
+    const { error } = await supabase.rpc('track_early_discovery', {
+      p_user_id: userId,
+      p_song_id: isVideo ? null : contentId,
+      p_video_id: isVideo ? contentId : null
+    });
+
+    if (error) {
+      console.error('Error tracking early discovery:', error);
+    }
+  } catch (error) {
+    console.error('Error in trackEarlyDiscovery:', error);
+  }
+}

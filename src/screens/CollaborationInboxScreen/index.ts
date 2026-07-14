@@ -1,0 +1,1 @@
+export { CollaborationInboxScreen } from './CollaborationInboxScreen';

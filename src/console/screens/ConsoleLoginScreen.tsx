@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Building2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getMyOrganizations } from '../../lib/orgAccess';
+import { almcRoutes } from '../../lib/almcRoutes';
 import { LoadingLogo } from '../../components/LoadingLogo';
 
 export function ConsoleLoginScreen(): JSX.Element {
@@ -35,15 +36,15 @@ export function ConsoleLoginScreen(): JSX.Element {
   };
 
   const routeAfterLogin = async () => {
-    if (redirect && redirect.startsWith('/console')) {
+    if (redirect && (redirect.startsWith('/console') || redirect.startsWith('/login') || redirect === almcRoutes.home)) {
       navigate(redirect, { replace: true });
       return;
     }
     const organizations = await getMyOrganizations();
     if (organizations.length === 0) {
-      navigate('/console/onboarding', { replace: true });
+      navigate(almcRoutes.onboarding, { replace: true });
     } else {
-      navigate('/console', { replace: true });
+      navigate(almcRoutes.home, { replace: true });
     }
   };
 

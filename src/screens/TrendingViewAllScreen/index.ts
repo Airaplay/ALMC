@@ -1,0 +1,1 @@
+export { TrendingViewAllScreen } from './TrendingViewAllScreen';;
