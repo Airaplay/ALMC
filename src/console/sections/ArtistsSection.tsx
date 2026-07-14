@@ -23,6 +23,7 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(initialShowInvite ?? false);
+  const [verifyEmail, setVerifyEmail] = useState<string | undefined>();
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
 
   const loadArtists = useCallback(async () => {
@@ -105,7 +106,10 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
         {hasPermission('artists.invite') && (
           <button
             type="button"
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {
+              setVerifyEmail(undefined);
+              setShowAddModal(true);
+            }}
             className="inline-flex items-center gap-2 rounded-xl bg-[#309605] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#3ba208]"
           >
             <UserPlus className="h-4 w-4" />
@@ -139,7 +143,10 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
           {hasPermission('artists.invite') && (
             <button
               type="button"
-              onClick={() => setShowAddModal(true)}
+              onClick={() => {
+              setVerifyEmail(undefined);
+              setShowAddModal(true);
+            }}
               className="mt-4 text-sm font-medium text-[#3ba208] hover:underline"
             >
               Add your first artist
@@ -196,20 +203,25 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
                     )}
                     {artist.is_pending_invitation && (
                       <p className="mt-1 text-xs text-amber-400/90">
-                        Waiting for artist to accept
-                        {artist.invitation_code ? (
-                          <>
-                            {' '}
-                            · Code:{' '}
-                            <span className="font-mono tracking-wider text-amber-300">{artist.invitation_code}</span>
-                          </>
-                        ) : null}
+                        Awaiting verification — enter the code from the artist
                       </p>
                     )}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {artist.is_pending_invitation && hasPermission('artists.invite') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setVerifyEmail(artist.email);
+                        setShowAddModal(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#309605]/40 bg-[#309605]/10 px-3 py-2 text-xs text-[#3ba208] hover:bg-[#309605]/20"
+                    >
+                      Enter code
+                    </button>
+                  )}
                   {artist.link_status === 'active' && artist.artist_profile_id && hasPermission('content.upload') && (
                     <button
                       type="button"
@@ -276,8 +288,13 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
         <AddArtistModal
           organizationId={organization.id}
           open={showAddModal}
-          onClose={() => setShowAddModal(false)}
+          onClose={() => {
+            setShowAddModal(false);
+            setVerifyEmail(undefined);
+          }}
           onSuccess={loadArtists}
+          initialEmail={verifyEmail}
+          initialStep={verifyEmail ? 'verify' : 'details'}
         />
       )}
     </div>

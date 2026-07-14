@@ -56,7 +56,6 @@ export interface OrgArtistItem {
   is_pending_invitation?: boolean;
   invitation_id?: string | null;
   invitation_type?: 'link_existing' | 'create_new' | null;
-  invitation_code?: string | null;
   artist_profile_id: string | null;
   stage_name: string;
   profile_photo_url: string | null;
@@ -210,7 +209,7 @@ export async function inviteArtistToOrganization(
   email: string,
   invitationType: 'link_existing' | 'create_new' = 'link_existing',
   artistMetadata: Record<string, unknown> = {}
-): Promise<{ invitation_id: string; invitation_code: string; invitation_type: string; email_sent?: boolean }> {
+): Promise<{ invitation_id: string; invitation_type: string; email_sent?: boolean }> {
   const { data, error } = await supabase.rpc('invite_artist_to_organization', {
     p_org_id: orgId,
     p_email: email,
@@ -221,17 +220,34 @@ export async function inviteArtistToOrganization(
   if (!data || data.success === false) {
     throw new Error((data?.message as string) || 'Failed to send invitation');
   }
-  const invitationCode =
-    (data.invitation_code as string) ||
-    formatInvitationCodeInput((data.token as string) || '');
-  if (!data.invitation_id || !invitationCode) {
+  if (!data.invitation_id) {
     throw new Error('Invitation was not created. Please try again.');
   }
   return {
     invitation_id: data.invitation_id as string,
-    invitation_code: invitationCode,
     invitation_type: (data.invitation_type as string) ?? invitationType,
     email_sent: data.email_sent as boolean | undefined,
+  };
+}
+
+export async function confirmArtistOrganizationInvitation(
+  orgId: string,
+  email: string,
+  code: string
+): Promise<{ artist_profile_id: string; invitation_id: string }> {
+  const normalized = normalizeInvitationCode(code);
+  const { data, error } = await supabase.rpc('confirm_artist_organization_invitation', {
+    p_org_id: orgId,
+    p_email: email.trim(),
+    p_code: normalized || code.trim(),
+  });
+  if (error) throw new Error(rpcErrorMessage(error, 'Verification failed'));
+  if (!data?.success) {
+    throw new Error((data?.message as string) || 'Verification failed');
+  }
+  return {
+    artist_profile_id: data.artist_profile_id as string,
+    invitation_id: data.invitation_id as string,
   };
 }
 

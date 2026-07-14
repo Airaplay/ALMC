@@ -1,21 +1,27 @@
 import { useEffect, useState } from 'react';
-import { X, Link2, UserPlus, Copy, Check, Loader2, AlertCircle, Mail } from 'lucide-react';
+import { X, Link2, UserPlus, Loader2, AlertCircle, Mail, ShieldCheck } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import {
   ArtistInviteCandidate,
+  confirmArtistOrganizationInvitation,
+  formatInvitationCodeInput,
   inviteArtistToOrganization,
   lookupArtistInviteCandidate,
+  normalizeInvitationCode,
 } from '../../lib/orgAccess';
 import { consoleTheme } from '../consoleTheme';
 import { ConsolePrimaryButton, ConsoleSubmitArrow } from './ConsoleFormControls';
 
 type InviteMode = 'link_existing' | 'create_new';
+type Step = 'details' | 'verify';
 
 interface AddArtistModalProps {
   organizationId: string;
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  initialEmail?: string;
+  initialStep?: Step;
 }
 
 export function AddArtistModal({
@@ -23,36 +29,38 @@ export function AddArtistModal({
   open,
   onClose,
   onSuccess,
+  initialEmail,
+  initialStep = 'details',
 }: AddArtistModalProps): JSX.Element | null {
   const [mode, setMode] = useState<InviteMode>('link_existing');
-  const [email, setEmail] = useState('');
+  const [step, setStep] = useState<Step>(initialStep);
+  const [email, setEmail] = useState(initialEmail ?? '');
   const [stageName, setStageName] = useState('');
   const [country, setCountry] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [lookup, setLookup] = useState<ArtistInviteCandidate | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [invitationCode, setInvitationCode] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!open) {
       setMode('link_existing');
-      setEmail('');
+      setStep(initialStep);
+      setEmail(initialEmail ?? '');
       setStageName('');
       setCountry('');
+      setVerificationCode('');
       setLookup(null);
       setError(null);
-      setInvitationCode(null);
       setEmailSent(false);
-      setCopied(false);
     }
-  }, [open]);
+  }, [open, initialEmail, initialStep]);
 
   useEffect(() => {
-    if (!open || !email.trim() || !email.includes('@')) {
-      setLookup(null);
+    if (!open || step !== 'details' || !email.trim() || !email.includes('@')) {
+      if (step === 'details') setLookup(null);
       return;
     }
 
@@ -71,18 +79,11 @@ export function AddArtistModal({
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [email, organizationId, open, mode]);
+  }, [email, organizationId, open, mode, step]);
 
   if (!open) return null;
 
-  const handleCopy = async () => {
-    if (!invitationCode) return;
-    await navigator.clipboard.writeText(invitationCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendInvitation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
 
@@ -91,13 +92,14 @@ export function AddArtistModal({
       return;
     }
 
-    if (lookup?.pending_invitation_id) {
-      setError('An invitation is already pending for this email.');
+    if (lookup?.link_status === 'active') {
+      setError('This artist is already linked to your organization.');
       return;
     }
 
-    if (lookup?.link_status === 'active') {
-      setError('This artist is already linked to your organization.');
+    if (lookup?.pending_invitation_id) {
+      setStep('verify');
+      setError(null);
       return;
     }
 
@@ -105,7 +107,6 @@ export function AddArtistModal({
     setError(null);
     try {
       const invitationType = mode === 'create_new' ? 'create_new' : 'link_existing';
-
       const result = await inviteArtistToOrganization(
         organizationId,
         email.trim(),
@@ -114,28 +115,55 @@ export function AddArtistModal({
           ? { stage_name: stageName.trim(), country: country.trim() || undefined }
           : {}
       );
-
-      setInvitationCode(result.invitation_code);
       setEmailSent(result.email_sent !== false);
-      onSuccess();
+      setStep('verify');
+      setVerificationCode('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send invitation');
+      const message = err instanceof Error ? err.message : 'Failed to send invitation';
+      if (message.includes('already pending')) {
+        setStep('verify');
+        setError(null);
+      } else {
+        setError(message);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleConfirmArtist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || normalizeInvitationCode(verificationCode).length < 8) {
+      setError('Enter the full verification code from the artist.');
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      await confirmArtistOrganizationInvitation(organizationId, email.trim(), verificationCode);
+      onSuccess();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Verification failed');
     } finally {
       setSubmitting(false);
     }
   };
 
   const lookupHint = (() => {
+    if (step !== 'details') return null;
     if (lookupLoading) return 'Checking Airaplay account…';
     if (!lookup) return null;
     if (lookup.link_status === 'active') return 'Already linked to your roster.';
-    if (lookup.link_status === 'pending_invite') return 'Invitation already pending for this artist.';
-    if (lookup.pending_invitation_id) return 'An invitation is already pending for this email.';
+    if (lookup.link_status === 'pending_invite' || lookup.pending_invitation_id) {
+      return 'Invitation pending — enter the verification code from the artist.';
+    }
     if (lookup.has_artist_profile) {
       return `Found artist profile: ${lookup.stage_name ?? lookup.display_name ?? 'Artist'}`;
     }
     if (lookup.has_account) return 'Account exists but has no artist profile yet — use Invite new artist.';
-    return 'No Airaplay account yet — they will receive an invite to sign up and join.';
+    return 'No Airaplay account yet — a verification code will be emailed to them.';
   })();
 
   return (
@@ -148,9 +176,13 @@ export function AddArtistModal({
 
         <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-5">
           <div>
-            <h2 className="text-xl font-bold text-foreground">Add Artist</h2>
+            <h2 className="text-xl font-bold text-foreground">
+              {step === 'verify' ? 'Verify artist' : 'Add Artist'}
+            </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Link an existing Airaplay artist or invite someone new to your roster.
+              {step === 'verify'
+                ? 'Enter the verification code the artist received by email. You will not see the code — only they do.'
+                : 'Link an existing Airaplay artist or invite someone new to your roster.'}
             </p>
           </div>
           <button
@@ -162,75 +194,8 @@ export function AddArtistModal({
           </button>
         </div>
 
-        <div className="px-6 pt-4">
-          <div className="grid grid-cols-2 gap-2 rounded-xl bg-secondary p-1">
-            <button
-              type="button"
-              onClick={() => setMode('link_existing')}
-              className={cn(
-                'flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                mode === 'link_existing'
-                  ? 'bg-card text-[#3ba208] shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <Link2 className="h-4 w-4" />
-              Link existing
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('create_new')}
-              className={cn(
-                'flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                mode === 'create_new'
-                  ? 'bg-card text-[#3ba208] shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <UserPlus className="h-4 w-4" />
-              Invite new artist
-            </button>
-          </div>
-        </div>
-
-        {invitationCode ? (
-          <div className="space-y-4 px-6 py-6">
-            <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
-              <p className="text-sm font-medium text-foreground">Invitation created</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {emailSent
-                  ? `We emailed this code to ${email.trim()}. The artist can also enter it manually after signing in.`
-                  : `Share this code with ${email.trim()}. They must sign in with that email to accept.`}
-              </p>
-              <div className="mt-4 rounded-xl border-2 border-dashed border-[#309605]/50 bg-black/30 px-4 py-5 text-center">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">Invitation code</p>
-                <p className="mt-2 font-mono text-3xl font-bold tracking-[0.25em] text-[#3ba208]">
-                  {invitationCode}
-                </p>
-              </div>
-              {emailSent && (
-                <p className="mt-3 flex items-center gap-2 text-xs text-emerald-400">
-                  <Mail className="h-3.5 w-3.5" />
-                  Invitation email queued for delivery
-                </p>
-              )}
-              <div className="mt-4 flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-secondary py-2.5 text-sm text-foreground hover:bg-muted"
-                >
-                  {copied ? <Check className="h-4 w-4 text-[#3ba208]" /> : <Copy className="h-4 w-4" />}
-                  {copied ? 'Copied' : 'Copy code'}
-                </button>
-                <ConsolePrimaryButton type="button" onClick={onClose} className="flex-1">
-                  Done
-                </ConsolePrimaryButton>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 px-6 py-6">
+        {step === 'verify' ? (
+          <form onSubmit={handleConfirmArtist} className="space-y-4 px-6 py-6">
             {error && (
               <div className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -238,84 +203,191 @@ export function AddArtistModal({
               </div>
             )}
 
-            <div>
-              <label className="mb-1.5 block text-sm text-secondary-foreground">Artist email *</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="artist@email.com"
-                className={cn(consoleTheme.input, 'w-full')}
-              />
-              {lookupHint && (
-                <p
-                  className={cn(
-                    'mt-2 flex items-center gap-2 text-xs',
-                    lookup?.link_status === 'active' || lookup?.pending_invitation_id
-                      ? 'text-amber-400'
-                      : 'text-muted-foreground'
-                  )}
-                >
-                  {lookupLoading && <Loader2 className="h-3 w-3 animate-spin" />}
-                  {lookupHint}
+            <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
+              <p className="text-sm text-foreground">
+                Verification code sent to <strong>{email.trim()}</strong>
+              </p>
+              {emailSent && (
+                <p className="mt-2 flex items-center gap-2 text-xs text-emerald-400">
+                  <Mail className="h-3.5 w-3.5" />
+                  Email queued — ask the artist to share their code with you
                 </p>
               )}
             </div>
 
-            {mode === 'create_new' && (
-              <>
-                <div>
-                  <label className="mb-1.5 block text-sm text-secondary-foreground">Stage name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={stageName}
-                    onChange={(e) => setStageName(e.target.value)}
-                    placeholder="Artist stage name"
-                    className={cn(consoleTheme.input, 'w-full')}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-sm text-secondary-foreground">Country</label>
-                  <input
-                    type="text"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    placeholder="Nigeria"
-                    className={cn(consoleTheme.input, 'w-full')}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  They will sign up on Airaplay, create their artist profile, then enter the invitation code to join your roster.
-                </p>
-              </>
-            )}
-
-            {mode === 'link_existing' && (
-              <p className="text-xs text-muted-foreground">
-                The artist must already have an Airaplay artist profile on this email. They enter the invitation code to grant your organization management access.
+            <div>
+              <label className="mb-1.5 block text-sm text-secondary-foreground">
+                Verification code from artist *
+              </label>
+              <input
+                type="text"
+                inputMode="text"
+                autoComplete="off"
+                autoFocus
+                required
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(formatInvitationCodeInput(e.target.value))}
+                placeholder="Enter code"
+                className={cn(consoleTheme.input, 'w-full text-center font-mono text-lg tracking-[0.15em] uppercase')}
+              />
+              <p className="mt-2 text-xs text-muted-foreground">
+                The code must match exactly what was emailed to the artist. It is not shown here.
               </p>
-            )}
+            </div>
 
             <div className="flex gap-3 pt-2">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => {
+                  setStep('details');
+                  setVerificationCode('');
+                  setError(null);
+                }}
                 className="flex-1 rounded-xl border border-border py-3 text-sm text-secondary-foreground hover:bg-muted"
               >
-                Cancel
+                Back
               </button>
               <ConsolePrimaryButton
                 type="submit"
-                disabled={submitting || lookup?.link_status === 'active' || !!lookup?.pending_invitation_id}
+                disabled={submitting || normalizeInvitationCode(verificationCode).length < 8}
                 loading={submitting}
                 className="flex-1"
               >
-                <ConsoleSubmitArrow label="Send invitation" />
+                <ConsoleSubmitArrow label="Confirm artist" />
               </ConsolePrimaryButton>
             </div>
           </form>
+        ) : (
+          <>
+            <div className="px-6 pt-4">
+              <div className="grid grid-cols-2 gap-2 rounded-xl bg-secondary p-1">
+                <button
+                  type="button"
+                  onClick={() => setMode('link_existing')}
+                  className={cn(
+                    'flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    mode === 'link_existing'
+                      ? 'bg-card text-[#3ba208] shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <Link2 className="h-4 w-4" />
+                  Link existing
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('create_new')}
+                  className={cn(
+                    'flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    mode === 'create_new'
+                      ? 'bg-card text-[#3ba208] shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Invite new artist
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleSendInvitation} className="space-y-4 px-6 py-6">
+              {error && (
+                <div className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              <div>
+                <label className="mb-1.5 block text-sm text-secondary-foreground">Artist email *</label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="artist@email.com"
+                  className={cn(consoleTheme.input, 'w-full')}
+                />
+                {lookupHint && (
+                  <p
+                    className={cn(
+                      'mt-2 flex items-center gap-2 text-xs',
+                      lookup?.link_status === 'active'
+                        ? 'text-amber-400'
+                        : lookup?.pending_invitation_id
+                          ? 'text-amber-400'
+                          : 'text-muted-foreground'
+                    )}
+                  >
+                    {lookupLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+                    {lookupHint}
+                  </p>
+                )}
+              </div>
+
+              {mode === 'create_new' && (
+                <>
+                  <div>
+                    <label className="mb-1.5 block text-sm text-secondary-foreground">Stage name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={stageName}
+                      onChange={(e) => setStageName(e.target.value)}
+                      placeholder="Artist stage name"
+                      className={cn(consoleTheme.input, 'w-full')}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm text-secondary-foreground">Country</label>
+                    <input
+                      type="text"
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      placeholder="Nigeria"
+                      className={cn(consoleTheme.input, 'w-full')}
+                    />
+                  </div>
+                </>
+              )}
+
+              <p className="flex items-start gap-2 text-xs text-muted-foreground">
+                <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#3ba208]" />
+                A verification code is emailed only to the artist. You will enter it on the next step to confirm them.
+              </p>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 rounded-xl border border-border py-3 text-sm text-secondary-foreground hover:bg-muted"
+                >
+                  Cancel
+                </button>
+                {lookup?.pending_invitation_id ? (
+                  <ConsolePrimaryButton
+                    type="button"
+                    onClick={() => {
+                      setStep('verify');
+                      setError(null);
+                    }}
+                    className="flex-1"
+                  >
+                    <ConsoleSubmitArrow label="Enter verification code" />
+                  </ConsolePrimaryButton>
+                ) : (
+                  <ConsolePrimaryButton
+                    type="submit"
+                    disabled={submitting || lookup?.link_status === 'active'}
+                    loading={submitting}
+                    className="flex-1"
+                  >
+                    <ConsoleSubmitArrow label="Send verification code" />
+                  </ConsolePrimaryButton>
+                )}
+              </div>
+            </form>
+          </>
         )}
       </div>
     </div>
