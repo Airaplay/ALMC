@@ -27,7 +27,11 @@ Connect this repo; `vercel.json` sets build and SPA routing. Add Supabase env va
 
 ## Database
 
-Apply `supabase/migrations/20260714140000_almc_organization_console_phase1.sql` to your Supabase project.
+ALMC uses the **same Supabase project** as Airaplay-DB-V2 (shared auth, org tables, and RLS). Apply `supabase/migrations/20260714140000_almc_organization_console_phase1.sql` if not already applied.
+
+## Design
+
+UI follows the Airaplay web design system (AuthModal, sidebar tokens, brand green `#309605` / `#3ba208`).
 
 ## Sync from Airaplay-DB-V2
 

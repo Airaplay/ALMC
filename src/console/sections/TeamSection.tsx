@@ -58,8 +58,8 @@ export function TeamSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-white">Team</h2>
-        <p className="mt-1 text-sm text-white/50">Manage who can access this organization workspace</p>
+        <h2 className="text-2xl font-semibold text-foreground">Team</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Manage who can access this organization workspace</p>
       </div>
 
       {error && (
@@ -67,8 +67,8 @@ export function TeamSection() {
       )}
 
       {hasPermission('team.invite') && (
-        <div className="rounded-2xl border border-white/10 bg-[#141416] p-5">
-          <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
             <UserPlus className="h-5 w-5 text-[#3ba208]" />
             Invite team member
           </h3>
@@ -79,12 +79,12 @@ export function TeamSection() {
               placeholder="colleague@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:border-[#309605]/50 focus:outline-none"
+              className="rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground focus:border-[#309605]/50 focus:outline-none"
             />
             <select
               value={roleKey}
               onChange={(e) => setRoleKey(e.target.value)}
-              className="rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:outline-none"
+              className="rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground focus:outline-none"
             >
               {INVITE_ROLES.map((r) => (
                 <option key={r.key} value={r.key}>
@@ -95,7 +95,7 @@ export function TeamSection() {
             <button
               type="submit"
               disabled={inviting}
-              className="rounded-xl bg-[#309605] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#3ba208] disabled:opacity-50"
+              className="rounded-xl bg-[#309605] px-5 py-2.5 text-sm font-medium text-foreground hover:bg-[#3ba208] disabled:opacity-50"
             >
               Invite
             </button>
@@ -114,9 +114,9 @@ export function TeamSection() {
           <LoadingLogo />
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-white/10">
+        <div className="overflow-hidden rounded-2xl border border-border">
           <table className="w-full text-left text-sm">
-            <thead className="bg-[#141416] text-white/50">
+            <thead className="bg-card text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 font-medium">Member</th>
                 <th className="px-4 py-3 font-medium">Role</th>
@@ -124,7 +124,7 @@ export function TeamSection() {
                 <th className="px-4 py-3 font-medium">Joined</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10 bg-[#0f0f11]">
+            <tbody className="divide-y divide-white/10 bg-secondary">
               {members.map((member) => (
                 <tr key={member.id}>
                   <td className="px-4 py-3">
@@ -132,19 +132,19 @@ export function TeamSection() {
                       {member.avatar_url ? (
                         <img src={member.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
                       ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs text-white">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs text-foreground">
                           {(member.display_name ?? member.email).charAt(0).toUpperCase()}
                         </div>
                       )}
                       <div>
-                        <p className="font-medium text-white">{member.display_name ?? member.email}</p>
-                        <p className="text-xs text-white/40">{member.email}</p>
+                        <p className="font-medium text-foreground">{member.display_name ?? member.email}</p>
+                        <p className="text-xs text-muted-foreground/80">{member.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-white/80">{member.role_name}</td>
-                  <td className="px-4 py-3 capitalize text-white/60">{member.status}</td>
-                  <td className="px-4 py-3 text-white/50">
+                  <td className="px-4 py-3 text-secondary-foreground">{member.role_name}</td>
+                  <td className="px-4 py-3 capitalize text-muted-foreground">{member.status}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
                     {member.joined_at ? new Date(member.joined_at).toLocaleDateString() : '—'}
                   </td>
                 </tr>

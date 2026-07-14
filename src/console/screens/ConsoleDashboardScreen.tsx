@@ -63,7 +63,7 @@ function ConsoleDashboardContent(): JSX.Element {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b]">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingLogo />
       </div>
     );
@@ -71,7 +71,7 @@ function ConsoleDashboardContent(): JSX.Element {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b] p-4">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-red-300">{error}</div>
       </div>
     );
@@ -80,7 +80,7 @@ function ConsoleDashboardContent(): JSX.Element {
   if (organizations.length === 0) {
     navigate(almcRoutes.onboarding, { replace: true });
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b]">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingLogo />
       </div>
     );
@@ -89,26 +89,26 @@ function ConsoleDashboardContent(): JSX.Element {
   const renderSection = () => {
     switch (activeSection) {
       case 'dashboard':
-        return hasPermission('analytics.view') ? <DashboardSection /> : <p className="text-white/50">Access denied</p>;
+        return hasPermission('analytics.view') ? <DashboardSection /> : <p className="text-muted-foreground">Access denied</p>;
       case 'artists':
         return hasPermission('artists.view') ? (
           <ArtistsSection onUploadArtist={handleUploadArtist} initialShowInvite={showInviteArtist} />
         ) : (
-          <p className="text-white/50">Access denied</p>
+          <p className="text-muted-foreground">Access denied</p>
         );
       case 'content':
         return <ContentSection />;
       case 'team':
-        return hasPermission('team.manage') ? <TeamSection /> : <p className="text-white/50">Access denied</p>;
+        return hasPermission('team.manage') ? <TeamSection /> : <p className="text-muted-foreground">Access denied</p>;
       case 'settings':
-        return hasPermission('org.settings') ? <SettingsSection /> : <p className="text-white/50">Access denied</p>;
+        return hasPermission('org.settings') ? <SettingsSection /> : <p className="text-muted-foreground">Access denied</p>;
       default:
         return null;
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-[#0a0a0b] text-white">
+    <div className="flex min-h-screen bg-background text-foreground">
       <ConsoleSidebar
         activeSection={activeSection}
         onSectionChange={(s) => {
@@ -122,21 +122,21 @@ function ConsoleDashboardContent(): JSX.Element {
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="hidden items-center justify-between border-b border-white/10 px-6 py-4 lg:flex">
-          <h1 className="text-lg font-semibold">{SECTION_TITLES[activeSection]}</h1>
+        <header className="hidden items-center justify-between border-b border-border px-6 py-4 lg:flex">
+          <h1 className="text-lg font-semibold text-foreground">{SECTION_TITLES[activeSection]}</h1>
           <div className="flex items-center gap-3">
             {organizations.length > 1 && (
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setShowOrgMenu((v) => !v)}
-                  className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm hover:bg-white/5"
+                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm hover:bg-muted"
                 >
                   {organization?.name}
-                  <ChevronDown className="h-4 w-4 text-white/50" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
                 {showOrgMenu && (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-white/10 bg-[#141416] py-1 shadow-xl">
+                  <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-border bg-card py-1 shadow-xl">
                     {organizations.map((org) => (
                       <button
                         key={org.id}
@@ -145,8 +145,8 @@ function ConsoleDashboardContent(): JSX.Element {
                           setOrganizationId(org.id);
                           setShowOrgMenu(false);
                         }}
-                        className={`block w-full px-4 py-2 text-left text-sm hover:bg-white/5 ${
-                          org.id === organization?.id ? 'text-[#3ba208]' : 'text-white/80'
+                        className={`block w-full px-4 py-2 text-left text-sm hover:bg-muted ${
+                          org.id === organization?.id ? 'text-[#3ba208]' : 'text-secondary-foreground'
                         }`}
                       >
                         {org.name}
@@ -165,7 +165,7 @@ function ConsoleDashboardContent(): JSX.Element {
             <button
               type="button"
               onClick={handleLogout}
-              className="rounded-xl p-2 text-white/50 hover:bg-white/5 hover:text-white"
+              className="rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
               title="Sign out"
             >
               <LogOut className="h-5 w-5" />
@@ -178,14 +178,14 @@ function ConsoleDashboardContent(): JSX.Element {
           title={SECTION_TITLES[activeSection]}
         />
 
-        <div className="flex items-center justify-end gap-2 border-b border-white/10 px-4 py-2 lg:hidden">
+        <div className="flex items-center justify-end gap-2 border-b border-border px-4 py-2 lg:hidden">
           <ArtistSwitcher
             onAddArtist={() => {
               setActiveSection('artists');
               setShowInviteArtist(true);
             }}
           />
-          <button type="button" onClick={handleLogout} className="rounded-lg p-2 text-white/50">
+          <button type="button" onClick={handleLogout} className="rounded-lg p-2 text-muted-foreground hover:text-foreground">
             <LogOut className="h-5 w-5" />
           </button>
         </div>
@@ -221,7 +221,7 @@ export function ConsoleDashboardScreen(): JSX.Element {
 
   if (!authChecked) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b]">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingLogo />
       </div>
     );

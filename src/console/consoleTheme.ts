@@ -1,21 +1,24 @@
-/** Airaplay brand greens — match consumer app and AuthModal. */
+/**
+ * ALMC design tokens — aligned with Airaplay-DB-V2 web theme (AuthModal, LeftSidebar).
+ * Uses the same Supabase project for auth, organizations, and delegated content RLS.
+ */
 export const AIRAPLAY_GREEN = '#309605';
 export const AIRAPLAY_GREEN_LIGHT = '#3ba208';
 
 export const consoleTheme = {
+  page: "min-h-screen bg-background text-foreground font-['Inter',sans-serif]",
+  card: 'rounded-2xl border border-border bg-card text-card-foreground',
+  cardInner: 'rounded-xl border border-border bg-secondary',
+  muted: 'text-muted-foreground',
+  link: 'font-semibold text-[#3ba208] transition-colors hover:text-[#3ba208]/90',
   btnPrimary:
-    'bg-[#309605] hover:bg-[#3ba208] text-white disabled:opacity-50',
-  btnPrimaryGradient:
-    'bg-gradient-to-r from-[#309605] to-[#3ba208] hover:from-[#3ba208] hover:to-[#309605] text-white disabled:opacity-50',
-  link: 'text-[#3ba208] hover:underline',
-  textAccent: 'text-[#3ba208]',
-  icon: 'text-[#3ba208]',
-  iconBadge: 'bg-[#309605]/15',
-  activeItem: 'bg-[#309605]/15 text-[#3ba208]',
-  selectedBorder: 'border-[#309605] bg-[#309605]/10',
-  hoverBorder: 'hover:border-[#309605]/40',
-  cardHover: 'hover:border-[#309605]/30',
-  inputFocus: 'focus:border-[#309605]/50 focus:outline-none',
-  banner: 'border-[#309605]/30 bg-[#309605]/10',
-  checkbox: 'text-[#309605] focus:ring-[#309605]/50',
+    'h-12 rounded-xl bg-[#3ba208] text-[13px] font-bold tracking-wide text-white hover:bg-[#3ba208]/90 active:scale-[0.98] disabled:opacity-40',
+  btnSecondary: 'rounded-xl border border-border bg-secondary text-secondary-foreground hover:bg-muted',
+  input:
+    'rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30',
+  activeNav: 'bg-sidebar-accent font-semibold text-sidebar-accent-foreground',
+  inactiveNav:
+    'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
+  iconAccent: 'text-[#3ba208]',
+  banner: 'rounded-xl border border-primary/30 bg-primary/10',
 } as const;

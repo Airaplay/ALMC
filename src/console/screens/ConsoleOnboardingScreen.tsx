@@ -6,6 +6,13 @@ import { almcRoutes } from '../../lib/almcRoutes';
 import { supabase } from '../../lib/supabase';
 import { performCompleteLogout } from '../../lib/logoutService';
 import { LoadingLogo } from '../../components/LoadingLogo';
+import { ConsoleAuthShell } from '../components/ConsoleAuthShell';
+import {
+  ConsoleErrorAlert,
+  ConsolePrimaryButton,
+  ConsoleSubmitArrow,
+} from '../components/ConsoleFormControls';
+import { consoleTheme } from '../consoleTheme';
 
 const ORG_TYPES: Array<{ id: OrgType; label: string; description: string; icon: typeof Music2 }> = [
   { id: 'label', label: 'Record Label', description: 'Manage signed artists and releases', icon: Music2 },
@@ -51,7 +58,7 @@ export function ConsoleOnboardingScreen(): JSX.Element {
 
   if (!authChecked) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b]">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingLogo />
       </div>
     );
@@ -101,168 +108,150 @@ export function ConsoleOnboardingScreen(): JSX.Element {
     }
   };
 
+  const signOutButton = (
+    <button
+      type="button"
+      onClick={handleSignOut}
+      disabled={isSigningOut}
+      title="Sign out"
+      aria-label="Sign out"
+      className="absolute right-4 top-4 rounded-full p-2.5 text-white/50 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50 sm:right-6 sm:top-6"
+    >
+      <LogOut className="h-5 w-5" />
+    </button>
+  );
+
   return (
-    <div className="relative min-h-screen bg-[#0a0a0b] px-4 py-10">
-      <button
-        type="button"
-        onClick={handleSignOut}
-        disabled={isSigningOut}
-        title="Sign out"
-        aria-label="Sign out"
-        className="absolute right-4 top-4 rounded-xl border border-white/10 p-2.5 text-white/50 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50 sm:right-6 sm:top-6"
-      >
-        <LogOut className="h-5 w-5" />
-      </button>
-
-      <div className="mx-auto max-w-2xl">
-        <div className="mb-8 text-center">
-          <img
-            src="/official_airaplay_logo.png"
-            alt="Airaplay"
-            className="mx-auto mb-4 h-8 object-contain"
-          />
-          <h1 className="text-2xl font-bold text-white">Set up your organization</h1>
-          <p className="mt-2 text-sm text-white/50">
-            Step {step} of 2
-            {signedInEmail ? (
-              <>
-                {' · '}
-                <span className="text-white/40">{signedInEmail}</span>
-              </>
-            ) : null}
-          </p>
-        </div>
-
-        {error && (
-          <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-            {error}
-          </div>
-        )}
-
-        {step === 1 ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {ORG_TYPES.map(({ id, label, description, icon: Icon }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => {
-                  setOrgType(id);
-                  setStep(2);
-                }}
-                className={`rounded-2xl border p-5 text-left transition hover:border-[#309605]/40 ${
-                  orgType === id ? 'border-[#309605] bg-[#309605]/10' : 'border-white/10 bg-[#141416]'
-                }`}
-              >
-                <Icon className="mb-3 h-6 w-6 text-[#3ba208]" />
-                <p className="font-semibold text-white">{label}</p>
-                <p className="mt-1 text-sm text-white/50">{description}</p>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-white/10 bg-[#141416] p-6">
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="text-sm text-white/50 hover:text-white"
-            >
-              ← Change organization type
-            </button>
-
-            <div>
-              <label className="mb-1.5 block text-sm text-white/70">Company name *</label>
-              <input
-                required
-                value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                className="w-full rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:border-[#309605]/50 focus:outline-none"
-              />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-sm text-white/70">Company email *</label>
-                <input
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                  className="w-full rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm text-white/70">Phone</label>
-                <input
-                  value={form.phone}
-                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                  className="w-full rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm text-white/70">Country *</label>
-              <input
-                required
-                value={form.country}
-                onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
-                className="w-full rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:outline-none"
-                placeholder="Nigeria"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm text-white/70">Website</label>
-              <input
-                type="url"
-                value={form.website}
-                onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
-                className="w-full rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:outline-none"
-                placeholder="https://"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm text-white/70">Business registration number</label>
-              <input
-                value={form.businessRegistrationNumber}
-                onChange={(e) => setForm((f) => ({ ...f, businessRegistrationNumber: e.target.value }))}
-                className="w-full rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm text-white/70">Company description</label>
-              <textarea
-                rows={3}
-                value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                className="w-full rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:outline-none resize-none"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full rounded-xl bg-[#309605] py-3 text-sm font-semibold text-white hover:bg-[#3ba208] disabled:opacity-50"
-            >
-              {isSubmitting ? 'Creating workspace…' : 'Create organization'}
-            </button>
-          </form>
-        )}
-
+    <ConsoleAuthShell
+      maxWidth="2xl"
+      title="Set up your organization"
+      subtitle={`Step ${step} of 2${signedInEmail ? ` · ${signedInEmail}` : ''}`}
+      headerAction={signOutButton}
+      footer={
         <p className="mt-6 text-center">
           <button
             type="button"
             onClick={handleSignOut}
             disabled={isSigningOut}
-            className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white disabled:opacity-50"
+            className="inline-flex items-center gap-2 text-[13px] text-white/50 hover:text-white disabled:opacity-50"
           >
             <LogOut className="h-4 w-4" />
             {isSigningOut ? 'Signing out…' : 'Sign out'}
           </button>
         </p>
-      </div>
-    </div>
+      }
+    >
+      {error ? <ConsoleErrorAlert message={error} /> : null}
+
+      {step === 1 ? (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {ORG_TYPES.map(({ id, label, description, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => {
+                setOrgType(id);
+                setStep(2);
+              }}
+              className={`rounded-2xl border p-5 text-left transition hover:border-primary/40 ${
+                orgType === id
+                  ? 'border-primary bg-primary/10'
+                  : 'border-border bg-secondary/50'
+              }`}
+            >
+              <Icon className={`mb-3 h-6 w-6 ${consoleTheme.iconAccent}`} />
+              <p className="font-semibold text-foreground">{label}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            className="text-[13px] text-muted-foreground hover:text-foreground"
+          >
+            ← Change organization type
+          </button>
+
+          <div>
+            <label className="mb-1.5 block text-sm text-secondary-foreground">Company name *</label>
+            <input
+              required
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              className={consoleTheme.input + ' w-full'}
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm text-secondary-foreground">Company email *</label>
+              <input
+                type="email"
+                required
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                className={consoleTheme.input + ' w-full'}
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm text-secondary-foreground">Phone</label>
+              <input
+                value={form.phone}
+                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                className={consoleTheme.input + ' w-full'}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm text-secondary-foreground">Country *</label>
+            <input
+              required
+              value={form.country}
+              onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
+              className={consoleTheme.input + ' w-full'}
+              placeholder="Nigeria"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm text-secondary-foreground">Website</label>
+            <input
+              type="url"
+              value={form.website}
+              onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
+              className={consoleTheme.input + ' w-full'}
+              placeholder="https://"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm text-secondary-foreground">Business registration number</label>
+            <input
+              value={form.businessRegistrationNumber}
+              onChange={(e) => setForm((f) => ({ ...f, businessRegistrationNumber: e.target.value }))}
+              className={consoleTheme.input + ' w-full'}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm text-secondary-foreground">Company description</label>
+            <textarea
+              rows={3}
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              className={consoleTheme.input + ' w-full resize-none'}
+            />
+          </div>
+
+          <ConsolePrimaryButton type="submit" disabled={isSubmitting} loading={isSubmitting}>
+            <ConsoleSubmitArrow label={isSubmitting ? 'Creating workspace…' : 'Create organization'} />
+          </ConsolePrimaryButton>
+        </form>
+      )}
+    </ConsoleAuthShell>
   );
 }

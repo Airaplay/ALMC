@@ -1,12 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, LogOut, User } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getMyOrganizations } from '../../lib/orgAccess';
 import { almcRoutes } from '../../lib/almcRoutes';
 import { performCompleteLogout } from '../../lib/logoutService';
 import { toUserFacingAuthError } from '../../lib/criticalErrorMessages';
 import { LoadingLogo } from '../../components/LoadingLogo';
+import { ConsoleAuthShell } from '../components/ConsoleAuthShell';
+import {
+  ConsoleErrorAlert,
+  ConsoleFloatingInput,
+  ConsolePasswordToggle,
+  ConsolePrimaryButton,
+  ConsoleSubmitArrow,
+} from '../components/ConsoleFormControls';
+import { consoleTheme } from '../consoleTheme';
 
 export function ConsoleLoginScreen(): JSX.Element {
   const navigate = useNavigate();
@@ -122,9 +131,7 @@ export function ConsoleLoginScreen(): JSX.Element {
           email: email.trim(),
           password,
           options: {
-            data: {
-              display_name: displayName.trim(),
-            },
+            data: { display_name: displayName.trim() },
             emailRedirectTo: `${authRedirectBase}/auth/callback`,
           },
         });
@@ -215,93 +222,114 @@ export function ConsoleLoginScreen(): JSX.Element {
     }
   };
 
+  const headline = pendingVerification
+    ? 'Verify your email'
+    : isSignUp
+      ? 'Create account'
+      : 'Label & Management Console';
+  const subline = pendingVerification
+    ? `Enter the 6-digit code sent to ${email}`
+    : isSignUp
+      ? 'Join Airaplay — manage artists and releases'
+      : 'Sign in with your Airaplay account';
+
   if (isCheckingAuth) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b]">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingLogo />
       </div>
     );
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[#0a0a0b] p-4">
-      {signedInEmail && (
-        <button
-          type="button"
-          onClick={handleSignOut}
-          disabled={isSigningOut}
-          title="Sign out"
-          aria-label="Sign out"
-          className="absolute right-4 top-4 rounded-xl border border-white/10 p-2.5 text-white/50 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50 sm:right-6 sm:top-6"
-        >
-          <LogOut className="h-5 w-5" />
-        </button>
-      )}
-
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <img
-            src="/official_airaplay_logo.png"
-            alt="Airaplay"
-            className="mx-auto mb-4 h-8 object-contain"
-          />
-          <h1 className="text-2xl font-bold text-white">Airaplay Console</h1>
-          <p className="mt-2 text-sm text-white/50">Label & Management Console for organizations</p>
-        </div>
-
-        {signedInEmail && !pendingVerification && (
-          <div className="mb-4 rounded-2xl border border-[#309605]/30 bg-[#309605]/10 p-4">
-            <p className="text-sm text-white/80">
-              Signed in as <span className="font-medium text-white">{signedInEmail}</span>
-            </p>
+    <ConsoleAuthShell
+        title={headline}
+        subtitle={subline}
+        headerAction={
+          signedInEmail ? (
             <button
               type="button"
-              onClick={routeAfterLogin}
-              className="mt-3 w-full rounded-xl bg-[#309605] py-2.5 text-sm font-semibold text-white hover:bg-[#3ba208]"
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+              title="Sign out"
+              aria-label="Sign out"
+              className="absolute right-4 top-4 rounded-full p-2.5 text-white/50 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50 sm:right-6 sm:top-6"
             >
-              Continue to Console
+              <LogOut className="h-5 w-5" />
             </button>
+          ) : undefined
+        }
+        footer={
+          <div className="mt-6 space-y-3 text-center text-[13px] text-white/50">
+            {!pendingVerification && (
+              <p>
+                {isSignUp ? 'Already have an account?' : 'New to Airaplay?'}{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSignUp((value) => !value);
+                    setError(null);
+                    setPendingVerification(false);
+                  }}
+                  className={consoleTheme.link}
+                >
+                  {isSignUp ? 'Sign in' : 'Create account'}
+                </button>
+              </p>
+            )}
+            <p>
+              <a href={almcRoutes.consumerHome()} className={consoleTheme.link}>
+                Back to Airaplay
+              </a>
+            </p>
+          </div>
+        }
+      >
+        {signedInEmail && !pendingVerification && (
+          <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
+            <p className="text-[13px] text-white/80">
+              Signed in as <span className="font-medium text-white">{signedInEmail}</span>
+            </p>
+            <ConsolePrimaryButton type="button" onClick={routeAfterLogin} className="mt-3">
+              Continue to Console
+            </ConsolePrimaryButton>
           </div>
         )}
 
         {pendingVerification ? (
-          <form onSubmit={handleVerifyOtp} className="rounded-2xl border border-white/10 bg-[#141416] p-6 space-y-4">
-            <div className="text-center">
-              <h2 className="text-lg font-semibold text-white">Verify your email</h2>
-              <p className="mt-1 text-sm text-white/50">Enter the 6-digit code sent to {email}</p>
+          <form onSubmit={handleVerifyOtp} className="space-y-6">
+            {error ? <ConsoleErrorAlert message={error} /> : null}
+            <div className="flex justify-center gap-1.5 sm:gap-2">
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <input
+                  key={i}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={otpCode[i] || ''}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(-1);
+                    const next = otpCode.split('');
+                    next[i] = val;
+                    setOtpCode(next.join('').slice(0, 6));
+                    setError(null);
+                  }}
+                  className="h-12 w-10 min-w-0 rounded-xl border border-white/20 bg-white/5 text-center text-lg font-bold text-white outline-none transition-all focus:border-[#3ba208] focus:ring-2 focus:ring-[#3ba208]/30 sm:h-12 sm:w-11"
+                />
+              ))}
             </div>
-
-            {error && (
-              <div className="flex items-start gap-2 rounded-xl bg-red-500/10 p-3 text-sm text-red-300">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                {error}
-              </div>
-            )}
-
-            <input
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              className="w-full rounded-xl border border-white/10 bg-[#0f0f11] py-3 text-center text-lg tracking-[0.3em] text-white focus:border-[#309605]/50 focus:outline-none"
-              placeholder="000000"
-            />
-
-            <button
+            <ConsolePrimaryButton
               type="submit"
               disabled={isVerifyingOtp || otpCode.length !== 6}
-              className="w-full rounded-xl bg-[#309605] py-3 text-sm font-semibold text-white hover:bg-[#3ba208] disabled:opacity-50"
+              loading={isVerifyingOtp}
             >
-              {isVerifyingOtp ? 'Verifying…' : 'Verify & continue'}
-            </button>
-
+              <ConsoleSubmitArrow label="Verify & continue" />
+            </ConsolePrimaryButton>
             <button
               type="button"
               onClick={handleResendCode}
               disabled={resendCooldownSeconds > 0}
-              className="w-full text-sm text-[#3ba208] hover:underline disabled:text-white/30 disabled:no-underline"
+              className="w-full text-[12px] font-semibold text-[#3ba208] disabled:text-white/30"
             >
               {resendCooldownSeconds > 0
                 ? `Resend code in ${resendCooldownSeconds}s`
@@ -309,75 +337,46 @@ export function ConsoleLoginScreen(): JSX.Element {
             </button>
           </form>
         ) : (
-          <form onSubmit={handleSubmit} className="rounded-2xl border border-white/10 bg-[#141416] p-6 space-y-4">
-            {error && (
-              <div className="flex items-start gap-2 rounded-xl bg-red-500/10 p-3 text-sm text-red-300">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                {error}
-              </div>
-            )}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error ? <ConsoleErrorAlert message={error} /> : null}
 
             {isSignUp && (
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-white/70">Full name</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
-                  <input
-                    type="text"
-                    required
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-[#0f0f11] py-2.5 pl-10 pr-4 text-sm text-white focus:border-[#309605]/50 focus:outline-none"
-                    placeholder="Your name"
-                  />
-                </div>
-              </div>
+              <ConsoleFloatingInput
+                label="Full name"
+                required
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+              />
             )}
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-white/70">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-[#0f0f11] py-2.5 pl-10 pr-4 text-sm text-white focus:border-[#309605]/50 focus:outline-none"
-                  placeholder="you@label.com"
-                />
-              </div>
-            </div>
+            <ConsoleFloatingInput
+              label="Email"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-white/70">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-[#0f0f11] py-2.5 pl-10 pr-10 text-sm text-white focus:border-[#309605]/50 focus:outline-none"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
+            <ConsoleFloatingInput
+              label="Password"
+              type={showPassword ? 'text' : 'password'}
+              required
+              autoComplete={isSignUp ? 'new-password' : 'current-password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              rightSlot={
+                <ConsolePasswordToggle show={showPassword} onToggle={() => setShowPassword((v) => !v)} />
+              }
+            />
 
             {isSignUp && (
-              <label className="flex items-start gap-2 text-sm text-white/60">
+              <label className="flex items-start gap-2 text-[12px] text-white/60">
                 <input
                   type="checkbox"
                   checked={agreedToTerms}
                   onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-0.5 rounded border-white/20 bg-[#0f0f11] text-[#3ba208] focus:ring-[#309605]/50"
+                  className="mt-0.5 rounded border-white/20 bg-transparent text-[#3ba208] focus:ring-[#3ba208]/30"
                 />
                 <span>
                   I agree to the{' '}
@@ -385,7 +384,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                     href={almcRoutes.consumerTermsSignup()}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[#3ba208] hover:underline"
+                    className={consoleTheme.link}
                   >
                     Terms & Conditions
                   </a>
@@ -393,45 +392,21 @@ export function ConsoleLoginScreen(): JSX.Element {
               </label>
             )}
 
-            <button
+            <ConsolePrimaryButton
               type="submit"
               disabled={isSubmitting || (isSignUp && !agreedToTerms)}
-              className="w-full rounded-xl bg-[#309605] py-3 text-sm font-semibold text-white hover:bg-[#3ba208] disabled:opacity-50"
+              loading={isSubmitting}
             >
-              {isSubmitting
-                ? isSignUp
-                  ? 'Creating account…'
-                  : 'Signing in…'
-                : isSignUp
-                  ? 'Create account'
-                  : 'Sign in to Console'}
-            </button>
+              <ConsoleSubmitArrow
+                label={
+                  isSignUp
+                    ? 'Create account'
+                    : 'Sign in to Console'
+                }
+              />
+            </ConsolePrimaryButton>
           </form>
         )}
-
-        {!pendingVerification && (
-          <p className="mt-6 text-center text-sm text-white/40">
-            {isSignUp ? 'Already have an account?' : 'New to Airaplay?'}{' '}
-            <button
-              type="button"
-              onClick={() => {
-                setIsSignUp((value) => !value);
-                setError(null);
-                setPendingVerification(false);
-              }}
-              className="font-medium text-[#3ba208] hover:underline"
-            >
-              {isSignUp ? 'Sign in' : 'Create account'}
-            </button>
-          </p>
-        )}
-
-        <p className="mt-4 text-center text-sm text-white/40">
-          <a href={almcRoutes.consumerHome()} className="text-[#3ba208] hover:underline">
-            Back to Airaplay
-          </a>
-        </p>
-      </div>
-    </div>
+      </ConsoleAuthShell>
   );
 }

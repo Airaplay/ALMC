@@ -8,30 +8,30 @@ export function SettingsSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-white">Settings</h2>
-        <p className="mt-1 text-sm text-white/50">Organization profile and workspace preferences</p>
+        <h2 className="text-2xl font-semibold text-foreground">Settings</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Organization profile and workspace preferences</p>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-[#141416] p-6 space-y-4">
+      <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
         <div>
-          <p className="text-xs uppercase tracking-wide text-white/40">Organization</p>
-          <p className="mt-1 text-lg font-semibold text-white">{organization.name}</p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground/80">Organization</p>
+          <p className="mt-1 text-lg font-semibold text-foreground">{organization.name}</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <p className="text-xs text-white/40">Type</p>
-            <p className="mt-1 capitalize text-white/80">{organization.type}</p>
+            <p className="text-xs text-muted-foreground/80">Type</p>
+            <p className="mt-1 capitalize text-secondary-foreground">{organization.type}</p>
           </div>
           <div>
-            <p className="text-xs text-white/40">Slug</p>
-            <p className="mt-1 text-white/80">{organization.slug}</p>
+            <p className="text-xs text-muted-foreground/80">Slug</p>
+            <p className="mt-1 text-secondary-foreground">{organization.slug}</p>
           </div>
           <div>
-            <p className="text-xs text-white/40">Your role</p>
-            <p className="mt-1 text-white/80">{organization.role_name}</p>
+            <p className="text-xs text-muted-foreground/80">Your role</p>
+            <p className="mt-1 text-secondary-foreground">{organization.role_name}</p>
           </div>
         </div>
-        <p className="text-sm text-white/40">
+        <p className="text-sm text-muted-foreground/80">
           Advanced settings (branding, billing, API keys, audit logs) ship in Phase 2.
         </p>
       </div>

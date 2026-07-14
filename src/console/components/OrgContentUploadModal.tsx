@@ -69,14 +69,14 @@ export function OrgContentUploadModal({
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#141416] shadow-2xl">
-        <div className="flex items-start justify-between border-b border-white/10 p-5">
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-card shadow-2xl">
+        <div className="flex items-start justify-between border-b border-border p-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-white/40">Upload content</p>
-            <h3 className="mt-0.5 text-lg font-bold text-white">For {artist.stage_name}</h3>
-            <p className="mt-1 text-sm text-white/50">Org: {organizationId.slice(0, 8)}…</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">Upload content</p>
+            <h3 className="mt-0.5 text-lg font-bold text-foreground">For {artist.stage_name}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Org: {organizationId.slice(0, 8)}…</p>
           </div>
-          <button type="button" onClick={onClose} className="text-white/50 hover:text-white">
+          <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -86,14 +86,14 @@ export function OrgContentUploadModal({
               key={id}
               type="button"
               onClick={() => setSelectedType(id)}
-              className="flex items-center gap-4 rounded-xl border border-white/10 bg-[#0f0f11] p-4 text-left hover:border-[#309605]/40"
+              className="flex items-center gap-4 rounded-xl border border-border bg-secondary p-4 text-left hover:border-[#309605]/40"
             >
               <div className="rounded-lg bg-[#309605]/15 p-3">
                 <Icon className="h-5 w-5 text-[#3ba208]" />
               </div>
               <div>
-                <p className="font-semibold text-white">{label}</p>
-                <p className="text-sm text-white/50">{detail}</p>
+                <p className="font-semibold text-foreground">{label}</p>
+                <p className="text-sm text-muted-foreground">{detail}</p>
               </div>
             </button>
           ))}

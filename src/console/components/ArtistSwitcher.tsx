@@ -53,32 +53,32 @@ export function ArtistSwitcher({ onAddArtist }: ArtistSwitcherProps) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white hover:bg-white/10"
+        className="flex items-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-sm text-foreground hover:bg-white/10"
       >
-        <User className="h-4 w-4 text-white/60" />
+        <User className="h-4 w-4 text-muted-foreground" />
         <span className="max-w-[140px] truncate font-medium">{label}</span>
-        <ChevronDown className={`h-4 w-4 text-white/50 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-white/10 bg-[#141416] shadow-2xl">
+        <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
           <button
             type="button"
             onClick={() => selectArtist(null)}
-            className={`flex w-full items-center px-4 py-3 text-left text-sm hover:bg-white/5 ${
-              !artistProfileId ? 'text-[#3ba208]' : 'text-white/80'
+            className={`flex w-full items-center px-4 py-3 text-left text-sm hover:bg-muted ${
+              !artistProfileId ? 'text-[#3ba208]' : 'text-secondary-foreground'
             }`}
           >
             All Artists (Org view)
           </button>
-          <div className="border-t border-white/10" />
+          <div className="border-t border-border" />
           {artists.map((artist) => (
             <button
               key={artist.artist_profile_id}
               type="button"
               onClick={() => selectArtist(artist)}
-              className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-white/5 ${
-                artistProfileId === artist.artist_profile_id ? 'text-[#3ba208]' : 'text-white/80'
+              className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-muted ${
+                artistProfileId === artist.artist_profile_id ? 'text-[#3ba208]' : 'text-secondary-foreground'
               }`}
             >
               {artist.profile_photo_url ? (
@@ -96,14 +96,14 @@ export function ArtistSwitcher({ onAddArtist }: ArtistSwitcherProps) {
           ))}
           {hasPermission('artists.invite') && onAddArtist && (
             <>
-              <div className="border-t border-white/10" />
+              <div className="border-t border-border" />
               <button
                 type="button"
                 onClick={() => {
                   setOpen(false);
                   onAddArtist();
                 }}
-                className="flex w-full items-center gap-2 px-4 py-3 text-sm text-[#3ba208] hover:bg-white/5"
+                className="flex w-full items-center gap-2 px-4 py-3 text-sm text-[#3ba208] hover:bg-muted"
               >
                 <Plus className="h-4 w-4" />
                 Add Artist

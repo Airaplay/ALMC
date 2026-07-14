@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ScreenLoader } from '@/components/ScreenLoader';
+import { ConsoleAppShell } from '@/console/components/ConsoleAppShell';
 import { almcRoutes } from '@/lib/almcRoutes';
 
 const ConsoleDashboardScreen = lazy(() => import('@/console/screens/ConsoleDashboardScreen'));
@@ -19,15 +20,17 @@ const ConsoleAcceptTeamScreen = lazy(() =>
 
 export default function AlmcApp() {
   return (
-    <Suspense fallback={<ScreenLoader />}>
-      <Routes>
-        <Route path={almcRoutes.home} element={<ConsoleDashboardScreen />} />
-        <Route path={almcRoutes.login} element={<ConsoleLoginScreen />} />
-        <Route path={almcRoutes.onboarding} element={<ConsoleOnboardingScreen />} />
-        <Route path={almcRoutes.acceptArtist} element={<ConsoleAcceptArtistScreen />} />
-        <Route path={almcRoutes.acceptTeam} element={<ConsoleAcceptTeamScreen />} />
-        <Route path="*" element={<Navigate to={almcRoutes.home} replace />} />
-      </Routes>
-    </Suspense>
+    <ConsoleAppShell>
+      <Suspense fallback={<ScreenLoader />}>
+        <Routes>
+          <Route path={almcRoutes.home} element={<ConsoleDashboardScreen />} />
+          <Route path={almcRoutes.login} element={<ConsoleLoginScreen />} />
+          <Route path={almcRoutes.onboarding} element={<ConsoleOnboardingScreen />} />
+          <Route path={almcRoutes.acceptArtist} element={<ConsoleAcceptArtistScreen />} />
+          <Route path={almcRoutes.acceptTeam} element={<ConsoleAcceptTeamScreen />} />
+          <Route path="*" element={<Navigate to={almcRoutes.home} replace />} />
+        </Routes>
+      </Suspense>
+    </ConsoleAppShell>
   );
 }

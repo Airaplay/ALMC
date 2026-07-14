@@ -1,0 +1,78 @@
+/* ALMC theme — same design tokens as src/web/web-theme.css (Airaplay web).
+   ALMC uses the same Supabase project as Airaplay-DB-V2 for auth and org data. */
+
+html.almc-app,
+body.almc-app #app {
+  display: block;
+  width: 100%;
+  max-width: none;
+}
+
+body.almc-app #app {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+body.almc-app {
+  --background: 0 0% 6%;
+  --foreground: 0 0% 95%;
+  --card: 0 0% 9%;
+  --card-foreground: 0 0% 95%;
+  --popover: 0 0% 9%;
+  --popover-foreground: 0 0% 95%;
+  --primary: 102 94% 30%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 14%;
+  --secondary-foreground: 0 0% 80%;
+  --muted: 0 0% 14%;
+  --muted-foreground: 0 0% 55%;
+  --accent: 102 94% 30%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 16%;
+  --input: 0 0% 16%;
+  --ring: 102 94% 30%;
+  --radius: 0.75rem;
+  --sidebar-background: 0 0% 8%;
+  --sidebar-foreground: 0 0% 65%;
+  --sidebar-primary: 102 94% 30%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 14%;
+  --sidebar-accent-foreground: 0 0% 95%;
+  --sidebar-border: 0 0% 14%;
+  --sidebar-ring: 102 94% 30%;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  scrollbar-width: thin;
+  scrollbar-color: hsl(0 0% 28%) transparent;
+}
+
+body.almc-app * {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(0 0% 28%) transparent;
+  -ms-overflow-style: auto;
+}
+
+body.almc-app ::-webkit-scrollbar {
+  display: block;
+  width: 8px;
+  height: 8px;
+}
+
+body.almc-app ::-webkit-scrollbar-track {
+  background: hsl(0 0% 8% / 0.6);
+  border-radius: 4px;
+}
+
+body.almc-app ::-webkit-scrollbar-thumb {
+  background: hsl(0 0% 32%);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+body.almc-app ::-webkit-scrollbar-thumb:hover {
+  background: hsl(0 0% 42%);
+  background-clip: padding-box;
+}

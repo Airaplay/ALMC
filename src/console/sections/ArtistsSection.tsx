@@ -96,14 +96,14 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-white">Artists</h2>
-          <p className="mt-1 text-sm text-white/50">{total} in roster</p>
+          <h2 className="text-2xl font-semibold text-foreground">Artists</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{total} in roster</p>
         </div>
         {hasPermission('artists.invite') && (
           <button
             type="button"
             onClick={() => setShowInvite(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#309605] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#3ba208]"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#309605] px-4 py-2.5 text-sm font-medium text-foreground hover:bg-[#3ba208]"
           >
             <UserPlus className="h-4 w-4" />
             Invite Artist
@@ -112,13 +112,13 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
       </div>
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80" />
         <input
           type="search"
           placeholder="Search artists..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-[#141416] py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-white/40 focus:border-[#309605]/50 focus:outline-none"
+          className="w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground/80 focus:border-[#309605]/50 focus:outline-none"
         />
       </div>
 
@@ -127,9 +127,9 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
       )}
 
       {showInvite && (
-        <div className="rounded-2xl border border-white/10 bg-[#141416] p-5">
-          <h3 className="text-lg font-semibold text-white">Invite Artist</h3>
-          <p className="mt-1 text-sm text-white/50">
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <h3 className="text-lg font-semibold text-foreground">Invite Artist</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
             Invite an existing Airaplay artist by email. They keep full ownership of their profile.
           </p>
           <form onSubmit={handleInvite} className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -139,12 +139,12 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
               placeholder="artist@email.com"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
-              className="flex-1 rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:border-[#309605]/50 focus:outline-none"
+              className="flex-1 rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground focus:border-[#309605]/50 focus:outline-none"
             />
             <button
               type="submit"
               disabled={inviting}
-              className="rounded-xl bg-[#309605] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#3ba208] disabled:opacity-50"
+              className="rounded-xl bg-[#309605] px-5 py-2.5 text-sm font-medium text-foreground hover:bg-[#3ba208] disabled:opacity-50"
             >
               {inviting ? 'Sending…' : 'Send Invite'}
             </button>
@@ -154,7 +154,7 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
                 setShowInvite(false);
                 setInviteLink(null);
               }}
-              className="rounded-xl border border-white/10 px-5 py-2.5 text-sm text-white/70"
+              className="rounded-xl border border-border px-5 py-2.5 text-sm text-secondary-foreground"
             >
               Cancel
             </button>
@@ -173,8 +173,8 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
           <LoadingLogo />
         </div>
       ) : artists.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/15 bg-[#141416]/50 p-12 text-center">
-          <p className="text-white/60">No artists in your roster yet</p>
+        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center">
+          <p className="text-muted-foreground">No artists in your roster yet</p>
           {hasPermission('artists.invite') && (
             <button
               type="button"
@@ -190,7 +190,7 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
           {artists.map((artist) => (
             <div
               key={artist.link_id}
-              className="rounded-2xl border border-white/10 bg-[#141416] p-4 sm:p-5"
+              className="rounded-2xl border border-border bg-card p-4 sm:p-5"
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div className="flex min-w-0 flex-1 items-center gap-4">
@@ -201,13 +201,13 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
                       className="h-14 w-14 shrink-0 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/10 text-lg font-semibold text-white">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/10 text-lg font-semibold text-foreground">
                       {artist.stage_name.charAt(0)}
                     </div>
                   )}
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="truncate text-base font-semibold text-white">{artist.stage_name}</h3>
+                      <h3 className="truncate text-base font-semibold text-foreground">{artist.stage_name}</h3>
                       {artist.is_verified && <BadgeCheck className="h-4 w-4 shrink-0 text-sky-400" />}
                       <span
                         className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase ${
@@ -215,14 +215,14 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
                             ? 'bg-emerald-500/15 text-emerald-400'
                             : artist.link_status === 'pending_invite'
                               ? 'bg-amber-500/15 text-amber-400'
-                              : 'bg-white/10 text-white/50'
+                              : 'bg-white/10 text-muted-foreground'
                         }`}
                       >
                         {artist.link_status.replace('_', ' ')}
                       </span>
                     </div>
-                    <p className="text-sm text-white/50">{artist.country ?? '—'}</p>
-                    <p className="mt-1 text-xs text-white/40">
+                    <p className="text-sm text-muted-foreground">{artist.country ?? '—'}</p>
+                    <p className="mt-1 text-xs text-muted-foreground/80">
                       {formatNum(Number(artist.followers))} followers · {formatNum(Number(artist.streams))} streams
                       {artist.latest_release?.title && ` · Latest: ${artist.latest_release.title}`}
                     </p>
@@ -234,7 +234,7 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
                     <button
                       type="button"
                       onClick={() => onUploadArtist(artist)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs text-white/80 hover:bg-white/5"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs text-secondary-foreground hover:bg-muted"
                     >
                       <Upload className="h-3.5 w-3.5" />
                       Upload
@@ -246,7 +246,7 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
                       setArtistProfileId(artist.artist_profile_id);
                       setSelectedArtist(artist);
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs text-white/80 hover:bg-white/5"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs text-secondary-foreground hover:bg-muted"
                   >
                     <BarChart3 className="h-3.5 w-3.5" />
                     Focus
@@ -256,16 +256,16 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
                       <button
                         type="button"
                         onClick={() => setMenuOpen(menuOpen === artist.link_id ? null : artist.link_id)}
-                        className="rounded-lg p-2 text-white/50 hover:bg-white/5 hover:text-white"
+                        className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </button>
                       {menuOpen === artist.link_id && (
-                        <div className="absolute right-0 top-full z-10 mt-1 w-44 rounded-xl border border-white/10 bg-[#141416] py-1 shadow-xl">
+                        <div className="absolute right-0 top-full z-10 mt-1 w-44 rounded-xl border border-border bg-card py-1 shadow-xl">
                           <button
                             type="button"
                             onClick={() => handleRevoke(artist)}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-400 hover:bg-white/5"
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-400 hover:bg-muted"
                           >
                             <Ban className="h-4 w-4" />
                             Revoke access
