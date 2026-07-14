@@ -57,7 +57,7 @@ export function ContentSection() {
               type="button"
               onClick={() => hasPermission('content.upload') && setUploadArtist(artist)}
               disabled={!hasPermission('content.upload')}
-              className="rounded-2xl border border-white/10 bg-[#141416] p-5 text-left transition hover:border-[#FF3366]/30 hover:bg-[#141416]/80 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-2xl border border-white/10 bg-[#141416] p-5 text-left transition hover:border-[#309605]/30 hover:bg-[#141416]/80 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <div className="flex items-center gap-3">
                 {artist.profile_photo_url ? (
@@ -85,7 +85,7 @@ export function ContentSection() {
       {hasPermission('content.upload') && activeArtists.length > 0 && (
         <div className="rounded-2xl border border-white/10 bg-[#141416] p-5">
           <div className="flex items-center gap-3">
-            <Upload className="h-5 w-5 text-[#FF3366]" />
+            <Upload className="h-5 w-5 text-[#3ba208]" />
             <p className="text-sm text-white/70">
               Select an artist above to upload on their behalf. All content remains on the artist&apos;s public profile.
             </p>

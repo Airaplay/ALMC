@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Music2, Users, Package, Film, LogOut } from 'lucide-react';
+import { Music2, Users, Package, Film, LogOut } from 'lucide-react';
 import { createOrganization, getMyOrganizations, OrgType, setStoredOrgId } from '../../lib/orgAccess';
 import { almcRoutes } from '../../lib/almcRoutes';
 import { supabase } from '../../lib/supabase';
@@ -116,9 +116,11 @@ export function ConsoleOnboardingScreen(): JSX.Element {
 
       <div className="mx-auto max-w-2xl">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FF3366]/15">
-            <Building2 className="h-7 w-7 text-[#FF3366]" />
-          </div>
+          <img
+            src="/official_airaplay_logo.png"
+            alt="Airaplay"
+            className="mx-auto mb-4 h-8 object-contain"
+          />
           <h1 className="text-2xl font-bold text-white">Set up your organization</h1>
           <p className="mt-2 text-sm text-white/50">
             Step {step} of 2
@@ -147,11 +149,11 @@ export function ConsoleOnboardingScreen(): JSX.Element {
                   setOrgType(id);
                   setStep(2);
                 }}
-                className={`rounded-2xl border p-5 text-left transition hover:border-[#FF3366]/40 ${
-                  orgType === id ? 'border-[#FF3366] bg-[#FF3366]/10' : 'border-white/10 bg-[#141416]'
+                className={`rounded-2xl border p-5 text-left transition hover:border-[#309605]/40 ${
+                  orgType === id ? 'border-[#309605] bg-[#309605]/10' : 'border-white/10 bg-[#141416]'
                 }`}
               >
-                <Icon className="mb-3 h-6 w-6 text-[#FF3366]" />
+                <Icon className="mb-3 h-6 w-6 text-[#3ba208]" />
                 <p className="font-semibold text-white">{label}</p>
                 <p className="mt-1 text-sm text-white/50">{description}</p>
               </button>
@@ -173,7 +175,7 @@ export function ConsoleOnboardingScreen(): JSX.Element {
                 required
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                className="w-full rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:border-[#FF3366]/50 focus:outline-none"
+                className="w-full rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:border-[#309605]/50 focus:outline-none"
               />
             </div>
 
@@ -242,7 +244,7 @@ export function ConsoleOnboardingScreen(): JSX.Element {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-xl bg-[#FF3366] py-3 text-sm font-semibold text-white disabled:opacity-50"
+              className="w-full rounded-xl bg-[#309605] py-3 text-sm font-semibold text-white hover:bg-[#3ba208] disabled:opacity-50"
             >
               {isSubmitting ? 'Creating workspace…' : 'Create organization'}
             </button>

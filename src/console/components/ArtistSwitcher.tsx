@@ -66,7 +66,7 @@ export function ArtistSwitcher({ onAddArtist }: ArtistSwitcherProps) {
             type="button"
             onClick={() => selectArtist(null)}
             className={`flex w-full items-center px-4 py-3 text-left text-sm hover:bg-white/5 ${
-              !artistProfileId ? 'text-[#FF3366]' : 'text-white/80'
+              !artistProfileId ? 'text-[#3ba208]' : 'text-white/80'
             }`}
           >
             All Artists (Org view)
@@ -78,7 +78,7 @@ export function ArtistSwitcher({ onAddArtist }: ArtistSwitcherProps) {
               type="button"
               onClick={() => selectArtist(artist)}
               className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-white/5 ${
-                artistProfileId === artist.artist_profile_id ? 'text-[#FF3366]' : 'text-white/80'
+                artistProfileId === artist.artist_profile_id ? 'text-[#3ba208]' : 'text-white/80'
               }`}
             >
               {artist.profile_photo_url ? (
@@ -103,7 +103,7 @@ export function ArtistSwitcher({ onAddArtist }: ArtistSwitcherProps) {
                   setOpen(false);
                   onAddArtist();
                 }}
-                className="flex w-full items-center gap-2 px-4 py-3 text-sm text-[#FF3366] hover:bg-white/5"
+                className="flex w-full items-center gap-2 px-4 py-3 text-sm text-[#3ba208] hover:bg-white/5"
               >
                 <Plus className="h-4 w-4" />
                 Add Artist

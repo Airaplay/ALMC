@@ -103,7 +103,7 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
           <button
             type="button"
             onClick={() => setShowInvite(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#FF3366] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#FF3366]/90"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#309605] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#3ba208]"
           >
             <UserPlus className="h-4 w-4" />
             Invite Artist
@@ -118,7 +118,7 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
           placeholder="Search artists..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-[#141416] py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-white/40 focus:border-[#FF3366]/50 focus:outline-none"
+          className="w-full rounded-xl border border-white/10 bg-[#141416] py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-white/40 focus:border-[#309605]/50 focus:outline-none"
         />
       </div>
 
@@ -139,12 +139,12 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
               placeholder="artist@email.com"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
-              className="flex-1 rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:border-[#FF3366]/50 focus:outline-none"
+              className="flex-1 rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:border-[#309605]/50 focus:outline-none"
             />
             <button
               type="submit"
               disabled={inviting}
-              className="rounded-xl bg-[#FF3366] px-5 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+              className="rounded-xl bg-[#309605] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#3ba208] disabled:opacity-50"
             >
               {inviting ? 'Sending…' : 'Send Invite'}
             </button>
@@ -179,7 +179,7 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
             <button
               type="button"
               onClick={() => setShowInvite(true)}
-              className="mt-4 text-sm font-medium text-[#FF3366] hover:underline"
+              className="mt-4 text-sm font-medium text-[#3ba208] hover:underline"
             >
               Invite your first artist
             </button>

@@ -47,7 +47,7 @@ export function ConsoleSidebar({
         {organization?.logo_url ? (
           <img src={organization.logo_url} alt="" className="h-9 w-9 rounded-lg object-cover" />
         ) : (
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#FF3366]/20 text-[#FF3366]">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#309605]/20 text-[#3ba208]">
             <Building2 className="h-5 w-5" />
           </div>
         )}
@@ -73,7 +73,7 @@ export function ConsoleSidebar({
             }}
             className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
               activeSection === section
-                ? 'bg-[#FF3366]/15 text-[#FF3366]'
+                ? 'bg-[#309605]/15 text-[#3ba208]'
                 : 'text-white/70 hover:bg-white/5 hover:text-white'
             }`}
           >

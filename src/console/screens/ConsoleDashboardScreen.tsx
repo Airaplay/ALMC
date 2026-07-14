@@ -146,7 +146,7 @@ function ConsoleDashboardContent(): JSX.Element {
                           setShowOrgMenu(false);
                         }}
                         className={`block w-full px-4 py-2 text-left text-sm hover:bg-white/5 ${
-                          org.id === organization?.id ? 'text-[#FF3366]' : 'text-white/80'
+                          org.id === organization?.id ? 'text-[#3ba208]' : 'text-white/80'
                         }`}
                       >
                         {org.name}

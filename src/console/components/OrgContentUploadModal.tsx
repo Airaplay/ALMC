@@ -86,10 +86,10 @@ export function OrgContentUploadModal({
               key={id}
               type="button"
               onClick={() => setSelectedType(id)}
-              className="flex items-center gap-4 rounded-xl border border-white/10 bg-[#0f0f11] p-4 text-left hover:border-[#FF3366]/40"
+              className="flex items-center gap-4 rounded-xl border border-white/10 bg-[#0f0f11] p-4 text-left hover:border-[#309605]/40"
             >
-              <div className="rounded-lg bg-[#FF3366]/15 p-3">
-                <Icon className="h-5 w-5 text-[#FF3366]" />
+              <div className="rounded-lg bg-[#309605]/15 p-3">
+                <Icon className="h-5 w-5 text-[#3ba208]" />
               </div>
               <div>
                 <p className="font-semibold text-white">{label}</p>

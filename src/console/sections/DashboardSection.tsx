@@ -24,7 +24,7 @@ function KpiCard({
       <div className="mb-3 flex items-center justify-between">
         <span className="text-sm text-white/50">{label}</span>
         <div className="rounded-lg bg-white/5 p-2">
-          <Icon className="h-4 w-4 text-[#FF3366]" />
+          <Icon className="h-4 w-4 text-[#3ba208]" />
         </div>
       </div>
       <p className="text-2xl font-semibold tabular-nums text-white">{value}</p>

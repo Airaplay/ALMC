@@ -59,7 +59,7 @@ export function ConsoleAcceptInvitationScreen({ type }: { type: AcceptType }): J
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b] p-4">
         <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#141416] p-8 text-center">
-          <Building2 className="mx-auto h-12 w-12 text-[#FF3366]" />
+          <Building2 className="mx-auto h-12 w-12 text-[#3ba208]" />
           <h1 className="mt-4 text-xl font-semibold text-white">Sign in to accept</h1>
           <p className="mt-2 text-sm text-white/50">
             Please sign in with the account that received this invitation.
@@ -67,7 +67,7 @@ export function ConsoleAcceptInvitationScreen({ type }: { type: AcceptType }): J
           <button
             type="button"
             onClick={() => navigate(`${almcRoutes.login}?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`)}
-            className="mt-6 w-full rounded-xl bg-[#FF3366] py-3 text-sm font-semibold text-white"
+            className="mt-6 w-full rounded-xl bg-[#309605] py-3 text-sm font-semibold text-white hover:bg-[#3ba208]"
           >
             Sign in
           </button>
@@ -92,7 +92,7 @@ export function ConsoleAcceptInvitationScreen({ type }: { type: AcceptType }): J
           <button
             type="button"
             onClick={() => navigate(type === 'team' ? almcRoutes.home : almcRoutes.consumerProfile())}
-            className="mt-6 w-full rounded-xl bg-[#FF3366] py-3 text-sm font-semibold text-white"
+            className="mt-6 w-full rounded-xl bg-[#309605] py-3 text-sm font-semibold text-white hover:bg-[#3ba208]"
           >
             {type === 'team' ? 'Go to Console' : 'Go to Profile'}
           </button>

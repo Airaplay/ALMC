@@ -69,7 +69,7 @@ export function TeamSection() {
       {hasPermission('team.invite') && (
         <div className="rounded-2xl border border-white/10 bg-[#141416] p-5">
           <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
-            <UserPlus className="h-5 w-5 text-[#FF3366]" />
+            <UserPlus className="h-5 w-5 text-[#3ba208]" />
             Invite team member
           </h3>
           <form onSubmit={handleInvite} className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
@@ -79,7 +79,7 @@ export function TeamSection() {
               placeholder="colleague@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:border-[#FF3366]/50 focus:outline-none"
+              className="rounded-xl border border-white/10 bg-[#0f0f11] px-4 py-2.5 text-sm text-white focus:border-[#309605]/50 focus:outline-none"
             />
             <select
               value={roleKey}
@@ -95,7 +95,7 @@ export function TeamSection() {
             <button
               type="submit"
               disabled={inviting}
-              className="rounded-xl bg-[#FF3366] px-5 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+              className="rounded-xl bg-[#309605] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#3ba208] disabled:opacity-50"
             >
               Invite
             </button>

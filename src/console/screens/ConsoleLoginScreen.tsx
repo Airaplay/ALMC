@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, Building2, LogOut, User } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, LogOut, User } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getMyOrganizations } from '../../lib/orgAccess';
 import { almcRoutes } from '../../lib/almcRoutes';
@@ -240,22 +240,24 @@ export function ConsoleLoginScreen(): JSX.Element {
 
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FF3366]/15">
-            <Building2 className="h-7 w-7 text-[#FF3366]" />
-          </div>
+          <img
+            src="/official_airaplay_logo.png"
+            alt="Airaplay"
+            className="mx-auto mb-4 h-8 object-contain"
+          />
           <h1 className="text-2xl font-bold text-white">Airaplay Console</h1>
           <p className="mt-2 text-sm text-white/50">Label & Management Console for organizations</p>
         </div>
 
         {signedInEmail && !pendingVerification && (
-          <div className="mb-4 rounded-2xl border border-[#FF3366]/30 bg-[#FF3366]/10 p-4">
+          <div className="mb-4 rounded-2xl border border-[#309605]/30 bg-[#309605]/10 p-4">
             <p className="text-sm text-white/80">
               Signed in as <span className="font-medium text-white">{signedInEmail}</span>
             </p>
             <button
               type="button"
               onClick={routeAfterLogin}
-              className="mt-3 w-full rounded-xl bg-[#FF3366] py-2.5 text-sm font-semibold text-white hover:bg-[#FF3366]/90"
+              className="mt-3 w-full rounded-xl bg-[#309605] py-2.5 text-sm font-semibold text-white hover:bg-[#3ba208]"
             >
               Continue to Console
             </button>
@@ -283,14 +285,14 @@ export function ConsoleLoginScreen(): JSX.Element {
               maxLength={6}
               value={otpCode}
               onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              className="w-full rounded-xl border border-white/10 bg-[#0f0f11] py-3 text-center text-lg tracking-[0.3em] text-white focus:border-[#FF3366]/50 focus:outline-none"
+              className="w-full rounded-xl border border-white/10 bg-[#0f0f11] py-3 text-center text-lg tracking-[0.3em] text-white focus:border-[#309605]/50 focus:outline-none"
               placeholder="000000"
             />
 
             <button
               type="submit"
               disabled={isVerifyingOtp || otpCode.length !== 6}
-              className="w-full rounded-xl bg-[#FF3366] py-3 text-sm font-semibold text-white hover:bg-[#FF3366]/90 disabled:opacity-50"
+              className="w-full rounded-xl bg-[#309605] py-3 text-sm font-semibold text-white hover:bg-[#3ba208] disabled:opacity-50"
             >
               {isVerifyingOtp ? 'Verifying…' : 'Verify & continue'}
             </button>
@@ -299,7 +301,7 @@ export function ConsoleLoginScreen(): JSX.Element {
               type="button"
               onClick={handleResendCode}
               disabled={resendCooldownSeconds > 0}
-              className="w-full text-sm text-[#FF3366] hover:underline disabled:text-white/30 disabled:no-underline"
+              className="w-full text-sm text-[#3ba208] hover:underline disabled:text-white/30 disabled:no-underline"
             >
               {resendCooldownSeconds > 0
                 ? `Resend code in ${resendCooldownSeconds}s`
@@ -325,7 +327,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                     required
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-[#0f0f11] py-2.5 pl-10 pr-4 text-sm text-white focus:border-[#FF3366]/50 focus:outline-none"
+                    className="w-full rounded-xl border border-white/10 bg-[#0f0f11] py-2.5 pl-10 pr-4 text-sm text-white focus:border-[#309605]/50 focus:outline-none"
                     placeholder="Your name"
                   />
                 </div>
@@ -341,7 +343,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-[#0f0f11] py-2.5 pl-10 pr-4 text-sm text-white focus:border-[#FF3366]/50 focus:outline-none"
+                  className="w-full rounded-xl border border-white/10 bg-[#0f0f11] py-2.5 pl-10 pr-4 text-sm text-white focus:border-[#309605]/50 focus:outline-none"
                   placeholder="you@label.com"
                 />
               </div>
@@ -356,7 +358,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-[#0f0f11] py-2.5 pl-10 pr-10 text-sm text-white focus:border-[#FF3366]/50 focus:outline-none"
+                  className="w-full rounded-xl border border-white/10 bg-[#0f0f11] py-2.5 pl-10 pr-10 text-sm text-white focus:border-[#309605]/50 focus:outline-none"
                   placeholder="••••••••"
                 />
                 <button
@@ -375,7 +377,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                   type="checkbox"
                   checked={agreedToTerms}
                   onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-0.5 rounded border-white/20 bg-[#0f0f11] text-[#FF3366] focus:ring-[#FF3366]/50"
+                  className="mt-0.5 rounded border-white/20 bg-[#0f0f11] text-[#3ba208] focus:ring-[#309605]/50"
                 />
                 <span>
                   I agree to the{' '}
@@ -383,7 +385,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                     href={almcRoutes.consumerTermsSignup()}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[#FF3366] hover:underline"
+                    className="text-[#3ba208] hover:underline"
                   >
                     Terms & Conditions
                   </a>
@@ -394,7 +396,7 @@ export function ConsoleLoginScreen(): JSX.Element {
             <button
               type="submit"
               disabled={isSubmitting || (isSignUp && !agreedToTerms)}
-              className="w-full rounded-xl bg-[#FF3366] py-3 text-sm font-semibold text-white hover:bg-[#FF3366]/90 disabled:opacity-50"
+              className="w-full rounded-xl bg-[#309605] py-3 text-sm font-semibold text-white hover:bg-[#3ba208] disabled:opacity-50"
             >
               {isSubmitting
                 ? isSignUp
@@ -417,7 +419,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                 setError(null);
                 setPendingVerification(false);
               }}
-              className="font-medium text-[#FF3366] hover:underline"
+              className="font-medium text-[#3ba208] hover:underline"
             >
               {isSignUp ? 'Sign in' : 'Create account'}
             </button>
@@ -425,7 +427,7 @@ export function ConsoleLoginScreen(): JSX.Element {
         )}
 
         <p className="mt-4 text-center text-sm text-white/40">
-          <a href={almcRoutes.consumerHome()} className="text-[#FF3366] hover:underline">
+          <a href={almcRoutes.consumerHome()} className="text-[#3ba208] hover:underline">
             Back to Airaplay
           </a>
         </p>
