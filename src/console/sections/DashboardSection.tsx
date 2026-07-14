@@ -10,6 +10,18 @@ function formatNumber(n: number): string {
   return n.toLocaleString();
 }
 
+function formatRevenueUsd(n: number): string {
+  if (!Number.isFinite(n)) return '$0.00';
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(2)}K`;
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n);
+}
+
 function KpiCard({
   label,
   value,
@@ -74,7 +86,7 @@ export function DashboardSection() {
         <KpiCard label="Total Artists" value={data.total_artists} icon={Users} />
         <KpiCard label="Monthly Streams" value={formatNumber(Number(data.total_streams))} icon={Play} />
         <KpiCard label="Total Followers" value={formatNumber(Number(data.total_followers))} icon={Heart} />
-        <KpiCard label="Total Revenue" value={formatNumber(Number(data.total_revenue))} icon={DollarSign} />
+        <KpiCard label="Total Revenue" value={formatRevenueUsd(Number(data.total_revenue))} icon={DollarSign} />
         <KpiCard label="Albums" value={data.total_albums} icon={Disc3} />
         <KpiCard label="Songs" value={data.total_songs} icon={Music} />
         <KpiCard label="Videos" value={data.total_videos} icon={Video} />
