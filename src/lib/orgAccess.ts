@@ -53,13 +53,16 @@ export interface OrgArtistItem {
   link_id: string;
   link_status: string;
   linked_at: string | null;
-  artist_profile_id: string;
+  is_pending_invitation?: boolean;
+  invitation_id?: string | null;
+  invitation_type?: 'link_existing' | 'create_new' | null;
+  artist_profile_id: string | null;
   stage_name: string;
   profile_photo_url: string | null;
   is_verified: boolean | null;
   country: string | null;
   artist_id: string | null;
-  user_id: string;
+  user_id: string | null;
   email: string;
   display_name: string | null;
   followers: number;
@@ -70,6 +73,19 @@ export interface OrgArtistItem {
     type: string;
     created_at: string;
   } | null;
+}
+
+export interface ArtistInviteCandidate {
+  email: string;
+  has_account: boolean;
+  has_artist_profile: boolean;
+  user_id: string | null;
+  artist_profile_id: string | null;
+  stage_name: string | null;
+  display_name: string | null;
+  link_status: string | null;
+  pending_invitation_id: string | null;
+  recommended_invitation_type: 'link_existing' | 'create_new';
 }
 
 export interface OrgMemberItem {
@@ -176,7 +192,7 @@ export async function inviteArtistToOrganization(
   email: string,
   invitationType: 'link_existing' | 'create_new' = 'link_existing',
   artistMetadata: Record<string, unknown> = {}
-): Promise<{ invitation_id: string; token: string }> {
+): Promise<{ invitation_id: string; token: string; invitation_type: string }> {
   const { data, error } = await supabase.rpc('invite_artist_to_organization', {
     p_org_id: orgId,
     p_email: email,
@@ -187,7 +203,31 @@ export async function inviteArtistToOrganization(
   return {
     invitation_id: data.invitation_id as string,
     token: data.token as string,
+    invitation_type: (data.invitation_type as string) ?? invitationType,
   };
+}
+
+export async function lookupArtistInviteCandidate(
+  orgId: string,
+  email: string
+): Promise<ArtistInviteCandidate> {
+  const { data, error } = await supabase.rpc('lookup_artist_invite_candidate', {
+    p_org_id: orgId,
+    p_email: email,
+  });
+  if (error) throw error;
+  return data as ArtistInviteCandidate;
+}
+
+export async function cancelArtistOrganizationInvitation(
+  orgId: string,
+  invitationId: string
+): Promise<void> {
+  const { error } = await supabase.rpc('cancel_artist_organization_invitation', {
+    p_org_id: orgId,
+    p_invitation_id: invitationId,
+  });
+  if (error) throw error;
 }
 
 export async function revokeOrganizationArtistAccess(
@@ -233,9 +273,18 @@ export function orgHasPermission(
   return (permissions ?? []).includes(permission);
 }
 
-export async function acceptArtistOrganizationInvitation(token: string): Promise<{ organization_id: string }> {
+export async function acceptArtistOrganizationInvitation(token: string): Promise<{
+  organization_id: string;
+  requires_artist_profile?: boolean;
+}> {
   const { data, error } = await supabase.rpc('accept_artist_organization_invitation', { p_token: token });
   if (error) throw error;
+  if (data?.requires_artist_profile) {
+    return {
+      organization_id: data.organization_id as string,
+      requires_artist_profile: true,
+    };
+  }
   return { organization_id: data.organization_id as string };
 }
 

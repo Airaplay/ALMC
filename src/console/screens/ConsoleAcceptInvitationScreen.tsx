@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, AlertCircle } from 'lucide-react';
-import { acceptArtistOrganizationInvitation, acceptOrganizationMemberInvitation } from '../../lib/orgAccess';
+import { acceptOrganizationMemberInvitation } from '../../lib/orgAccess';
 import { almcRoutes } from '../../lib/almcRoutes';
 import { supabase } from '../../lib/supabase';
 import { LoadingLogo } from '../../components/LoadingLogo';
@@ -36,7 +36,17 @@ export function ConsoleAcceptInvitationScreen({ type }: { type: AcceptType }): J
       }
 
       if (type === 'artist') {
-        await acceptArtistOrganizationInvitation(token);
+        const { data, error: rpcError } = await supabase.rpc('accept_artist_organization_invitation', {
+          p_token: token,
+        });
+        if (rpcError) throw rpcError;
+        if (data?.requires_artist_profile || data?.success === false) {
+          setStatus('error');
+          setMessage(
+            'Create your artist profile on Airaplay first, then open this invitation link again to join the organization.'
+          );
+          return;
+        }
         setMessage('You have joined the organization. Your artist profile remains fully yours.');
       } else {
         await acceptOrganizationMemberInvitation(token);
@@ -95,6 +105,14 @@ export function ConsoleAcceptInvitationScreen({ type }: { type: AcceptType }): J
           onClick={() => navigate(type === 'team' ? almcRoutes.home : almcRoutes.consumerProfile())}
         >
           <ConsoleSubmitArrow label={type === 'team' ? 'Go to Console' : 'Go to Profile'} />
+        </ConsolePrimaryButton>
+      )}
+      {status === 'error' && message.includes('artist profile') && (
+        <ConsolePrimaryButton
+          type="button"
+          onClick={() => navigate(almcRoutes.consumerBecomeArtist())}
+        >
+          <ConsoleSubmitArrow label="Become an artist" />
         </ConsolePrimaryButton>
       )}
     </ConsoleAuthShell>

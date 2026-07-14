@@ -34,11 +34,13 @@ export function ArtistSwitcher({ onAddArtist }: ArtistSwitcherProps) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const selected = artists.find((a) => a.artist_profile_id === artistProfileId) ?? null;
+  const activeArtists = artists.filter((a) => a.link_status === 'active' && a.artist_profile_id);
+
+  const selected = activeArtists.find((a) => a.artist_profile_id === artistProfileId) ?? null;
   const label = selected?.stage_name ?? 'All Artists';
 
   const selectArtist = (artist: OrgArtistItem | null) => {
-    if (artist) {
+    if (artist?.artist_profile_id) {
       setArtistProfileId(artist.artist_profile_id);
       setSelectedArtist(artist);
     } else {
@@ -72,9 +74,9 @@ export function ArtistSwitcher({ onAddArtist }: ArtistSwitcherProps) {
             All Artists (Org view)
           </button>
           <div className="border-t border-border" />
-          {artists.map((artist) => (
+          {activeArtists.map((artist) => (
             <button
-              key={artist.artist_profile_id}
+              key={artist.artist_profile_id ?? artist.link_id}
               type="button"
               onClick={() => selectArtist(artist)}
               className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-muted ${

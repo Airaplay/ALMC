@@ -24,6 +24,10 @@ export const almcRoutes = {
   acceptTeamInviteUrl: (token: string) =>
     `${window.location.origin}${almcPath('accept-team')}?token=${encodeURIComponent(token)}`,
   consumerHome: () => consumerBase() || '/',
+  consumerBecomeArtist: () => {
+    const base = consumerBase();
+    return base ? `${base}/become-artist` : '/become-artist';
+  },
   consumerProfile: () => `${consumerBase() || ''}/profile`.replace(/^\/\//, '/'),
   consumerTermsSignup: () => {
     const base = consumerBase();
