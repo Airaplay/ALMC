@@ -9,6 +9,10 @@ function almcPath(segment?: string): string {
   return joined.startsWith('/') ? joined : `/${joined}`;
 }
 
+function consumerBase(): string {
+  return (import.meta.env.VITE_AIRAPLAY_CONSUMER_URL as string | undefined)?.replace(/\/$/, '') || '';
+}
+
 export const almcRoutes = {
   home: almcPath(),
   login: almcPath('login'),
@@ -19,6 +23,10 @@ export const almcRoutes = {
     `${window.location.origin}${almcPath('accept-artist')}?token=${encodeURIComponent(token)}`,
   acceptTeamInviteUrl: (token: string) =>
     `${window.location.origin}${almcPath('accept-team')}?token=${encodeURIComponent(token)}`,
-  consumerProfile: () =>
-    (import.meta.env.VITE_AIRAPLAY_CONSUMER_URL as string | undefined)?.replace(/\/$/, '') || '/profile',
+  consumerHome: () => consumerBase() || '/',
+  consumerProfile: () => `${consumerBase() || ''}/profile`.replace(/^\/\//, '/'),
+  consumerTermsSignup: () => {
+    const base = consumerBase();
+    return base ? `${base}/terms/user-signup` : '/terms/user-signup';
+  },
 };

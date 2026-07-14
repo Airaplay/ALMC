@@ -1,6 +1,7 @@
-import { Users, LayoutDashboard, Upload, UserCog, Settings, LogOut, Menu, X, ChevronDown, Building2 } from 'lucide-react';
+import { Users, LayoutDashboard, Upload, UserCog, Settings, LogOut, Menu, X, Building2 } from 'lucide-react';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { orgHasPermission, OrgPermission } from '../../lib/orgAccess';
+import { almcRoutes } from '../../lib/almcRoutes';
 
 export type ConsoleSection = 'dashboard' | 'artists' | 'content' | 'team' | 'settings';
 
@@ -10,6 +11,7 @@ interface ConsoleSidebarProps {
   sidebarOpen: boolean;
   onCloseSidebar: () => void;
   isMobile: boolean;
+  onSignOut?: () => void;
 }
 
 const NAV_ITEMS: Array<{
@@ -31,6 +33,7 @@ export function ConsoleSidebar({
   sidebarOpen,
   onCloseSidebar,
   isMobile,
+  onSignOut,
 }: ConsoleSidebarProps) {
   const { organization, permissions } = useOrganization();
 
@@ -80,13 +83,25 @@ export function ConsoleSidebar({
         ))}
       </nav>
 
-      <div className="border-t border-white/10 p-3">
+      <div className="space-y-1 border-t border-white/10 p-3">
         <a
-          href="/"
+          href={almcRoutes.consumerHome()}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/60 hover:bg-white/5 hover:text-white"
         >
           ← Back to Airaplay
         </a>
+        {onSignOut && (
+          <button
+            type="button"
+            onClick={onSignOut}
+            title="Sign out"
+            aria-label="Sign out"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/60 hover:bg-white/5 hover:text-white"
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            Sign out
+          </button>
+        )}
       </div>
     </div>
   );
@@ -127,5 +142,3 @@ export function ConsoleMobileHeader({
     </div>
   );
 }
-
-export { LogOut, ChevronDown };

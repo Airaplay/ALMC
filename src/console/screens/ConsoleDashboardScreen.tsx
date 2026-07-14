@@ -118,6 +118,7 @@ function ConsoleDashboardContent(): JSX.Element {
         sidebarOpen={sidebarOpen}
         onCloseSidebar={() => setSidebarOpen(false)}
         isMobile={isMobile}
+        onSignOut={handleLogout}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">

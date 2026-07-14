@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Music2, Users, Package, Film } from 'lucide-react';
+import { Building2, Music2, Users, Package, Film, LogOut } from 'lucide-react';
 import { createOrganization, getMyOrganizations, OrgType, setStoredOrgId } from '../../lib/orgAccess';
 import { almcRoutes } from '../../lib/almcRoutes';
 import { supabase } from '../../lib/supabase';
+import { performCompleteLogout } from '../../lib/logoutService';
 import { LoadingLogo } from '../../components/LoadingLogo';
 
 const ORG_TYPES: Array<{ id: OrgType; label: string; description: string; icon: typeof Music2 }> = [
@@ -19,6 +20,8 @@ export function ConsoleOnboardingScreen(): JSX.Element {
   const [step, setStep] = useState<1 | 2>(1);
   const [orgType, setOrgType] = useState<OrgType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',
@@ -36,6 +39,7 @@ export function ConsoleOnboardingScreen(): JSX.Element {
         navigate(almcRoutes.login, { replace: true });
         return;
       }
+      setSignedInEmail(session.user.email ?? null);
       const orgs = await getMyOrganizations();
       if (orgs.length > 0) {
         navigate(almcRoutes.home, { replace: true });
@@ -85,15 +89,46 @@ export function ConsoleOnboardingScreen(): JSX.Element {
     }
   };
 
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    setError(null);
+    try {
+      await performCompleteLogout();
+      navigate(almcRoutes.login, { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign out failed');
+      setIsSigningOut(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#0a0a0b] px-4 py-10">
+    <div className="relative min-h-screen bg-[#0a0a0b] px-4 py-10">
+      <button
+        type="button"
+        onClick={handleSignOut}
+        disabled={isSigningOut}
+        title="Sign out"
+        aria-label="Sign out"
+        className="absolute right-4 top-4 rounded-xl border border-white/10 p-2.5 text-white/50 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50 sm:right-6 sm:top-6"
+      >
+        <LogOut className="h-5 w-5" />
+      </button>
+
       <div className="mx-auto max-w-2xl">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FF3366]/15">
             <Building2 className="h-7 w-7 text-[#FF3366]" />
           </div>
           <h1 className="text-2xl font-bold text-white">Set up your organization</h1>
-          <p className="mt-2 text-sm text-white/50">Step {step} of 2</p>
+          <p className="mt-2 text-sm text-white/50">
+            Step {step} of 2
+            {signedInEmail ? (
+              <>
+                {' · '}
+                <span className="text-white/40">{signedInEmail}</span>
+              </>
+            ) : null}
+          </p>
         </div>
 
         {error && (
@@ -213,6 +248,18 @@ export function ConsoleOnboardingScreen(): JSX.Element {
             </button>
           </form>
         )}
+
+        <p className="mt-6 text-center">
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white disabled:opacity-50"
+          >
+            <LogOut className="h-4 w-4" />
+            {isSigningOut ? 'Signing out…' : 'Sign out'}
+          </button>
+        </p>
       </div>
     </div>
   );
