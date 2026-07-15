@@ -26,27 +26,54 @@ export interface OrganizationSummary {
   permissions: OrgPermission[];
 }
 
+export interface OrgDashboardArtistRank {
+  artist_profile_id: string;
+  stage_name: string;
+  streams: number;
+}
+
+export interface OrgDashboardGrowthPoint {
+  date: string;
+  streams: number;
+  listeners: number;
+}
+
+export interface OrgFastestGrowingArtist extends OrgDashboardArtistRank {
+  growth_pct: number;
+}
+
+export interface OrgActivityItem {
+  id: string;
+  action: string;
+  artist_profile_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
 export interface OrgDashboardData {
+  period_days: number;
+  period_start: string;
+  period_end: string;
   total_artists: number;
+  artists_added: number;
   total_streams: number;
+  period_streams: number;
+  previous_period_streams: number;
+  period_listeners: number;
+  previous_period_listeners: number;
   total_followers: number;
   total_revenue: number;
+  period_revenue: number;
+  previous_period_revenue: number;
   total_songs: number;
   total_albums: number;
   total_videos: number;
-  top_performing_artist: {
-    artist_profile_id: string;
-    stage_name: string;
-    streams: number;
-  } | null;
-  fastest_growing_artist: unknown;
-  recent_activity: Array<{
-    id: string;
-    action: string;
-    artist_profile_id: string | null;
-    metadata: Record<string, unknown>;
-    created_at: string;
-  }>;
+  total_releases: number;
+  top_performing_artists: OrgDashboardArtistRank[];
+  top_performing_artist: OrgDashboardArtistRank | null;
+  fastest_growing_artist: OrgFastestGrowingArtist | null;
+  growth_chart: OrgDashboardGrowthPoint[];
+  recent_activity: OrgActivityItem[];
 }
 
 export interface OrgArtistItem {
@@ -163,8 +190,14 @@ export async function createOrganization(input: {
   };
 }
 
-export async function getOrganizationDashboard(orgId: string): Promise<OrgDashboardData> {
-  const { data, error } = await supabase.rpc('get_organization_dashboard', { p_org_id: orgId });
+export async function getOrganizationDashboard(
+  orgId: string,
+  days = 30
+): Promise<OrgDashboardData> {
+  const { data, error } = await supabase.rpc('get_organization_dashboard', {
+    p_org_id: orgId,
+    p_days: days,
+  });
   if (error) throw error;
   return data as OrgDashboardData;
 }
