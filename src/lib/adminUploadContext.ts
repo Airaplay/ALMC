@@ -1,6 +1,8 @@
 export interface AdminUploadContext {
   targetUserId: string;
   targetDisplayName?: string;
+  organizationId?: string;
+  artistProfileId?: string;
 }
 
 export function resolveContentOwnerUserId(

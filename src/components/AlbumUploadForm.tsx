@@ -23,6 +23,7 @@ import { useLocation } from '../hooks/useLocation';
 import { ParallelUploadManager } from '../lib/parallelUploadManager';
 import { cn } from '../lib/utils';
 import { AdminUploadContext, resolveContentOwnerUserId } from '../lib/adminUploadContext';
+import { ConsoleUploadEmbed, ContentReleaseAction, resolveContentUploadStatus } from '../lib/consoleUploadEmbed';
 
 /* ─── Types ─── */
 interface Genre { id: string; name: string; }
@@ -48,9 +49,10 @@ interface AlbumUploadFormProps {
   onSuccess?: () => void;
   initialData?: any;
   adminUploadContext?: AdminUploadContext;
+  consoleEmbed?: ConsoleUploadEmbed;
 }
 
-export default function AlbumUploadForm({ onClose, onSuccess, initialData, adminUploadContext }: AlbumUploadFormProps) {
+export default function AlbumUploadForm({ onClose, onSuccess, initialData, adminUploadContext, consoleEmbed }: AlbumUploadFormProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { location } = useLocation(true);
@@ -89,6 +91,14 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
 
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
+  useEffect(() => {
+    consoleEmbed?.onStepChange?.(currentStep);
+  }, [currentStep, consoleEmbed]);
+
+  useEffect(() => {
+    consoleEmbed?.onTitleChange?.(albumTitle);
+  }, [albumTitle, consoleEmbed]);
+
   const ownerUserId = resolveContentOwnerUserId(adminUploadContext, user?.id);
 
   useEffect(() => {
@@ -99,8 +109,16 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
     }
     (async () => {
       try {
-        const profile = adminUploadContext ? null : await getArtistProfile();
+        let profile = adminUploadContext ? null : await getArtistProfile();
         if (!mountedRef.current) return;
+        if (!profile && adminUploadContext?.artistProfileId) {
+          const { data } = await supabase
+            .from('artist_profiles')
+            .select('id, stage_name, artist_id, bio, profile_photo_url, is_verified')
+            .eq('id', adminUploadContext.artistProfileId)
+            .maybeSingle();
+          if (data) profile = data;
+        }
         if (profile) setArtistProfile({ id: profile.id, stage_name: profile.stage_name, artist_id: profile.artist_id ?? null, bio: profile.bio, profile_photo_url: profile.profile_photo_url, is_verified: profile.is_verified });
         else {
           const { data } = await supabase.from('artist_profiles').select('id, stage_name, artist_id, bio, profile_photo_url, is_verified').eq('user_id', ownerUserId).maybeSingle();
@@ -205,8 +223,12 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
     return result.publicUrl;
   }, [uploadTaskId, updateUploadProgress, ownerUserId]);
 
-  const handleUpload = async () => {
+  const handleUpload = async (releaseAction: ContentReleaseAction = 'publish') => {
     if (!ownerUserId || !artistProfile) return;
+    if (releaseAction === 'schedule' && !releaseDate) {
+      setError('Pick a release date to schedule this album.');
+      return;
+    }
     setError(null);
     setUploading(true);
     setUploadProgress(5);
@@ -321,13 +343,14 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
       }
 
       setUploadProgress(95);
+      const uploadStatus = resolveContentUploadStatus(releaseAction, releaseDate);
       const { error: contentErr } = await supabase.from('content_uploads').insert({
         user_id: ownerUserId,
         artist_profile_id: artistProfile.id,
         content_type: 'album',
         title: formData.title,
         description: formData.description || null,
-        status: 'approved',
+        status: uploadStatus,
         metadata: {
           album_id: albumData.id,
           cover_url: coverImageUrl,
@@ -335,10 +358,14 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
           tracks_count: songIds.length,
           release_date: formData.releaseDateTime ?? formData.releaseDate,
           genre: formData.genre || null,
+          release_action: releaseAction,
           featured_artists: audioFiles.reduce((acc, af) => {
             if (af.featuredArtists.length) acc[af.title] = af.featuredArtists;
             return acc;
           }, {} as Record<string, string[]>),
+          ...(adminUploadContext?.organizationId
+            ? { uploaded_by_org_id: adminUploadContext.organizationId }
+            : {}),
         },
       });
       if (contentErr) throw new Error(`Album created but failed to add to Library: ${contentErr.message}`);
@@ -412,7 +439,12 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
   }
 
   return (
-    <div className="flex flex-col min-h-screen min-h-[100dvh] overflow-y-auto bg-gradient-to-b from-[#1a1a1a] via-[#0d0d0d] to-[#000000] text-white content-with-nav font-['Inter',sans-serif]">
+    <div className={cn(
+      consoleEmbed?.hideChrome
+        ? "flex flex-col text-white font-['Inter',sans-serif]"
+        : "flex flex-col min-h-screen min-h-[100dvh] overflow-y-auto bg-gradient-to-b from-[#1a1a1a] via-[#0d0d0d] to-[#000000] text-white content-with-nav font-['Inter',sans-serif]"
+    )}>
+      {!consoleEmbed?.hideChrome && (
       <header className="w-full py-5 px-5 sticky top-0 z-20 flex-shrink-0 bg-gradient-to-b from-[#1a1a1a] to-transparent backdrop-blur-sm">
         <div className="flex items-center gap-4">
           <button
@@ -429,7 +461,9 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
           </h1>
         </div>
       </header>
-      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-5 py-5 space-y-8 pb-28 w-full">
+      )}
+      <div className={cn('flex-1 min-h-0 overflow-y-auto scrollbar-hide space-y-8 w-full', consoleEmbed?.hideChrome ? 'py-1' : 'px-5 py-5 pb-28')}>
+        {!consoleEmbed?.hideChrome && (
         <div>
           <div className="flex items-center gap-0 mb-3">
             {STEPS.map((label, i) => {
@@ -474,10 +508,21 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
             />
           </div>
         </div>
+        )}
 
         {/* Step 0 — Tracks + Cover */}
         {currentStep === 0 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            {consoleEmbed?.hideChrome && (
+              <button
+                type="button"
+                onClick={() => consoleEmbed.onExitFirstStep?.()}
+                className="inline-flex items-center gap-2 text-sm text-white/60 hover:text-white"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to content type
+              </button>
+            )}
             <div className="space-y-1">
               <h2 className="text-lg font-semibold tracking-tight text-white">Upload your files</h2>
               <p className="text-sm text-white/60">Add cover art and at least one track with audio.</p>
@@ -809,7 +854,7 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
               </div>
             )}
 
-            <div className="pt-4 flex gap-3">
+            <div className={cn('pt-4 flex gap-3', consoleEmbed?.showReleaseActions && 'flex-col sm:flex-row')}>
               <button
                 type="button"
                 onClick={() => setCurrentStep(1)}
@@ -818,9 +863,40 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
               >
                 Back
               </button>
+              {consoleEmbed?.showReleaseActions ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleUpload('draft')}
+                    disabled={uploading || !canSubmit}
+                    className="flex-1 min-h-[48px] rounded-xl border border-white/10 text-sm font-semibold text-white/80 hover:bg-white/5 disabled:opacity-50"
+                  >
+                    Save Draft
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleUpload('schedule')}
+                    disabled={uploading || !canSubmit}
+                    className="flex-1 min-h-[48px] rounded-xl border border-[#00ad74]/40 text-sm font-semibold text-[#00ad74] hover:bg-[#00ad74]/10 disabled:opacity-50"
+                  >
+                    Schedule
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleUpload('publish')}
+                    disabled={uploading || !canSubmit}
+                    className={cn(
+                      'flex-1 min-h-[48px] py-3.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 touch-manipulation transition-all',
+                      canSubmit && !uploading ? 'bg-[#00ad74] hover:bg-[#009c68] text-white' : 'bg-white/10 text-white/40 cursor-not-allowed'
+                    )}
+                  >
+                    {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</> : <><Upload className="w-4 h-4" /> Publish Now</>}
+                  </button>
+                </>
+              ) : (
               <button
                 type="button"
-                onClick={handleUpload}
+                onClick={() => handleUpload('publish')}
                 disabled={uploading || !canSubmit}
                 className={cn(
                   'flex-[2] min-h-[48px] py-3.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 touch-manipulation transition-all',
@@ -829,6 +905,7 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
               >
                 {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</> : <><Upload className="w-4 h-4" /> Submit album</>}
               </button>
+              )}
             </div>
           </div>
         )}

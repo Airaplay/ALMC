@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Music, Disc3, Video, Upload } from 'lucide-react';
+import { Music, Disc3, Video, Upload, Plus } from 'lucide-react';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { listOrganizationArtists, OrgArtistItem } from '../../lib/orgAccess';
-import { OrgContentUploadModal } from '../components/OrgContentUploadModal';
+import { OrgContentUploadWizard } from '../components/OrgContentUploadWizard';
 import { LoadingLogo } from '../../components/LoadingLogo';
 
 export function ContentSection() {
   const { organization, hasPermission } = useOrganization();
   const [artists, setArtists] = useState<OrgArtistItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [uploadArtist, setUploadArtist] = useState<OrgArtistItem | null>(null);
 
   useEffect(() => {
@@ -32,11 +33,35 @@ export function ContentSection() {
 
   const activeArtists = artists.filter((a) => a.link_status === 'active');
 
+  const openWizard = (artist?: OrgArtistItem) => {
+    setUploadArtist(artist ?? null);
+    setWizardOpen(true);
+  };
+
+  const closeWizard = () => {
+    setWizardOpen(false);
+    setUploadArtist(null);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold text-foreground">Content</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Upload singles, albums, and videos for your artists</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold text-foreground">Content</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Upload singles, albums, and videos for your artists
+          </p>
+        </div>
+        {hasPermission('content.upload') && activeArtists.length > 0 && (
+          <button
+            type="button"
+            onClick={() => openWizard()}
+            className="inline-flex items-center gap-2 rounded-xl bg-[#3ba208] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#3ba208]/90"
+          >
+            <Plus className="h-4 w-4" />
+            Upload
+          </button>
+        )}
       </div>
 
       {activeArtists.length === 0 ? (
@@ -49,7 +74,7 @@ export function ContentSection() {
             <button
               key={artist.artist_profile_id}
               type="button"
-              onClick={() => hasPermission('content.upload') && setUploadArtist(artist)}
+              onClick={() => hasPermission('content.upload') && openWizard(artist)}
               disabled={!hasPermission('content.upload')}
               className="rounded-2xl border border-border bg-card p-5 text-left transition hover:border-[#309605]/30 hover:bg-card/80 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -81,18 +106,20 @@ export function ContentSection() {
           <div className="flex items-center gap-3">
             <Upload className="h-5 w-5 text-[#3ba208]" />
             <p className="text-sm text-secondary-foreground">
-              Select an artist above to upload on their behalf. All content remains on the artist&apos;s public profile.
+              Use the upload wizard to add singles, albums, or videos. All content stays on the
+              artist&apos;s public profile.
             </p>
           </div>
         </div>
       )}
 
-      {uploadArtist && organization && (
-        <OrgContentUploadModal
+      {wizardOpen && organization && (
+        <OrgContentUploadWizard
           organizationId={organization.id}
-          artist={uploadArtist}
-          onClose={() => setUploadArtist(null)}
-          onSuccess={() => setUploadArtist(null)}
+          artists={activeArtists}
+          initialArtist={uploadArtist}
+          onClose={closeWizard}
+          onSuccess={closeWizard}
         />
       )}
     </div>

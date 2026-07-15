@@ -23,6 +23,13 @@ import { useLocation } from '../hooks/useLocation';
 import { LoadingLogo } from './LoadingLogo';
 import { cn } from '../lib/utils';
 import { AdminUploadContext, resolveContentOwnerUserId } from '../lib/adminUploadContext';
+import {
+  ConsoleUploadEmbed,
+  ContentCredit,
+  ContentReleaseAction,
+  generateIsrc,
+  resolveContentUploadStatus,
+} from '../lib/consoleUploadEmbed';
 
 interface Genre { id: string; name: string; }
 interface Subgenre { id: string; name: string; parent_genre_id: string; }
@@ -44,9 +51,10 @@ interface SingleUploadFormProps {
   onClose?: () => void;
   onSuccess?: () => void;
   adminUploadContext?: AdminUploadContext;
+  consoleEmbed?: ConsoleUploadEmbed;
 }
 
-const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUploadFormProps) => {
+const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext, consoleEmbed }: SingleUploadFormProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { location } = useLocation(true);
@@ -68,6 +76,10 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
   const [subgenreId, setSubgenreId] = useState("");
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [featuredArtist, setFeaturedArtist] = useState("");
+  const [isrc, setIsrc] = useState("");
+  const [lyrics, setLyrics] = useState("");
+  const [credits, setCredits] = useState<ContentCredit[]>([]);
+  const [scheduleLater, setScheduleLater] = useState(false);
 
   // Files
   const [audioFile, setAudioFile] = useState<File | null>(null);
@@ -94,6 +106,14 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
   const ownerUserId = resolveContentOwnerUserId(adminUploadContext, user?.id);
 
   useEffect(() => {
+    consoleEmbed?.onStepChange?.(currentStep);
+  }, [currentStep, consoleEmbed]);
+
+  useEffect(() => {
+    consoleEmbed?.onTitleChange?.(title);
+  }, [title, consoleEmbed]);
+
+  useEffect(() => {
     if (!adminUploadContext && !user) {
       navigate('/');
       return;
@@ -106,7 +126,17 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
       try {
         let profile = adminUploadContext ? null : await getArtistProfile();
         if (!mountedRef.current) return;
-        // Fallback: if cache returned null, fetch directly (creators may have profile that cache missed)
+
+        if (!profile && adminUploadContext?.artistProfileId) {
+          const { data: byId, error } = await supabase
+            .from('artist_profiles')
+            .select('id, user_id, stage_name, artist_id, bio, profile_photo_url, is_verified')
+            .eq('id', adminUploadContext.artistProfileId)
+            .maybeSingle();
+          if (!mountedRef.current) return;
+          if (!error && byId) profile = byId;
+        }
+
         if (!profile) {
           const { data: directProfile, error } = await supabase
             .from('artist_profiles')
@@ -215,7 +245,19 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
     if (currentStep < 2) setCurrentStep((s) => (s + 1) as Step);
   };
   const handleBack = () => {
+    if (currentStep === 0 && consoleEmbed?.onExitFirstStep) {
+      consoleEmbed.onExitFirstStep();
+      return;
+    }
     if (currentStep > 0) setCurrentStep((s) => (s - 1) as Step);
+  };
+
+  const addCredit = () => setCredits((prev) => [...prev, { role: '', name: '' }]);
+  const updateCredit = (index: number, field: keyof ContentCredit, value: string) => {
+    setCredits((prev) => prev.map((credit, i) => (i === index ? { ...credit, [field]: value } : credit)));
+  };
+  const removeCredit = (index: number) => {
+    setCredits((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Extract duration from an audio file client-side
@@ -267,9 +309,16 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
     }
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (releaseAction: ContentReleaseAction = 'publish') => {
     if (!ownerUserId || !artistProfile) return;
     if (!title.trim() || !audioFile || !genreId) return;
+
+    let action = releaseAction;
+    if (scheduleLater && action === 'publish') action = 'schedule';
+    if (action === 'schedule' && !releaseDate) {
+      setError('Pick a release date to schedule this release.');
+      return;
+    }
 
     setUploading(true);
     setUploadProgress(0);
@@ -426,6 +475,7 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
       setUploadProgress(90);
 
       // Insert content_uploads
+      const uploadStatus = resolveContentUploadStatus(action, releaseDate);
       const metadata: Record<string, unknown> = {
         song_id: songId,
         audio_url: audioPublicUrl,
@@ -436,7 +486,15 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
         mood_ids: selectedMoods,
         featured_artist: featuredArtist || null,
         release_date: releaseDate ? (releaseTime ? `${format(releaseDate, "yyyy-MM-dd")}T${releaseTime}:00` : format(releaseDate, "yyyy-MM-dd")) : null,
+        isrc: isrc.trim() || null,
+        lyrics: lyrics.trim() || null,
+        credits: credits.filter((c) => c.role.trim() && c.name.trim()),
+        release_action: action,
+        scheduled: action === 'schedule' || (scheduleLater && !!releaseDate),
       };
+      if (adminUploadContext?.organizationId) {
+        metadata.uploaded_by_org_id = adminUploadContext.organizationId;
+      }
       // songs.release_date is date-only for DB; full datetime lives in content_uploads.metadata.release_date
 
       const { error: insertErr } = await supabase.from("content_uploads").insert({
@@ -444,8 +502,8 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
         artist_profile_id: artistProfile.id,
         content_type: "single",
         title: title.trim(),
-        description: description.trim() || null,
-        status: "approved",
+        description: lyrics.trim() || description.trim() || null,
+        status: uploadStatus,
         metadata,
       });
 
@@ -494,7 +552,10 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
   /* ── Guards ── */
   if (loadingProfile) {
     return (
-      <div className="flex flex-col min-h-screen min-h-[100dvh] bg-gradient-to-b from-[#1a1a1a] via-[#0d0d0d] to-[#000000] items-center justify-center">
+      <div className={cn(
+        "flex flex-col items-center justify-center",
+        consoleEmbed?.hideChrome ? "py-16" : "min-h-screen min-h-[100dvh] bg-gradient-to-b from-[#1a1a1a] via-[#0d0d0d] to-[#000000]"
+      )}>
         <LoadingLogo variant="pulse" size={48} />
       </div>
     );
@@ -546,9 +607,13 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
     ? (title && genreId ? 100 : title ? 50 : 0)
     : selectedMoods.length > 0 ? 60 : 20;
 
+  const shellClass = consoleEmbed?.hideChrome
+    ? "flex flex-col text-white font-['Inter',sans-serif]"
+    : "flex flex-col min-h-screen min-h-[100dvh] overflow-y-auto bg-gradient-to-b from-[#1a1a1a] via-[#0d0d0d] to-[#000000] text-white content-with-nav font-['Inter',sans-serif]";
+
   return (
-    <div className="flex flex-col min-h-screen min-h-[100dvh] overflow-y-auto bg-gradient-to-b from-[#1a1a1a] via-[#0d0d0d] to-[#000000] text-white content-with-nav font-['Inter',sans-serif]">
-      {/* ── Page header: back + title (same format as AlbumUploadForm “Curate your collection”) ── */}
+    <div className={shellClass}>
+      {!consoleEmbed?.hideChrome && (
       <header className="w-full py-5 px-5 sticky top-0 z-20 flex-shrink-0 bg-gradient-to-b from-[#1a1a1a] to-transparent backdrop-blur-sm">
         <div className="flex items-center gap-4">
           <button
@@ -565,9 +630,10 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
           </h1>
         </div>
       </header>
+      )}
 
-      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-5 py-5 space-y-8 pb-28 w-full">
-          {/* ── Step Navigator ── */}
+      <div className={cn("flex-1 min-h-0 overflow-y-auto scrollbar-hide space-y-8 w-full", consoleEmbed?.hideChrome ? "py-1" : "px-5 py-5 pb-28")}>
+          {!consoleEmbed?.hideChrome && (
           <div>
             <div className="flex items-center gap-0 mb-3">
               {STEPS.map((label, i) => {
@@ -605,7 +671,6 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
                 );
               })}
             </div>
-            {/* Step progress bar */}
             <div className="h-0.5 bg-white/10 rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#00ad74] rounded-full transition-all duration-500"
@@ -613,6 +678,7 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
               />
             </div>
           </div>
+          )}
 
           {/* ══════════════════════════════
               STEP 0 — FILES
@@ -938,6 +1004,94 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
                 )}
               </div>
 
+              {consoleEmbed?.hideChrome && (
+                <div className="space-y-5 border-t border-white/10 pt-5">
+                  <div className="space-y-2">
+                    <label htmlFor="isrc" className="text-xs font-bold uppercase tracking-[0.12em] text-white/60 block">
+                      ISRC
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        id="isrc"
+                        placeholder="NG-APL-26-00001"
+                        value={isrc}
+                        onChange={(e) => setIsrc(e.target.value.toUpperCase())}
+                        className="flex-1 min-h-[48px] h-12 bg-white/5 border border-white/10 focus:border-[#00ad74]/30 focus:ring-2 focus:ring-[#00ad74]/20 text-white rounded-xl px-4 outline-none transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIsrc(generateIsrc())}
+                        className="rounded-xl border border-white/10 px-4 text-xs font-semibold text-white/80 hover:bg-white/5"
+                      >
+                        Auto-generate
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="lyrics" className="text-xs font-bold uppercase tracking-[0.12em] text-white/60 block">
+                      Lyrics
+                    </label>
+                    <textarea
+                      id="lyrics"
+                      rows={4}
+                      placeholder="Paste lyrics (optional)"
+                      value={lyrics}
+                      onChange={(e) => setLyrics(e.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#00ad74]/20 focus:border-[#00ad74]/30 resize-none"
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold uppercase tracking-[0.12em] text-white/60 block">
+                        Credits
+                      </label>
+                      <button
+                        type="button"
+                        onClick={addCredit}
+                        className="text-xs font-semibold text-[#00ad74] hover:text-[#00ad74]/80"
+                      >
+                        + Add credit
+                      </button>
+                    </div>
+                    {credits.map((credit, index) => (
+                      <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-2">
+                        <input
+                          placeholder="Role (Producer, Writer…)"
+                          value={credit.role}
+                          onChange={(e) => updateCredit(index, 'role', e.target.value)}
+                          className="min-h-[44px] rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none"
+                        />
+                        <input
+                          placeholder="Name"
+                          value={credit.name}
+                          onChange={(e) => updateCredit(index, 'name', e.target.value)}
+                          className="min-h-[44px] rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeCredit(index)}
+                          className="rounded-xl border border-white/10 px-3 text-white/60 hover:text-white"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <label className="flex items-center gap-2 text-sm text-white/70">
+                    <input
+                      type="checkbox"
+                      checked={scheduleLater}
+                      onChange={(e) => setScheduleLater(e.target.checked)}
+                      className="rounded border-white/20 bg-white/5"
+                    />
+                    Schedule for later
+                  </label>
+                </div>
+              )}
+
               {/* Error Message */}
               {error && (
                 <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 sm:p-5">
@@ -1106,18 +1260,64 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
               )}
 
               {/* Navigation */}
-              <div className="pt-4 flex gap-3">
+              <div className={cn('pt-4 flex gap-3', consoleEmbed?.showReleaseActions && 'flex-col sm:flex-row')}>
                 <button
                   onClick={handleBack}
                   disabled={uploading}
-                  className="flex-1 rounded-xl min-h-[48px] gap-2 text-white/60 hover:text-white transition-colors flex items-center justify-center disabled:opacity-50 touch-manipulation border border-white/10"
+                  className={cn(
+                    'rounded-xl min-h-[48px] gap-2 text-white/60 hover:text-white transition-colors flex items-center justify-center disabled:opacity-50 touch-manipulation border border-white/10',
+                    consoleEmbed?.showReleaseActions ? 'sm:flex-1' : 'flex-1'
+                  )}
                   aria-label="Back"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back
                 </button>
+                {consoleEmbed?.showReleaseActions ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleUpload('draft')}
+                      disabled={uploading}
+                      className="flex-1 rounded-xl min-h-[48px] border border-white/10 text-sm font-semibold text-white/80 hover:bg-white/5 disabled:opacity-50"
+                    >
+                      Save Draft
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleUpload('schedule')}
+                      disabled={uploading}
+                      className="flex-1 rounded-xl min-h-[48px] border border-[#00ad74]/40 text-sm font-semibold text-[#00ad74] hover:bg-[#00ad74]/10 disabled:opacity-50"
+                    >
+                      Schedule
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleUpload('publish')}
+                      disabled={uploading}
+                      className={cn(
+                        'flex-1 rounded-xl min-h-[48px] h-12 font-semibold gap-2 transition-all flex items-center justify-center touch-manipulation',
+                        uploading
+                          ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                          : 'bg-[#00ad74] hover:bg-[#009c68] active:bg-[#008a5d] text-white'
+                      )}
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Uploading…
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          Publish Now
+                        </>
+                      )}
+                    </button>
+                  </>
+                ) : (
                 <button
-                  onClick={handleUpload}
+                  onClick={() => handleUpload('publish')}
                   disabled={uploading}
                   className={cn(
                     "flex-1 rounded-xl min-h-[48px] h-12 font-semibold gap-2 transition-all flex items-center justify-center touch-manipulation",
@@ -1138,6 +1338,7 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext }: SingleUplo
                     </>
                   )}
                 </button>
+                )}
               </div>
             </div>
           )}

@@ -20,6 +20,11 @@ import { useUpload } from '../contexts/UploadContext';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
 import { AdminUploadContext, resolveContentOwnerUserId } from '../lib/adminUploadContext';
+import {
+  ConsoleUploadEmbed,
+  ContentReleaseAction,
+  resolveContentUploadStatus,
+} from '../lib/consoleUploadEmbed';
 
 const STEPS = ['Media', 'Details'] as const;
 type Step = 0 | 1;
@@ -29,9 +34,10 @@ interface VideoUploadFormProps {
   onSuccess?: () => void;
   initialData?: any;
   adminUploadContext?: AdminUploadContext;
+  consoleEmbed?: ConsoleUploadEmbed;
 }
 
-export default function VideoUploadForm({ onClose, onSuccess, initialData, adminUploadContext }: VideoUploadFormProps) {
+export default function VideoUploadForm({ onClose, onSuccess, initialData, adminUploadContext, consoleEmbed }: VideoUploadFormProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addUpload, updateUploadProgress, updateUploadStatus } = useUpload();
@@ -81,6 +87,14 @@ export default function VideoUploadForm({ onClose, onSuccess, initialData, admin
   const ownerUserId = resolveContentOwnerUserId(adminUploadContext, user?.id);
 
   useEffect(() => {
+    consoleEmbed?.onStepChange?.(currentStep);
+  }, [currentStep, consoleEmbed]);
+
+  useEffect(() => {
+    consoleEmbed?.onTitleChange?.(title);
+  }, [title, consoleEmbed]);
+
+  useEffect(() => {
     if (!adminUploadContext && !user) return;
     if (!ownerUserId) {
       if (mountedRef.current) setLoadingProfile(false);
@@ -88,8 +102,16 @@ export default function VideoUploadForm({ onClose, onSuccess, initialData, admin
     }
     (async () => {
       try {
-        const profile = adminUploadContext ? null : await getArtistProfile();
+        let profile = adminUploadContext ? null : await getArtistProfile();
         if (!mountedRef.current) return;
+        if (!profile && adminUploadContext?.artistProfileId) {
+          const { data } = await supabase
+            .from('artist_profiles')
+            .select('id, stage_name, artist_id, bio, profile_photo_url, is_verified')
+            .eq('id', adminUploadContext.artistProfileId)
+            .maybeSingle();
+          if (data) profile = data;
+        }
         if (profile) {
           setArtistProfile({ id: profile.id, stage_name: profile.stage_name, artist_id: profile.artist_id ?? null, bio: profile.bio, profile_photo_url: profile.profile_photo_url, is_verified: profile.is_verified });
         } else {
@@ -227,12 +249,16 @@ export default function VideoUploadForm({ onClose, onSuccess, initialData, admin
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (releaseAction: ContentReleaseAction = 'publish') => {
     setError(null);
     setSuccess(null);
     setUploadProgress(0);
     if (!title.trim()) { setError('Video title is required.'); return; }
     if (!isEditing && !selectedVideoFile) { setError('Video file is required.'); return; }
+    if (releaseAction === 'schedule' && !releaseDate) {
+      setError('Pick a release date to schedule this video.');
+      return;
+    }
 
     setIsSubmitting(true);
     const taskId = `video-${Date.now()}`;
@@ -335,7 +361,13 @@ export default function VideoUploadForm({ onClose, onSuccess, initialData, admin
         file_type: selectedVideoFile?.type ?? initialData?.metadata?.file_type ?? null,
         artist_id: finalArtistId,
         bunny_stream: true,
+        release_action: releaseAction,
+        ...(adminUploadContext?.organizationId
+          ? { uploaded_by_org_id: adminUploadContext.organizationId }
+          : {}),
       };
+
+      const uploadStatus = resolveContentUploadStatus(releaseAction, releaseDate);
 
       if (isEditing && initialData?.id) {
         const { error: updateError } = await supabase.from('content_uploads').update({ title: title.trim(), description: description.trim() || null, metadata: { ...initialData.metadata, ...metadata } }).eq('id', initialData.id);
@@ -350,7 +382,7 @@ export default function VideoUploadForm({ onClose, onSuccess, initialData, admin
           content_type: 'video',
           title: title.trim(),
           description: description.trim() || null,
-          status: 'approved',
+          status: uploadStatus,
           metadata,
         });
         if (insertError) throw insertError;
@@ -414,7 +446,12 @@ export default function VideoUploadForm({ onClose, onSuccess, initialData, admin
   const progressPct = (currentStep / (STEPS.length - 1)) * 100;
 
   return (
-    <div className="flex flex-col min-h-screen min-h-[100dvh] overflow-y-auto bg-gradient-to-b from-[#1a1a1a] via-[#0d0d0d] to-[#000000] text-white content-with-nav font-['Inter',sans-serif]">
+    <div className={cn(
+      consoleEmbed?.hideChrome
+        ? "flex flex-col text-white font-['Inter',sans-serif]"
+        : "flex flex-col min-h-screen min-h-[100dvh] overflow-y-auto bg-gradient-to-b from-[#1a1a1a] via-[#0d0d0d] to-[#000000] text-white content-with-nav font-['Inter',sans-serif]"
+    )}>
+      {!consoleEmbed?.hideChrome && (
       <header className="w-full py-5 px-5 sticky top-0 z-20 flex-shrink-0 bg-gradient-to-b from-[#1a1a1a] to-transparent backdrop-blur-sm">
         <div className="flex items-center gap-4">
           <button type="button" onClick={onClose} className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-all duration-200 touch-manipulation flex-shrink-0" aria-label="Back">
@@ -426,9 +463,10 @@ export default function VideoUploadForm({ onClose, onSuccess, initialData, admin
           </h1>
         </div>
       </header>
+      )}
 
-      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-5 py-5 space-y-8 pb-28 w-full">
-        {!isEditing && (
+      <div className={cn('flex-1 min-h-0 overflow-y-auto scrollbar-hide space-y-8 w-full', consoleEmbed?.hideChrome ? 'py-1' : 'px-5 py-5 pb-28')}>
+        {!isEditing && !consoleEmbed?.hideChrome && (
           <div>
             <div className="flex items-center gap-0 mb-3">
               {STEPS.map((label, i) => {
@@ -456,6 +494,16 @@ export default function VideoUploadForm({ onClose, onSuccess, initialData, admin
         {/* Step 0 — Media */}
         {currentStep === 0 && !isEditing && (
           <div className="space-y-6">
+            {consoleEmbed?.hideChrome && (
+              <button
+                type="button"
+                onClick={() => consoleEmbed.onExitFirstStep?.()}
+                className="inline-flex items-center gap-2 text-sm text-white/60 hover:text-white"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to content type
+              </button>
+            )}
             <div className="space-y-1">
               <h2 className="text-lg font-semibold tracking-tight text-white">Video file</h2>
               <p className="text-sm text-white/60">MP4, WebM, MOV, AVI, MKV · Max 500 MB</p>
@@ -598,13 +646,23 @@ export default function VideoUploadForm({ onClose, onSuccess, initialData, admin
                 </div>
               </div>
             )}
-            <div className="flex gap-3 pt-2">
+            <div className={cn('flex gap-3 pt-2', consoleEmbed?.showReleaseActions && !isEditing && 'flex-col sm:flex-row')}>
               {!isEditing && (
                 <button type="button" onClick={() => setCurrentStep(0)} disabled={isSubmitting} className="flex-1 min-h-[48px] py-3.5 rounded-xl font-semibold text-sm border border-white/10 hover:bg-white/10 text-white touch-manipulation disabled:opacity-50">Back</button>
               )}
-              <button type="button" onClick={handleSubmit} disabled={isSubmitting || !canSubmit} className={cn('min-h-[48px] py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 touch-manipulation', isEditing ? 'flex-1' : 'flex-[2]', canSubmit && !isSubmitting ? 'bg-[#00ad74] text-white hover:bg-[#009c68]' : 'bg-white/10 text-white/40 cursor-not-allowed disabled:opacity-50')}>
+              {consoleEmbed?.showReleaseActions && !isEditing ? (
+                <>
+                  <button type="button" onClick={() => handleSubmit('draft')} disabled={isSubmitting || !canSubmit} className="flex-1 min-h-[48px] rounded-xl border border-white/10 text-sm font-semibold text-white/80 hover:bg-white/5 disabled:opacity-50">Save Draft</button>
+                  <button type="button" onClick={() => handleSubmit('schedule')} disabled={isSubmitting || !canSubmit} className="flex-1 min-h-[48px] rounded-xl border border-[#00ad74]/40 text-sm font-semibold text-[#00ad74] hover:bg-[#00ad74]/10 disabled:opacity-50">Schedule</button>
+                  <button type="button" onClick={() => handleSubmit('publish')} disabled={isSubmitting || !canSubmit} className={cn('flex-1 min-h-[48px] py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 touch-manipulation', canSubmit && !isSubmitting ? 'bg-[#00ad74] text-white hover:bg-[#009c68]' : 'bg-white/10 text-white/40 cursor-not-allowed disabled:opacity-50')}>
+                    {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> {uploadStep || 'Uploading…'}</> : <><Upload className="w-4 h-4" /> Publish Now</>}
+                  </button>
+                </>
+              ) : (
+              <button type="button" onClick={() => handleSubmit('publish')} disabled={isSubmitting || !canSubmit} className={cn('min-h-[48px] py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 touch-manipulation', isEditing ? 'flex-1' : 'flex-[2]', canSubmit && !isSubmitting ? 'bg-[#00ad74] text-white hover:bg-[#009c68]' : 'bg-white/10 text-white/40 cursor-not-allowed disabled:opacity-50')}>
                 {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> {uploadStep || 'Uploading…'}</> : isEditing ? <><CheckCircle2 className="w-4 h-4" /> Save changes</> : <><Upload className="w-4 h-4" /> Publish video</>}
               </button>
+              )}
             </div>
           </div>
         )}
