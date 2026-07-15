@@ -88,12 +88,14 @@ export interface OrgArtistItem {
   profile_photo_url: string | null;
   is_verified: boolean | null;
   country: string | null;
+  genre: string | null;
   artist_id: string | null;
   user_id: string | null;
   email: string;
   display_name: string | null;
   followers: number;
   streams: number;
+  monthly_streams: number;
   revenue: number;
   latest_release: {
     title: string;
@@ -202,9 +204,19 @@ export async function getOrganizationDashboard(
   return data as OrgDashboardData;
 }
 
+export type OrgArtistSort = 'streams' | 'monthly_streams' | 'followers' | 'revenue' | 'stage_name' | 'linked_at';
+
 export async function listOrganizationArtists(
   orgId: string,
-  options?: { search?: string; status?: string; limit?: number; offset?: number }
+  options?: {
+    search?: string;
+    status?: string;
+    genre?: string;
+    verified?: 'all' | 'verified' | 'unverified';
+    sort?: OrgArtistSort;
+    limit?: number;
+    offset?: number;
+  }
 ): Promise<{ items: OrgArtistItem[]; total: number }> {
   const { data, error } = await supabase.rpc('list_organization_artists', {
     p_org_id: orgId,
@@ -212,6 +224,9 @@ export async function listOrganizationArtists(
     p_status: options?.status ?? 'active',
     p_limit: options?.limit ?? 50,
     p_offset: options?.offset ?? 0,
+    p_genre: options?.genre ?? null,
+    p_verified: options?.verified ?? 'all',
+    p_sort: options?.sort ?? 'streams',
   });
   if (error) throw error;
   return {
