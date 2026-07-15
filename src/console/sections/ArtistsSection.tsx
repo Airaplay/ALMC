@@ -12,11 +12,12 @@ import { AddArtistModal } from '../components/AddArtistModal';
 
 interface ArtistsSectionProps {
   onUploadArtist: (artist: OrgArtistItem) => void;
+  onFocusArtist?: (artist: OrgArtistItem) => void;
   initialShowInvite?: boolean;
 }
 
-export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSectionProps) {
-  const { organization, hasPermission, setArtistProfileId, setSelectedArtist } = useOrganization();
+export function ArtistsSection({ onUploadArtist, onFocusArtist, initialShowInvite }: ArtistsSectionProps) {
+  const { organization, hasPermission, artistProfileId, setArtistProfileId, setSelectedArtist } = useOrganization();
   const [artists, setArtists] = useState<OrgArtistItem[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
@@ -88,7 +89,6 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
     if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
     return n.toLocaleString();
   };
-
   const statusLabel = (artist: OrgArtistItem) => {
     if (artist.is_pending_invitation) {
       return artist.invitation_type === 'create_new' ? 'invite pending' : 'link pending';
@@ -158,7 +158,11 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
           {artists.map((artist) => (
             <div
               key={artist.link_id}
-              className="rounded-2xl border border-border bg-card p-4 sm:p-5"
+              className={`rounded-2xl border bg-card p-4 sm:p-5 ${
+                artist.artist_profile_id && artistProfileId === artist.artist_profile_id
+                  ? 'border-[#309605]/50 ring-1 ring-[#309605]/30'
+                  : 'border-border'
+              }`}
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div className="flex min-w-0 flex-1 items-center gap-4">
@@ -236,13 +240,19 @@ export function ArtistsSection({ onUploadArtist, initialShowInvite }: ArtistsSec
                     <button
                       type="button"
                       onClick={() => {
+                        if (!artist.artist_profile_id) return;
                         setArtistProfileId(artist.artist_profile_id);
                         setSelectedArtist(artist);
+                        onFocusArtist?.(artist);
                       }}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs text-secondary-foreground hover:bg-muted"
+                      className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs ${
+                        artistProfileId === artist.artist_profile_id
+                          ? 'border-[#3ba208]/40 bg-[#309605]/15 text-[#3ba208]'
+                          : 'border-border text-secondary-foreground hover:bg-muted'
+                      }`}
                     >
                       <BarChart3 className="h-3.5 w-3.5" />
-                      Focus
+                      {artistProfileId === artist.artist_profile_id ? 'Focused' : 'Focus'}
                     </button>
                   )}
                   {hasPermission('artists.revoke') && artist.link_status !== 'revoked' && (

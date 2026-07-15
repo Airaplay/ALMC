@@ -6,7 +6,7 @@ import { OrgContentUploadModal } from '../components/OrgContentUploadModal';
 import { LoadingLogo } from '../../components/LoadingLogo';
 
 export function ContentSection() {
-  const { organization, selectedArtist, artistProfileId, hasPermission } = useOrganization();
+  const { organization, hasPermission } = useOrganization();
   const [artists, setArtists] = useState<OrgArtistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadArtist, setUploadArtist] = useState<OrgArtistItem | null>(null);
@@ -17,12 +17,6 @@ export function ContentSection() {
       .then(({ items }) => setArtists(items))
       .finally(() => setLoading(false));
   }, [organization?.id]);
-
-  useEffect(() => {
-    if (selectedArtist && artistProfileId) {
-      setUploadArtist(selectedArtist);
-    }
-  }, [selectedArtist, artistProfileId]);
 
   if (!hasPermission('content.view')) {
     return <p className="text-muted-foreground">You don&apos;t have permission to view content.</p>;

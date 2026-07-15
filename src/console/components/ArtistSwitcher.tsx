@@ -5,9 +5,10 @@ import { listOrganizationArtists, OrgArtistItem } from '../../lib/orgAccess';
 
 interface ArtistSwitcherProps {
   onAddArtist?: () => void;
+  onFocusArtist?: () => void;
 }
 
-export function ArtistSwitcher({ onAddArtist }: ArtistSwitcherProps) {
+export function ArtistSwitcher({ onAddArtist, onFocusArtist }: ArtistSwitcherProps) {
   const {
     organization,
     artistProfileId,
@@ -43,6 +44,7 @@ export function ArtistSwitcher({ onAddArtist }: ArtistSwitcherProps) {
     if (artist?.artist_profile_id) {
       setArtistProfileId(artist.artist_profile_id);
       setSelectedArtist(artist);
+      onFocusArtist?.();
     } else {
       setArtistProfileId(null);
       setSelectedArtist(null);

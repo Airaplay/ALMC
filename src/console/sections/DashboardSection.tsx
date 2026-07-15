@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { getOrganizationDashboard, OrgDashboardData } from '../../lib/orgAccess';
 import { LoadingLogo } from '../../components/LoadingLogo';
@@ -45,10 +46,18 @@ function KpiCard({
 }
 
 export function DashboardSection() {
-  const { organization } = useOrganization();
+  const {
+    organization,
+    artistProfileId,
+    selectedArtist,
+    setArtistProfileId,
+    setSelectedArtist,
+  } = useOrganization();
   const [data, setData] = useState<OrgDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const isArtistFocus = Boolean(artistProfileId && selectedArtist);
 
   useEffect(() => {
     if (!organization?.id) return;
@@ -58,6 +67,11 @@ export function DashboardSection() {
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load dashboard'))
       .finally(() => setLoading(false));
   }, [organization?.id]);
+
+  const clearFocus = () => {
+    setArtistProfileId(null);
+    setSelectedArtist(null);
+  };
 
   if (loading) {
     return (
@@ -74,6 +88,67 @@ export function DashboardSection() {
   }
 
   if (!data) return null;
+
+  if (isArtistFocus && selectedArtist) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-foreground">{selectedArtist.stage_name}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Artist performance overview</p>
+          </div>
+          <button
+            type="button"
+            onClick={clearFocus}
+            className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm text-secondary-foreground hover:bg-muted"
+          >
+            <X className="h-4 w-4" />
+            View all artists
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4 rounded-2xl border border-[#3ba208]/30 bg-[#309605]/10 p-4">
+          {selectedArtist.profile_photo_url ? (
+            <img
+              src={selectedArtist.profile_photo_url}
+              alt=""
+              className="h-14 w-14 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted text-lg font-semibold">
+              {selectedArtist.stage_name.charAt(0)}
+            </div>
+          )}
+          <div>
+            <p className="font-medium text-foreground">{selectedArtist.email}</p>
+            {selectedArtist.country && (
+              <p className="text-sm text-muted-foreground">{selectedArtist.country}</p>
+            )}
+            {selectedArtist.latest_release?.title && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Latest: {selectedArtist.latest_release.title}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <KpiCard label="Streams" value={formatNumber(Number(selectedArtist.streams))} icon={Play} />
+          <KpiCard label="Followers" value={formatNumber(Number(selectedArtist.followers))} icon={Heart} />
+          <KpiCard label="Revenue" value={formatRevenueUsd(Number(selectedArtist.revenue))} icon={DollarSign} />
+          <KpiCard
+            label="Org rank (streams)"
+            value={
+              data.top_performing_artist?.artist_profile_id === selectedArtist.artist_profile_id
+                ? '#1'
+                : '—'
+            }
+            icon={Activity}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

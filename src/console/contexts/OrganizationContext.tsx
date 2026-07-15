@@ -9,6 +9,7 @@ import {
   setStoredArtistProfileId,
   setStoredOrgId,
   OrgPermission,
+  listOrganizationArtists,
 } from '../../lib/orgAccess';
 
 interface OrganizationContextValue {
@@ -63,6 +64,16 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     refreshOrganizations();
   }, [refreshOrganizations]);
+
+  useEffect(() => {
+    if (!organizationId || !artistProfileId || selectedArtist) return;
+    listOrganizationArtists(organizationId, { status: 'active', limit: 100 })
+      .then(({ items }) => {
+        const match = items.find((a) => a.artist_profile_id === artistProfileId) ?? null;
+        if (match) setSelectedArtist(match);
+      })
+      .catch(() => undefined);
+  }, [organizationId, artistProfileId, selectedArtist]);
 
   const setOrganizationId = useCallback((orgId: string) => {
     setOrganizationIdState(orgId);

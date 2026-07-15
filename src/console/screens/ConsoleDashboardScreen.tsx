@@ -92,7 +92,11 @@ function ConsoleDashboardContent(): JSX.Element {
         return hasPermission('analytics.view') ? <DashboardSection /> : <p className="text-muted-foreground">Access denied</p>;
       case 'artists':
         return hasPermission('artists.view') ? (
-          <ArtistsSection onUploadArtist={handleUploadArtist} initialShowInvite={showInviteArtist} />
+          <ArtistsSection
+            onUploadArtist={handleUploadArtist}
+            initialShowInvite={showInviteArtist}
+            onFocusArtist={() => setActiveSection('dashboard')}
+          />
         ) : (
           <p className="text-muted-foreground">Access denied</p>
         );
@@ -161,6 +165,7 @@ function ConsoleDashboardContent(): JSX.Element {
                 setActiveSection('artists');
                 setShowInviteArtist(true);
               }}
+              onFocusArtist={() => setActiveSection('dashboard')}
             />
             <button
               type="button"
@@ -184,6 +189,7 @@ function ConsoleDashboardContent(): JSX.Element {
               setActiveSection('artists');
               setShowInviteArtist(true);
             }}
+            onFocusArtist={() => setActiveSection('dashboard')}
           />
           <button type="button" onClick={handleLogout} className="rounded-lg p-2 text-muted-foreground hover:text-foreground">
             <LogOut className="h-5 w-5" />
