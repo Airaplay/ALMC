@@ -117,7 +117,13 @@ function CatalogList({
   );
 }
 
-export function AnalyticsSection() {
+export function AnalyticsSection({
+  fromArtists = false,
+  onBackToArtists,
+}: {
+  fromArtists?: boolean;
+  onBackToArtists?: () => void;
+} = {}) {
   const { organization, artistProfileId, selectedArtist, hasPermission, setArtistProfileId, setSelectedArtist } =
     useOrganization();
   const [days, setDays] = useState(30);
@@ -176,6 +182,16 @@ export function AnalyticsSection() {
     setSelectedArtist(null);
   };
 
+  const handleBack = () => {
+    if (fromArtists && onBackToArtists) {
+      setArtistProfileId(null);
+      setSelectedArtist(null);
+      onBackToArtists();
+      return;
+    }
+    clearArtistScope();
+  };
+
   if (!hasPermission('analytics.view')) {
     return <p className="text-muted-foreground">You don&apos;t have permission to view analytics.</p>;
   }
@@ -187,11 +203,11 @@ export function AnalyticsSection() {
           {isArtistScope && selectedArtist && (
             <button
               type="button"
-              onClick={clearArtistScope}
+              onClick={handleBack}
               className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to org-wide analytics
+              {fromArtists ? 'Back to artists' : 'Back to org-wide analytics'}
             </button>
           )}
           {isArtistScope && selectedArtist ? (

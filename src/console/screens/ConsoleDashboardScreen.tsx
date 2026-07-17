@@ -42,6 +42,7 @@ function ConsoleDashboardContent(): JSX.Element {
   const [showOrgMenu, setShowOrgMenu] = useState(false);
   const [uploadArtist, setUploadArtist] = useState<OrgArtistItem | null>(null);
   const [showInviteArtist, setShowInviteArtist] = useState(false);
+  const [analyticsFromArtists, setAnalyticsFromArtists] = useState(false);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 1024);
@@ -132,7 +133,10 @@ function ConsoleDashboardContent(): JSX.Element {
             onUploadArtist={handleUploadArtist}
             initialShowInvite={showInviteArtist}
             onFocusArtist={() => setActiveSection('dashboard')}
-            onOpenAnalytics={() => setActiveSection('analytics')}
+            onOpenAnalytics={() => {
+              setAnalyticsFromArtists(true);
+              setActiveSection('analytics');
+            }}
           />
         ) : (
           <p className="text-muted-foreground">Access denied</p>
@@ -144,7 +148,17 @@ function ConsoleDashboardContent(): JSX.Element {
           <p className="text-muted-foreground">Access denied</p>
         );
       case 'analytics':
-        return hasPermission('analytics.view') ? <AnalyticsSection /> : <p className="text-muted-foreground">Access denied</p>;
+        return hasPermission('analytics.view') ? (
+          <AnalyticsSection
+            fromArtists={analyticsFromArtists}
+            onBackToArtists={() => {
+              setAnalyticsFromArtists(false);
+              setActiveSection('artists');
+            }}
+          />
+        ) : (
+          <p className="text-muted-foreground">Access denied</p>
+        );
       case 'revenue':
         return hasPermission('analytics.view') || hasPermission('org.manage') ? (
           <RevenueSection />
@@ -167,6 +181,8 @@ function ConsoleDashboardContent(): JSX.Element {
         onSectionChange={(s) => {
           setActiveSection(s);
           setShowInviteArtist(false);
+          if (s !== 'analytics') setAnalyticsFromArtists(false);
+          if (s === 'analytics') setAnalyticsFromArtists(false);
         }}
         sidebarOpen={sidebarOpen}
         onCloseSidebar={() => setSidebarOpen(false)}
