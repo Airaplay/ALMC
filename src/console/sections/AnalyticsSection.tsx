@@ -254,28 +254,30 @@ export function AnalyticsSection({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="inline-flex rounded-xl border border-border bg-card p-1">
-          <button
-            type="button"
-            onClick={clearArtistScope}
-            className={cn(
-              'rounded-lg px-3 py-1.5 text-sm font-medium',
-              scope === 'org' ? 'bg-[#3ba208] text-white' : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            Org-wide
-          </button>
-          <button
-            type="button"
-            onClick={() => setScope('artist')}
-            className={cn(
-              'rounded-lg px-3 py-1.5 text-sm font-medium',
-              scope === 'artist' ? 'bg-[#3ba208] text-white' : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            Per Artist
-          </button>
-        </div>
+        {!fromArtists && (
+          <div className="inline-flex rounded-xl border border-border bg-card p-1">
+            <button
+              type="button"
+              onClick={clearArtistScope}
+              className={cn(
+                'rounded-lg px-3 py-1.5 text-sm font-medium',
+                scope === 'org' ? 'bg-[#3ba208] text-white' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              Org-wide
+            </button>
+            <button
+              type="button"
+              onClick={() => setScope('artist')}
+              className={cn(
+                'rounded-lg px-3 py-1.5 text-sm font-medium',
+                scope === 'artist' ? 'bg-[#3ba208] text-white' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              Per Artist
+            </button>
+          </div>
+        )}
 
         <select
           value={days}
