@@ -131,6 +131,7 @@ function ConsoleDashboardContent(): JSX.Element {
             onUploadArtist={handleUploadArtist}
             initialShowInvite={showInviteArtist}
             onFocusArtist={() => setActiveSection('dashboard')}
+            onOpenAnalytics={() => setActiveSection('analytics')}
           />
         ) : (
           <p className="text-muted-foreground">Access denied</p>

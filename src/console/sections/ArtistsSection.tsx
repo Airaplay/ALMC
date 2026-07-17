@@ -33,6 +33,7 @@ const PAGE_SIZE = 12;
 interface ArtistsSectionProps {
   onUploadArtist: (artist: OrgArtistItem) => void;
   onFocusArtist?: (artist: OrgArtistItem) => void;
+  onOpenAnalytics?: (artist: OrgArtistItem) => void;
   initialShowInvite?: boolean;
 }
 
@@ -79,7 +80,12 @@ function statusLabel(artist: OrgArtistItem): string {
   return artist.link_status.replace(/_/g, ' ');
 }
 
-export function ArtistsSection({ onUploadArtist, onFocusArtist, initialShowInvite }: ArtistsSectionProps) {
+export function ArtistsSection({
+  onUploadArtist,
+  onFocusArtist,
+  onOpenAnalytics,
+  initialShowInvite,
+}: ArtistsSectionProps) {
   const { organization, hasPermission, artistProfileId, setArtistProfileId, setSelectedArtist } =
     useOrganization();
   const [artists, setArtists] = useState<OrgArtistItem[]>([]);
@@ -236,7 +242,10 @@ export function ArtistsSection({ onUploadArtist, onFocusArtist, initialShowInvit
           {hasPermission('analytics.view') && (
             <button
               type="button"
-              onClick={() => focusArtist(artist, true)}
+              onClick={() => {
+                focusArtist(artist, false);
+                onOpenAnalytics?.(artist);
+              }}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs text-secondary-foreground hover:bg-muted"
             >
               <BarChart3 className="h-3.5 w-3.5" />

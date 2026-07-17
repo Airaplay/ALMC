@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Download, TrendingDown, TrendingUp, Minus } from 'lucide-react';
+import { ArrowLeft, Download, TrendingDown, TrendingUp, Minus } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { getOrganizationAnalytics, OrgAnalyticsData } from '../../lib/orgAccess';
@@ -78,6 +78,45 @@ function chartLabel(date: string): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+function CatalogList({
+  title,
+  empty,
+  items,
+}: {
+  title: string;
+  empty: string;
+  items: Array<{ id: string; title: string; stage_name: string; streams: number; cover_url: string | null }>;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+      <div className="mt-3 space-y-3">
+        {items.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{empty}</p>
+        ) : (
+          items.map((s, i) => (
+            <div key={s.id} className="flex items-center gap-3 text-sm">
+              <span className="w-5 shrink-0 tabular-nums text-xs text-muted-foreground">{i + 1}</span>
+              {s.cover_url ? (
+                <img src={s.cover_url} alt="" className="h-9 w-9 rounded-lg object-cover" />
+              ) : (
+                <div className="h-9 w-9 rounded-lg bg-secondary" />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-foreground">{s.title}</p>
+                {s.stage_name && (
+                  <p className="truncate text-xs text-muted-foreground">{s.stage_name}</p>
+                )}
+              </div>
+              <span className="tabular-nums text-muted-foreground">{formatNumber(s.streams)}</span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function AnalyticsSection() {
   const { organization, artistProfileId, selectedArtist, hasPermission, setArtistProfileId, setSelectedArtist } =
     useOrganization();
@@ -87,6 +126,8 @@ export function AnalyticsSection() {
   const [data, setData] = useState<OrgAnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const isArtistScope = scope === 'artist' && Boolean(artistProfileId && selectedArtist);
 
   useEffect(() => {
     if (artistProfileId) setScope('artist');
@@ -129,6 +170,12 @@ export function AnalyticsSection() {
     return Array.from(map.entries()).map(([name, value]) => ({ name, value }));
   }, [data]);
 
+  const clearArtistScope = () => {
+    setScope('org');
+    setArtistProfileId(null);
+    setSelectedArtist(null);
+  };
+
   if (!hasPermission('analytics.view')) {
     return <p className="text-muted-foreground">You don&apos;t have permission to view analytics.</p>;
   }
@@ -136,12 +183,41 @@ export function AnalyticsSection() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-foreground">Analytics</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Organization overview with period comparison
-            {scope === 'artist' && selectedArtist ? ` · ${selectedArtist.stage_name}` : ''}
-          </p>
+        <div className="min-w-0 space-y-3">
+          {isArtistScope && selectedArtist && (
+            <button
+              type="button"
+              onClick={clearArtistScope}
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to org-wide analytics
+            </button>
+          )}
+          {isArtistScope && selectedArtist ? (
+            <div className="flex min-w-0 items-center gap-3">
+              {selectedArtist.profile_photo_url ? (
+                <img
+                  src={selectedArtist.profile_photo_url}
+                  alt=""
+                  className="h-12 w-12 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold">
+                  {selectedArtist.stage_name.charAt(0)}
+                </div>
+              )}
+              <div className="min-w-0">
+                <h2 className="truncate text-2xl font-semibold text-foreground">{selectedArtist.stage_name}</h2>
+                <p className="text-sm text-muted-foreground">Artist analytics · period comparison</p>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <h2 className="text-2xl font-semibold text-foreground">Analytics</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Organization overview with period comparison</p>
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-[#3ba208]/30 bg-[#3ba208]/10 px-2.5 py-1 text-[11px] font-semibold text-[#3ba208]">
@@ -165,11 +241,7 @@ export function AnalyticsSection() {
         <div className="inline-flex rounded-xl border border-border bg-card p-1">
           <button
             type="button"
-            onClick={() => {
-              setScope('org');
-              setArtistProfileId(null);
-              setSelectedArtist(null);
-            }}
+            onClick={clearArtistScope}
             className={cn(
               'rounded-lg px-3 py-1.5 text-sm font-medium',
               scope === 'org' ? 'bg-[#3ba208] text-white' : 'text-muted-foreground hover:text-foreground'
@@ -229,6 +301,36 @@ export function AnalyticsSection() {
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">{error}</div>
       ) : !data ? null : (
         <>
+          {isArtistScope && selectedArtist && (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <p className="text-xs text-muted-foreground">Followers</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-foreground">
+                  {formatNumber(Number(selectedArtist.followers))}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <p className="text-xs text-muted-foreground">Lifetime streams</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-foreground">
+                  {formatNumber(Number(selectedArtist.streams))}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <p className="text-xs text-muted-foreground">Lifetime revenue</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-foreground">
+                  {formatUsd(Number(selectedArtist.revenue))}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <p className="text-xs text-muted-foreground">Period streams</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-foreground">
+                  {formatNumber(data.period_streams)}
+                </p>
+                <Delta current={data.period_streams} previous={data.previous_period_streams} />
+              </div>
+            </div>
+          )}
+
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="space-y-4 rounded-2xl border border-border bg-card p-5 lg:col-span-2">
               {(tab === 'streams' || tab === 'listeners') && (
@@ -276,29 +378,78 @@ export function AnalyticsSection() {
               )}
 
               {tab === 'revenue' && (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Period revenue (ads)</p>
-                    <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
-                      {formatUsd(data.period_revenue)}
-                    </p>
-                    <Delta current={data.period_revenue} previous={data.previous_period_revenue} />
+                <div className="space-y-6">
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Period revenue (ads)</p>
+                      <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
+                        {formatUsd(data.period_revenue)}
+                      </p>
+                      <Delta current={data.period_revenue} previous={data.previous_period_revenue} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Previous period</p>
+                      <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
+                        {formatUsd(data.previous_period_revenue)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Est. per stream</p>
+                      <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
+                        {data.period_streams > 0
+                          ? formatUsd(data.period_revenue / data.period_streams)
+                          : formatUsd(0)}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Previous period</p>
-                    <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
-                      {formatUsd(data.previous_period_revenue)}
-                    </p>
-                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Ad revenue attributed to this {isArtistScope ? 'artist' : 'organization'} for the selected
+                    period. Treats and payouts are available in Revenue.
+                  </p>
                 </div>
               )}
 
               {tab === 'retention' && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Average completion rate</p>
-                  <p className="mt-1 text-3xl font-semibold tabular-nums text-foreground">{data.avg_completion}%</p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Share of track duration listeners typically complete in this period.
+                <div className="space-y-6">
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Avg completion</p>
+                      <p className="mt-1 text-3xl font-semibold tabular-nums text-foreground">
+                        {data.avg_completion}%
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Period listeners</p>
+                      <p className="mt-1 text-3xl font-semibold tabular-nums text-foreground">
+                        {formatNumber(data.period_listeners)}
+                      </p>
+                      <Delta current={data.period_listeners} previous={data.previous_period_listeners} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Streams / listener</p>
+                      <p className="mt-1 text-3xl font-semibold tabular-nums text-foreground">
+                        {data.period_listeners > 0
+                          ? (data.period_streams / data.period_listeners).toFixed(1)
+                          : '—'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                        <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                        <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                        <Tooltip
+                          contentStyle={{ background: '#141416', border: '1px solid #2a2a2e', borderRadius: 12 }}
+                        />
+                        <Bar dataKey="listeners" fill="#60a5fa" radius={[6, 6, 0, 0]} name="Listeners" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Completion is the share of track duration listeners typically finish. Listener trend shows
+                    return engagement across the period.
                   </p>
                 </div>
               )}
@@ -322,10 +473,11 @@ export function AnalyticsSection() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    {(data.age_gender ?? []).slice(0, 8).map((row, i) => (
+                    {(data.age_gender ?? []).slice(0, 10).map((row, i) => (
                       <div key={`${row.gender}-${row.age_bucket}-${i}`} className="flex justify-between text-sm">
                         <span className="capitalize text-muted-foreground">
-                          {(row.gender ?? 'unknown').replace('_', ' ')} · {(row.age_bucket ?? 'unknown').replace('_', '-')}
+                          {(row.gender ?? 'unknown').replace('_', ' ')} ·{' '}
+                          {(row.age_bucket ?? 'unknown').replace('_', '-')}
                         </span>
                         <span className="tabular-nums text-foreground">{formatNumber(row.listeners ?? 0)}</span>
                       </div>
@@ -355,6 +507,22 @@ export function AnalyticsSection() {
               </div>
 
               <div className="rounded-2xl border border-border bg-card p-5">
+                <h3 className="text-sm font-semibold text-foreground">Top Cities</h3>
+                <div className="mt-3 space-y-2">
+                  {(data.top_cities ?? []).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No city data yet</p>
+                  ) : (
+                    data.top_cities.slice(0, 8).map((c) => (
+                      <div key={c.city} className="flex items-center justify-between text-sm">
+                        <span className="text-foreground">{c.city}</span>
+                        <span className="tabular-nums text-muted-foreground">{formatNumber(c.streams)}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-card p-5">
                 <h3 className="text-sm font-semibold text-foreground">Devices</h3>
                 <div className="mt-3 space-y-2">
                   {(data.devices ?? []).length === 0 ? (
@@ -372,74 +540,50 @@ export function AnalyticsSection() {
             </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <h3 className="text-sm font-semibold text-foreground">Top Songs</h3>
-              <div className="mt-3 space-y-3">
-                {(data.top_songs ?? []).length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No song plays yet</p>
-                ) : (
-                  data.top_songs.slice(0, 5).map((s) => (
-                    <div key={s.id} className="flex items-center justify-between gap-3 text-sm">
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-foreground">{s.title}</p>
-                        <p className="truncate text-xs text-muted-foreground">{s.stage_name}</p>
+          <div className={cn('grid gap-4', isArtistScope ? 'lg:grid-cols-2' : 'lg:grid-cols-3')}>
+            <CatalogList
+              title="Top Songs"
+              empty="No song plays yet"
+              items={(data.top_songs ?? []).slice(0, isArtistScope ? 10 : 5)}
+            />
+            <CatalogList
+              title="Top Albums"
+              empty="No album plays yet"
+              items={(data.top_albums ?? []).slice(0, isArtistScope ? 10 : 5)}
+            />
+            {!isArtistScope && (
+              <div className="rounded-2xl border border-border bg-card p-5">
+                <h3 className="text-sm font-semibold text-foreground">Growth Comparison</h3>
+                <div className="mt-3 space-y-3">
+                  {(data.growth_comparison ?? []).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No artist growth data yet</p>
+                  ) : (
+                    data.growth_comparison.slice(0, 5).map((a) => (
+                      <div key={a.artist_profile_id} className="flex items-center justify-between gap-3 text-sm">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-foreground">{a.stage_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatNumber(a.period_streams)} streams
+                          </p>
+                        </div>
+                        <span
+                          className={cn(
+                            'tabular-nums text-xs font-semibold',
+                            a.growth_pct >= 0 ? 'text-[#3ba208]' : 'text-red-400'
+                          )}
+                        >
+                          {a.growth_pct >= 0 ? '+' : ''}
+                          {a.growth_pct}%
+                        </span>
                       </div>
-                      <span className="tabular-nums text-muted-foreground">{formatNumber(s.streams)}</span>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
+                <p className="mt-4 text-xs text-muted-foreground">
+                  Playlist placements & traffic sources arrive in a later analytics pass.
+                </p>
               </div>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <h3 className="text-sm font-semibold text-foreground">Top Albums</h3>
-              <div className="mt-3 space-y-3">
-                {(data.top_albums ?? []).length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No album plays yet</p>
-                ) : (
-                  data.top_albums.slice(0, 5).map((a) => (
-                    <div key={a.id} className="flex items-center justify-between gap-3 text-sm">
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-foreground">{a.title}</p>
-                        <p className="truncate text-xs text-muted-foreground">{a.stage_name}</p>
-                      </div>
-                      <span className="tabular-nums text-muted-foreground">{formatNumber(a.streams)}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <h3 className="text-sm font-semibold text-foreground">Growth Comparison</h3>
-              <div className="mt-3 space-y-3">
-                {(data.growth_comparison ?? []).length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No artist growth data yet</p>
-                ) : (
-                  data.growth_comparison.slice(0, 5).map((a) => (
-                    <div key={a.artist_profile_id} className="flex items-center justify-between gap-3 text-sm">
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-foreground">{a.stage_name}</p>
-                        <p className="text-xs text-muted-foreground">{formatNumber(a.period_streams)} streams</p>
-                      </div>
-                      <span
-                        className={cn(
-                          'tabular-nums text-xs font-semibold',
-                          a.growth_pct >= 0 ? 'text-[#3ba208]' : 'text-red-400'
-                        )}
-                      >
-                        {a.growth_pct >= 0 ? '+' : ''}
-                        {a.growth_pct}%
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-              <p className="mt-4 text-xs text-muted-foreground">
-                Playlist placements & traffic sources arrive in a later analytics pass.
-              </p>
-            </div>
+            )}
           </div>
         </>
       )}
