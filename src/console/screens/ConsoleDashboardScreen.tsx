@@ -64,6 +64,14 @@ function ConsoleDashboardContent(): JSX.Element {
     setUploadArtist(artist);
   }, []);
 
+  const handleOpenUpload = useCallback(() => {
+    if (selectedArtist) {
+      setUploadArtist(selectedArtist);
+      return;
+    }
+    setActiveSection('content');
+  }, [selectedArtist]);
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -88,14 +96,6 @@ function ConsoleDashboardContent(): JSX.Element {
       </div>
     );
   }
-
-  const handleOpenUpload = useCallback(() => {
-    if (selectedArtist) {
-      setUploadArtist(selectedArtist);
-      return;
-    }
-    setActiveSection('content');
-  }, [selectedArtist]);
 
   const renderSection = () => {
     switch (activeSection) {

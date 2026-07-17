@@ -32,7 +32,16 @@ interface CalendarSectionProps {
 }
 
 function statusForItem(item: OrgReleaseCalendarItem) {
-  return RELEASE_STATUS_STYLES[item.calendar_status];
+  return RELEASE_STATUS_STYLES[item.calendar_status] ?? RELEASE_STATUS_STYLES.published;
+}
+
+function safeParseDate(value: string): Date | null {
+  try {
+    const d = parseISO(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  } catch {
+    return null;
+  }
 }
 
 function ReleaseCard({ item, compact = false }: { item: OrgReleaseCalendarItem; compact?: boolean }) {
@@ -118,7 +127,9 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
   const itemsByDay = useMemo(() => {
     const map = new Map<string, OrgReleaseCalendarItem[]>();
     for (const item of items) {
-      const key = format(parseISO(item.scheduled_at), 'yyyy-MM-dd');
+      const d = safeParseDate(item.scheduled_at);
+      if (!d) continue;
+      const key = format(d, 'yyyy-MM-dd');
       const list = map.get(key) ?? [];
       list.push(item);
       map.set(key, list);
@@ -131,8 +142,8 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
     const horizon = addDays(now, 7);
     return items
       .filter((item) => {
-        const d = parseISO(item.scheduled_at);
-        return d >= now && d <= horizon;
+        const d = safeParseDate(item.scheduled_at);
+        return !!d && d >= now && d <= horizon;
       })
       .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
       .slice(0, 10);
@@ -367,7 +378,10 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
               {items.map((item) => (
                 <div key={item.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4">
                   <div className="min-w-[120px] text-sm font-semibold text-foreground">
-                    {format(parseISO(item.scheduled_at), 'MMM d, yyyy')}
+                    {(() => {
+                      const d = safeParseDate(item.scheduled_at);
+                      return d ? format(d, 'MMM d, yyyy') : '—';
+                    })()}
                   </div>
                   <div className="min-w-0 flex-1">
                     <ReleaseCard item={item} compact />
@@ -387,7 +401,10 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
                     className="flex flex-wrap items-center gap-3 border-b border-border pb-3 last:border-b-0 last:pb-0"
                   >
                     <span className="text-sm font-medium text-muted-foreground">
-                      {format(parseISO(item.scheduled_at), 'MMM d')}
+                      {(() => {
+                        const d = safeParseDate(item.scheduled_at);
+                        return d ? format(d, 'MMM d') : '—';
+                      })()}
                     </span>
                     <span className="text-sm text-foreground">
                       {item.title} ({formatContentTypeLabel(item.content_type)})
