@@ -113,7 +113,6 @@ export function ArtistsSection({
       const result = await listOrganizationArtists(organization.id, {
         search: search || undefined,
         status: statusFilter,
-        genre: genreFilter || undefined,
         verified: verifiedFilter,
         sort: sortBy,
         limit: PAGE_SIZE,
@@ -126,23 +125,11 @@ export function ArtistsSection({
     } finally {
       setLoading(false);
     }
-  }, [organization?.id, search, statusFilter, genreFilter, verifiedFilter, sortBy, page]);
+  }, [organization?.id, search, statusFilter, verifiedFilter, sortBy, page]);
 
   useEffect(() => {
     loadArtists();
   }, [loadArtists]);
-
-  useEffect(() => {
-    if (!organization?.id) return;
-    listOrganizationArtists(organization.id, { status: 'all', limit: 500 })
-      .then(({ items }) => {
-        const genres = [
-          ...new Set(items.map((a) => a.genre).filter((g): g is string => Boolean(g && g.trim()))),
-        ].sort((a, b) => a.localeCompare(b));
-        setGenreOptions(genres);
-      })
-      .catch(() => setGenreOptions([]));
-  }, [organization?.id]);
 
   useEffect(() => {
     if (initialShowInvite) setShowAddModal(true);
@@ -150,7 +137,7 @@ export function ArtistsSection({
 
   useEffect(() => {
     setPage(0);
-  }, [search, statusFilter, genreFilter, verifiedFilter, sortBy]);
+  }, [search, statusFilter, verifiedFilter, sortBy]);
 
   const focusArtist = (artist: OrgArtistItem, navigate = false) => {
     if (!artist.artist_profile_id) return;
