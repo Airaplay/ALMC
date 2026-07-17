@@ -52,7 +52,6 @@ export function RevenueSection() {
       (data?.by_artist ?? []).slice(0, 8).map((a) => ({
         name: a.stage_name.length > 12 ? `${a.stage_name.slice(0, 12)}…` : a.stage_name,
         total: Number(a.total_earnings) || 0,
-        ads: Number(a.period_ads) || 0,
       })),
     [data]
   );
@@ -108,11 +107,10 @@ export function RevenueSection() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               { label: 'Total', value: data.total },
               { label: 'Treats (pending)', value: data.treats },
-              { label: 'Ads (period)', value: data.ads },
               { label: 'Pending', value: data.pending },
             ].map((kpi) => (
               <div key={kpi.label} className="rounded-2xl border border-border bg-card p-5">
@@ -151,7 +149,7 @@ export function RevenueSection() {
             </div>
 
             <div className="rounded-2xl border border-border bg-card p-5">
-              <h3 className="text-sm font-semibold text-foreground">Monthly trend (ads)</h3>
+              <h3 className="text-sm font-semibold text-foreground">Monthly trend</h3>
               <div className="mt-4 h-64">
                 {(data.monthly_trend ?? []).length === 0 ? (
                   <p className="text-sm text-muted-foreground">No monthly payouts yet</p>
@@ -183,14 +181,13 @@ export function RevenueSection() {
                   <tr>
                     <th className="px-5 py-3 font-semibold">Artist</th>
                     <th className="px-5 py-3 font-semibold">Total</th>
-                    <th className="px-5 py-3 font-semibold">Ads (period)</th>
                     <th className="px-5 py-3 font-semibold">% of org</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(data.by_artist ?? []).length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-5 py-8 text-center text-muted-foreground">
+                      <td colSpan={3} className="px-5 py-8 text-center text-muted-foreground">
                         No revenue rows yet
                       </td>
                     </tr>
@@ -199,7 +196,6 @@ export function RevenueSection() {
                       <tr key={row.artist_profile_id} className="border-t border-border">
                         <td className="px-5 py-3 font-medium text-foreground">{row.stage_name}</td>
                         <td className="px-5 py-3 tabular-nums text-foreground">{formatUsd(row.total_earnings)}</td>
-                        <td className="px-5 py-3 tabular-nums text-muted-foreground">{formatUsd(row.period_ads)}</td>
                         <td className="px-5 py-3 tabular-nums text-muted-foreground">{row.pct_of_org}%</td>
                       </tr>
                     ))

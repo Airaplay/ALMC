@@ -381,7 +381,7 @@ export function AnalyticsSection() {
                 <div className="space-y-6">
                   <div className="grid gap-4 sm:grid-cols-3">
                     <div>
-                      <p className="text-xs text-muted-foreground">Period revenue (ads)</p>
+                      <p className="text-xs text-muted-foreground">Period revenue</p>
                       <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
                         {formatUsd(data.period_revenue)}
                       </p>
@@ -403,7 +403,7 @@ export function AnalyticsSection() {
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Ad revenue attributed to this {isArtistScope ? 'artist' : 'organization'} for the selected
+                    Revenue attributed to this {isArtistScope ? 'artist' : 'organization'} for the selected
                     period. Treats and payouts are available in Revenue.
                   </p>
                 </div>
