@@ -56,7 +56,7 @@ function ConsoleDashboardContent(): JSX.Element {
   const greetingBlock = (
     <div className="min-w-0">
       {greeting.hiLine && (
-        <p className="truncate text-sm font-medium tracking-tight text-muted-foreground">
+        <p className="truncate text-base font-bold tracking-tight text-muted-foreground">
           {greeting.hiLine}
         </p>
       )}
@@ -69,7 +69,7 @@ function ConsoleDashboardContent(): JSX.Element {
   const greetingBlockMobile = (
     <div className="min-w-0">
       {greeting.hiLine && (
-        <p className="truncate text-xs font-medium tracking-tight text-muted-foreground">
+        <p className="truncate text-sm font-bold tracking-tight text-muted-foreground">
           {greeting.hiLine}
         </p>
       )}
