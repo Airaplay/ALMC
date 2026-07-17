@@ -141,6 +141,41 @@ export interface OrgMemberItem {
   role_name: string;
   status: string;
   joined_at: string | null;
+  artist_scope?: 'all' | 'selected';
+  artists_label?: string;
+  artist_count?: number;
+  last_active_at?: string | null;
+  last_active_label?: string;
+}
+
+export interface OrgPendingInviteItem {
+  id: string;
+  email: string;
+  role_key: string;
+  role_name: string;
+  status: string;
+  expires_at?: string;
+  created_at?: string;
+  artists_label?: string;
+  artist_count?: number;
+  last_active_label?: string;
+}
+
+export interface OrgRoleItem {
+  key: string;
+  name: string;
+  description: string;
+  is_system: boolean;
+  organization_id: string | null;
+  permissions: OrgPermission[];
+  permission_summary: string;
+  member_count: number;
+}
+
+export interface OrgTeamListResult {
+  members: OrgMemberItem[];
+  pending_invitations: OrgPendingInviteItem[];
+  member_count: number;
 }
 
 const ORG_STORAGE_KEY = 'airaplay_console_org_id';
@@ -464,10 +499,61 @@ export async function revokeOrganizationArtistAccess(
   if (error) throw error;
 }
 
-export async function listOrganizationMembers(orgId: string): Promise<OrgMemberItem[]> {
+export async function listOrganizationMembers(orgId: string): Promise<OrgTeamListResult> {
   const { data, error } = await supabase.rpc('list_organization_members', { p_org_id: orgId });
   if (error) throw error;
-  return (data?.members ?? []) as OrgMemberItem[];
+  return {
+    members: (data?.members ?? []) as OrgMemberItem[],
+    pending_invitations: (data?.pending_invitations ?? []) as OrgPendingInviteItem[],
+    member_count: Number(data?.member_count ?? data?.members?.length ?? 0),
+  };
+}
+
+export async function listOrganizationRoles(orgId: string): Promise<OrgRoleItem[]> {
+  const { data, error } = await supabase.rpc('list_organization_roles', { p_org_id: orgId });
+  if (error) throw error;
+  return (data?.roles ?? []) as OrgRoleItem[];
+}
+
+export async function createOrganizationCustomRole(
+  orgId: string,
+  input: { name: string; description?: string; permissions: OrgPermission[] }
+): Promise<{ key: string; name: string }> {
+  const { data, error } = await supabase.rpc('create_organization_custom_role', {
+    p_org_id: orgId,
+    p_name: input.name,
+    p_description: input.description ?? null,
+    p_permissions: input.permissions,
+  });
+  if (error) throw error;
+  return { key: data.key as string, name: data.name as string };
+}
+
+export async function updateOrganizationMember(
+  orgId: string,
+  memberId: string,
+  input: {
+    roleKey?: string;
+    artistScope?: 'all' | 'selected';
+    artistProfileIds?: string[];
+  }
+): Promise<void> {
+  const { error } = await supabase.rpc('update_organization_member', {
+    p_org_id: orgId,
+    p_member_id: memberId,
+    p_role_key: input.roleKey ?? null,
+    p_artist_scope: input.artistScope ?? null,
+    p_artist_profile_ids: input.artistProfileIds ?? null,
+  });
+  if (error) throw error;
+}
+
+export async function removeOrganizationMember(orgId: string, memberId: string): Promise<void> {
+  const { error } = await supabase.rpc('remove_organization_member', {
+    p_org_id: orgId,
+    p_member_id: memberId,
+  });
+  if (error) throw error;
 }
 
 export async function inviteOrganizationMember(
