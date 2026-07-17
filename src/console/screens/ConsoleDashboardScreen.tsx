@@ -15,6 +15,7 @@ import { ArtistSwitcher } from '../components/ArtistSwitcher';
 import { DashboardSection } from '../sections/DashboardSection';
 import { ArtistsSection } from '../sections/ArtistsSection';
 import { ContentSection } from '../sections/ContentSection';
+import { CalendarSection } from '../sections/CalendarSection';
 import { TeamSection } from '../sections/TeamSection';
 import { SettingsSection } from '../sections/SettingsSection';
 import { OrgArtistItem } from '../../lib/orgAccess';
@@ -23,6 +24,7 @@ import { OrgContentUploadModal } from '../components/OrgContentUploadModal';
 const SECTION_TITLES: Record<ConsoleSection, string> = {
   dashboard: 'Dashboard',
   artists: 'Artists',
+  calendar: 'Release Calendar',
   content: 'Content',
   team: 'Team',
   settings: 'Settings',
@@ -37,6 +39,7 @@ function ConsoleDashboardContent(): JSX.Element {
     error,
     setOrganizationId,
     hasPermission,
+    selectedArtist,
   } = useOrganization();
 
   const [activeSection, setActiveSection] = useState<ConsoleSection>('dashboard');
@@ -86,6 +89,14 @@ function ConsoleDashboardContent(): JSX.Element {
     );
   }
 
+  const handleOpenUpload = useCallback(() => {
+    if (selectedArtist) {
+      setUploadArtist(selectedArtist);
+      return;
+    }
+    setActiveSection('content');
+  }, [selectedArtist]);
+
   const renderSection = () => {
     switch (activeSection) {
       case 'dashboard':
@@ -97,6 +108,12 @@ function ConsoleDashboardContent(): JSX.Element {
             initialShowInvite={showInviteArtist}
             onFocusArtist={() => setActiveSection('dashboard')}
           />
+        ) : (
+          <p className="text-muted-foreground">Access denied</p>
+        );
+      case 'calendar':
+        return hasPermission('content.view') ? (
+          <CalendarSection onUpload={hasPermission('content.upload') ? handleOpenUpload : undefined} />
         ) : (
           <p className="text-muted-foreground">Access denied</p>
         );

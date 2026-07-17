@@ -50,6 +50,20 @@ export interface OrgActivityItem {
   created_at: string;
 }
 
+export type ReleaseCalendarStatus = 'draft' | 'scheduled' | 'published' | 'cancelled';
+
+export interface OrgReleaseCalendarItem {
+  id: string;
+  title: string;
+  content_type: string;
+  artist_profile_id: string;
+  stage_name: string;
+  profile_photo_url: string | null;
+  calendar_status: ReleaseCalendarStatus;
+  scheduled_at: string;
+  cover_url: string | null;
+}
+
 export interface OrgDashboardData {
   period_days: number;
   period_start: string;
@@ -202,6 +216,26 @@ export async function getOrganizationDashboard(
   });
   if (error) throw error;
   return data as OrgDashboardData;
+}
+
+export async function getOrganizationReleaseCalendar(
+  orgId: string,
+  options?: {
+    start?: string;
+    end?: string;
+    status?: 'all' | ReleaseCalendarStatus;
+    artistProfileId?: string | null;
+  }
+): Promise<OrgReleaseCalendarItem[]> {
+  const { data, error } = await supabase.rpc('get_organization_release_calendar', {
+    p_org_id: orgId,
+    p_start: options?.start ?? null,
+    p_end: options?.end ?? null,
+    p_status: options?.status ?? 'all',
+    p_artist_profile_id: options?.artistProfileId ?? null,
+  });
+  if (error) throw error;
+  return (data ?? []) as OrgReleaseCalendarItem[];
 }
 
 export type OrgArtistSort = 'streams' | 'monthly_streams' | 'followers' | 'revenue' | 'stage_name' | 'linked_at';

@@ -1,11 +1,11 @@
-import { Users, LayoutDashboard, Upload, UserCog, Settings, LogOut, Menu, X, Building2 } from 'lucide-react';
+import { Users, LayoutDashboard, Upload, UserCog, Settings, LogOut, Menu, X, Building2, CalendarDays } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { orgHasPermission, OrgPermission } from '../../lib/orgAccess';
 import { almcRoutes } from '../../lib/almcRoutes';
 import { consoleTheme } from '../consoleTheme';
 
-export type ConsoleSection = 'dashboard' | 'artists' | 'content' | 'team' | 'settings';
+export type ConsoleSection = 'dashboard' | 'artists' | 'calendar' | 'content' | 'team' | 'settings';
 
 interface ConsoleSidebarProps {
   activeSection: ConsoleSection;
@@ -24,6 +24,7 @@ const NAV_ITEMS: Array<{
 }> = [
   { section: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: 'analytics.view' },
   { section: 'artists', label: 'Artists', icon: Users, permission: 'artists.view' },
+  { section: 'calendar', label: 'Calendar', icon: CalendarDays, permission: 'content.view' },
   { section: 'content', label: 'Content', icon: Upload, permission: 'content.view' },
   { section: 'team', label: 'Team', icon: UserCog, permission: 'team.manage' },
   { section: 'settings', label: 'Settings', icon: Settings, permission: 'org.settings' },
