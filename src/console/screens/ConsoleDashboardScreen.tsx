@@ -14,7 +14,6 @@ import {
 import { ArtistSwitcher } from '../components/ArtistSwitcher';
 import { DashboardSection } from '../sections/DashboardSection';
 import { ArtistsSection } from '../sections/ArtistsSection';
-import { ContentSection } from '../sections/ContentSection';
 import { CalendarSection } from '../sections/CalendarSection';
 import { AnalyticsSection } from '../sections/AnalyticsSection';
 import { RevenueSection } from '../sections/RevenueSection';
@@ -68,7 +67,7 @@ function ConsoleDashboardContent(): JSX.Element {
       setUploadArtist(selectedArtist);
       return;
     }
-    setActiveSection('content');
+    setActiveSection('artists');
   }, [selectedArtist]);
 
   if (isLoading) {
@@ -116,8 +115,6 @@ function ConsoleDashboardContent(): JSX.Element {
         ) : (
           <p className="text-muted-foreground">Access denied</p>
         );
-      case 'content':
-        return <ContentSection />;
       case 'analytics':
         return hasPermission('analytics.view') ? <AnalyticsSection /> : <p className="text-muted-foreground">Access denied</p>;
       case 'revenue':

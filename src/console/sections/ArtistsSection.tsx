@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Eye,
   FileSpreadsheet,
+  FolderOpen,
 } from 'lucide-react';
 import { useOrganization } from '../contexts/OrganizationContext';
 import {
@@ -25,6 +26,7 @@ import {
 } from '../../lib/orgAccess';
 import { LoadingLogo } from '../../components/LoadingLogo';
 import { AddArtistModal } from '../components/AddArtistModal';
+import { ArtistContentPanel } from '../components/ArtistContentPanel';
 
 const PAGE_SIZE = 12;
 
@@ -95,6 +97,7 @@ export function ArtistsSection({ onUploadArtist, onFocusArtist, initialShowInvit
   const [showAddModal, setShowAddModal] = useState(initialShowInvite ?? false);
   const [verifyEmail, setVerifyEmail] = useState<string | undefined>();
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [contentArtist, setContentArtist] = useState<OrgArtistItem | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -218,6 +221,16 @@ export function ArtistsSection({ onUploadArtist, onFocusArtist, initialShowInvit
             >
               <Upload className="h-3.5 w-3.5" />
               Upload
+            </button>
+          )}
+          {hasPermission('content.view') && (
+            <button
+              type="button"
+              onClick={() => setContentArtist(artist)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs text-secondary-foreground hover:bg-muted"
+            >
+              <FolderOpen className="h-3.5 w-3.5" />
+              Content
             </button>
           )}
           {hasPermission('analytics.view') && (
@@ -576,6 +589,10 @@ export function ArtistsSection({ onUploadArtist, onFocusArtist, initialShowInvit
           initialEmail={verifyEmail}
           initialStep={verifyEmail ? 'verify' : 'details'}
         />
+      )}
+
+      {contentArtist && (
+        <ArtistContentPanel artist={contentArtist} onClose={() => setContentArtist(null)} />
       )}
     </div>
   );
