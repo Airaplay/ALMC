@@ -370,6 +370,56 @@ export async function getOrganizationRevenue(
 
 export type OrgArtistSort = 'streams' | 'monthly_streams' | 'followers' | 'revenue' | 'stage_name' | 'linked_at';
 
+export interface OrgContentItem {
+  id: string;
+  title: string;
+  content_type: string;
+  status: string;
+  play_count: number;
+  created_at: string;
+  updated_at: string;
+  artist_profile_id: string;
+  stage_name: string;
+  profile_photo_url: string | null;
+  cover_url: string | null;
+  release_status: string;
+  release_at: string | null;
+}
+
+export interface OrgContentListResult {
+  items: OrgContentItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export async function listOrganizationContent(
+  orgId: string,
+  options?: {
+    artistProfileId?: string | null;
+    contentType?: string | null;
+    search?: string | null;
+    limit?: number;
+    offset?: number;
+  }
+): Promise<OrgContentListResult> {
+  const { data, error } = await supabase.rpc('list_organization_content', {
+    p_org_id: orgId,
+    p_artist_profile_id: options?.artistProfileId ?? null,
+    p_content_type: options?.contentType ?? null,
+    p_search: options?.search ?? null,
+    p_limit: options?.limit ?? 50,
+    p_offset: options?.offset ?? 0,
+  });
+  if (error) throw error;
+  return {
+    items: (data?.items ?? []) as OrgContentItem[],
+    total: Number(data?.total ?? 0),
+    limit: Number(data?.limit ?? 50),
+    offset: Number(data?.offset ?? 0),
+  };
+}
+
 export async function listOrganizationArtists(
   orgId: string,
   options?: {

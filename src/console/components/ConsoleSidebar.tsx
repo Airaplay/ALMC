@@ -146,16 +146,21 @@ export function ConsoleSidebar({
 export function ConsoleMobileHeader({
   onOpenSidebar,
   title,
+  subtitle,
 }: {
   onOpenSidebar: () => void;
   title: string;
+  subtitle?: string;
 }) {
   return (
     <div className="flex items-center gap-3 border-b border-border px-4 py-3 lg:hidden">
       <button type="button" onClick={onOpenSidebar} className="text-muted-foreground hover:text-foreground">
         <Menu className="h-5 w-5" />
       </button>
-      <h1 className="text-base font-semibold text-foreground">{title}</h1>
+      <div className="min-w-0">
+        {subtitle ? <p className="truncate text-xs text-muted-foreground">{subtitle}</p> : null}
+        <h1 className="truncate text-base font-semibold text-foreground">{title}</h1>
+      </div>
     </div>
   );
 }

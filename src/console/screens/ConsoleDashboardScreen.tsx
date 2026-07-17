@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, ChevronDown } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -22,6 +22,10 @@ import { TeamSection } from '../sections/TeamSection';
 import { SettingsSection } from '../sections/SettingsSection';
 import { OrgArtistItem } from '../../lib/orgAccess';
 import { OrgContentUploadModal } from '../components/OrgContentUploadModal';
+import {
+  firstNameFromDisplay,
+  formatConsoleGreeting,
+} from '../utils/consoleGreeting';
 
 const SECTION_TITLES: Record<ConsoleSection, string> = {
   dashboard: 'Dashboard',
@@ -52,12 +56,41 @@ function ConsoleDashboardContent(): JSX.Element {
   const [showOrgMenu, setShowOrgMenu] = useState(false);
   const [uploadArtist, setUploadArtist] = useState<OrgArtistItem | null>(null);
   const [showInviteArtist, setShowInviteArtist] = useState(false);
+  const [greetingName, setGreetingName] = useState('');
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      const metaName =
+        (user.user_metadata?.display_name as string | undefined) ??
+        (user.user_metadata?.full_name as string | undefined) ??
+        null;
+      if (metaName) {
+        setGreetingName(firstNameFromDisplay(metaName, user.email));
+        return;
+      }
+      const { data: profile } = await supabase
+        .from('users')
+        .select('display_name')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      setGreetingName(firstNameFromDisplay(profile?.display_name, user.email));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const greeting = useMemo(() => formatConsoleGreeting(greetingName), [greetingName]);
 
   const handleLogout = async () => {
     await performCompleteLogout();
@@ -156,7 +189,10 @@ function ConsoleDashboardContent(): JSX.Element {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="hidden items-center justify-between border-b border-border px-6 py-4 lg:flex">
-          <h1 className="text-lg font-semibold text-foreground">{SECTION_TITLES[activeSection]}</h1>
+          <div className="min-w-0">
+            <p className="truncate text-sm text-muted-foreground">{greeting}</p>
+            <h1 className="text-lg font-semibold text-foreground">{SECTION_TITLES[activeSection]}</h1>
+          </div>
           <div className="flex items-center gap-3">
             {organizations.length > 1 && (
               <div className="relative">
@@ -210,6 +246,7 @@ function ConsoleDashboardContent(): JSX.Element {
         <ConsoleMobileHeader
           onOpenSidebar={() => setSidebarOpen(true)}
           title={SECTION_TITLES[activeSection]}
+          subtitle={greeting}
         />
 
         <div className="flex items-center justify-end gap-2 border-b border-border px-4 py-2 lg:hidden">
