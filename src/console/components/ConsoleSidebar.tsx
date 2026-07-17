@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Users, LayoutDashboard, UserCog, Settings, LogOut, Menu, X, Building2, CalendarDays, BarChart3, DollarSign } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useOrganization } from '../contexts/OrganizationContext';
@@ -146,14 +147,14 @@ export function ConsoleMobileHeader({
   title,
 }: {
   onOpenSidebar: () => void;
-  title: string;
+  title: ReactNode;
 }) {
   return (
     <div className="flex items-center gap-3 border-b border-border px-4 py-3 lg:hidden">
       <button type="button" onClick={onOpenSidebar} className="text-muted-foreground hover:text-foreground">
         <Menu className="h-5 w-5" />
       </button>
-      <h1 className="min-w-0 truncate text-lg font-black tracking-tight text-foreground">{title}</h1>
+      <div className="min-w-0 flex-1">{title}</div>
     </div>
   );
 }

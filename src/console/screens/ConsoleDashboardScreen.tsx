@@ -21,7 +21,7 @@ import { TeamSection } from '../sections/TeamSection';
 import { SettingsSection } from '../sections/SettingsSection';
 import { OrgArtistItem } from '../../lib/orgAccess';
 import { OrgContentUploadModal } from '../components/OrgContentUploadModal';
-import { formatConsoleGreeting } from '../utils/consoleGreeting';
+import { getConsoleGreetingParts } from '../utils/consoleGreeting';
 
 function ConsoleDashboardContent(): JSX.Element {
   const navigate = useNavigate();
@@ -49,8 +49,34 @@ function ConsoleDashboardContent(): JSX.Element {
   }, []);
 
   const greeting = useMemo(
-    () => formatConsoleGreeting(organization?.name),
+    () => getConsoleGreetingParts(organization?.name),
     [organization?.name]
+  );
+
+  const greetingBlock = (
+    <div className="min-w-0">
+      {greeting.hiLine && (
+        <p className="truncate text-sm font-medium tracking-tight text-muted-foreground">
+          {greeting.hiLine}
+        </p>
+      )}
+      <h1 className="truncate text-2xl font-black tracking-tight text-foreground lg:text-3xl">
+        {greeting.timeGreeting}
+      </h1>
+    </div>
+  );
+
+  const greetingBlockMobile = (
+    <div className="min-w-0">
+      {greeting.hiLine && (
+        <p className="truncate text-xs font-medium tracking-tight text-muted-foreground">
+          {greeting.hiLine}
+        </p>
+      )}
+      <h1 className="truncate text-lg font-black tracking-tight text-foreground">
+        {greeting.timeGreeting}
+      </h1>
+    </div>
   );
 
   const handleLogout = async () => {
@@ -148,9 +174,7 @@ function ConsoleDashboardContent(): JSX.Element {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="hidden items-center justify-between border-b border-border px-6 py-4 lg:flex">
-          <h1 className="min-w-0 truncate text-2xl font-black tracking-tight text-foreground">
-            {greeting}
-          </h1>
+          {greetingBlock}
           <div className="flex items-center gap-3">
             {organizations.length > 1 && (
               <div className="relative">
@@ -203,7 +227,7 @@ function ConsoleDashboardContent(): JSX.Element {
 
         <ConsoleMobileHeader
           onOpenSidebar={() => setSidebarOpen(true)}
-          title={greeting}
+          title={greetingBlockMobile}
         />
 
         <div className="flex items-center justify-end gap-2 border-b border-border px-4 py-2 lg:hidden">

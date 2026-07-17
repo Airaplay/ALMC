@@ -1,4 +1,4 @@
-/** Time-of-day greeting for ALMC console, e.g. "Hi Mavin Records, Good evening". */
+/** Time-of-day greeting for ALMC console. */
 
 export function getTimeOfDayGreeting(date = new Date()): string {
   const hour = date.getHours();
@@ -7,9 +7,21 @@ export function getTimeOfDayGreeting(date = new Date()): string {
   return 'Good evening';
 }
 
-export function formatConsoleGreeting(organizationName: string | null | undefined, date = new Date()): string {
-  const greeting = getTimeOfDayGreeting(date);
+export type ConsoleGreetingParts = {
+  /** e.g. "Hi Airaplay" — lighter line above the time greeting */
+  hiLine: string | null;
+  /** e.g. "Good afternoon" — primary headline */
+  timeGreeting: string;
+};
+
+export function getConsoleGreetingParts(
+  organizationName: string | null | undefined,
+  date = new Date()
+): ConsoleGreetingParts {
+  const timeGreeting = getTimeOfDayGreeting(date);
   const name = (organizationName ?? '').trim();
-  if (!name) return greeting;
-  return `Hi ${name}, ${greeting}`;
+  return {
+    hiLine: name ? `Hi ${name}` : null,
+    timeGreeting,
+  };
 }
