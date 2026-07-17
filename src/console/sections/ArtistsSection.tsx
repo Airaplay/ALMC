@@ -90,10 +90,8 @@ export function ArtistsSection({
     useOrganization();
   const [artists, setArtists] = useState<OrgArtistItem[]>([]);
   const [total, setTotal] = useState(0);
-  const [genreOptions, setGenreOptions] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [genreFilter, setGenreFilter] = useState('');
   const [verifiedFilter, setVerifiedFilter] = useState<'all' | 'verified' | 'unverified'>('all');
   const [sortBy, setSortBy] = useState<OrgArtistSort>('monthly_streams');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
@@ -420,18 +418,6 @@ export function ArtistsSection({
             <option value="active">Active</option>
             <option value="pending_invite">Pending</option>
             <option value="revoked">Revoked</option>
-          </select>
-          <select
-            value={genreFilter}
-            onChange={(e) => setGenreFilter(e.target.value)}
-            className="rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground"
-          >
-            <option value="">All genres</option>
-            {genreOptions.map((genre) => (
-              <option key={genre} value={genre}>
-                {genre}
-              </option>
-            ))}
           </select>
           <select
             value={verifiedFilter}
