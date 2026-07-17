@@ -351,6 +351,12 @@ export function ArtistsSection({ onUploadArtist, onFocusArtist, initialShowInvit
     );
   };
 
+  if (contentArtist) {
+    return (
+      <ArtistContentPanel artist={contentArtist} onBack={() => setContentArtist(null)} />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -589,10 +595,6 @@ export function ArtistsSection({ onUploadArtist, onFocusArtist, initialShowInvit
           initialEmail={verifyEmail}
           initialStep={verifyEmail ? 'verify' : 'details'}
         />
-      )}
-
-      {contentArtist && (
-        <ArtistContentPanel artist={contentArtist} onClose={() => setContentArtist(null)} />
       )}
     </div>
   );
