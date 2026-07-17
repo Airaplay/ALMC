@@ -1,11 +1,19 @@
-import { Users, LayoutDashboard, Upload, UserCog, Settings, LogOut, Menu, X, Building2, CalendarDays } from 'lucide-react';
+import { Users, LayoutDashboard, Upload, UserCog, Settings, LogOut, Menu, X, Building2, CalendarDays, BarChart3, DollarSign } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { orgHasPermission, OrgPermission } from '../../lib/orgAccess';
 import { almcRoutes } from '../../lib/almcRoutes';
 import { consoleTheme } from '../consoleTheme';
 
-export type ConsoleSection = 'dashboard' | 'artists' | 'calendar' | 'content' | 'team' | 'settings';
+export type ConsoleSection =
+  | 'dashboard'
+  | 'artists'
+  | 'calendar'
+  | 'content'
+  | 'analytics'
+  | 'revenue'
+  | 'team'
+  | 'settings';
 
 interface ConsoleSidebarProps {
   activeSection: ConsoleSection;
@@ -26,6 +34,8 @@ const NAV_ITEMS: Array<{
   { section: 'artists', label: 'Artists', icon: Users, permission: 'artists.view' },
   { section: 'calendar', label: 'Calendar', icon: CalendarDays, permission: 'content.view' },
   { section: 'content', label: 'Content', icon: Upload, permission: 'content.view' },
+  { section: 'analytics', label: 'Analytics', icon: BarChart3, permission: 'analytics.view' },
+  { section: 'revenue', label: 'Revenue', icon: DollarSign, permission: 'analytics.view' },
   { section: 'team', label: 'Team', icon: UserCog, permission: 'team.manage' },
   { section: 'settings', label: 'Settings', icon: Settings, permission: 'org.settings' },
 ];

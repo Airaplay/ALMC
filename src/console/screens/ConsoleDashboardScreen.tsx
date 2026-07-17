@@ -16,6 +16,8 @@ import { DashboardSection } from '../sections/DashboardSection';
 import { ArtistsSection } from '../sections/ArtistsSection';
 import { ContentSection } from '../sections/ContentSection';
 import { CalendarSection } from '../sections/CalendarSection';
+import { AnalyticsSection } from '../sections/AnalyticsSection';
+import { RevenueSection } from '../sections/RevenueSection';
 import { TeamSection } from '../sections/TeamSection';
 import { SettingsSection } from '../sections/SettingsSection';
 import { OrgArtistItem } from '../../lib/orgAccess';
@@ -26,6 +28,8 @@ const SECTION_TITLES: Record<ConsoleSection, string> = {
   artists: 'Artists',
   calendar: 'Release Calendar',
   content: 'Content',
+  analytics: 'Analytics',
+  revenue: 'Revenue',
   team: 'Team',
   settings: 'Settings',
 };
@@ -119,6 +123,14 @@ function ConsoleDashboardContent(): JSX.Element {
         );
       case 'content':
         return <ContentSection />;
+      case 'analytics':
+        return hasPermission('analytics.view') ? <AnalyticsSection /> : <p className="text-muted-foreground">Access denied</p>;
+      case 'revenue':
+        return hasPermission('analytics.view') || hasPermission('org.manage') ? (
+          <RevenueSection />
+        ) : (
+          <p className="text-muted-foreground">Access denied</p>
+        );
       case 'team':
         return hasPermission('team.manage') ? <TeamSection /> : <p className="text-muted-foreground">Access denied</p>;
       case 'settings':

@@ -238,6 +238,101 @@ export async function getOrganizationReleaseCalendar(
   return (data ?? []) as OrgReleaseCalendarItem[];
 }
 
+export interface OrgAnalyticsNamedCount {
+  country?: string;
+  device?: string;
+  gender?: string;
+  age_bucket?: string;
+  streams?: number;
+  listeners?: number;
+  pct?: number;
+}
+
+export interface OrgAnalyticsTitleItem {
+  id: string;
+  title: string;
+  stage_name: string;
+  streams: number;
+  cover_url: string | null;
+}
+
+export interface OrgAnalyticsGrowthArtist {
+  artist_profile_id: string;
+  stage_name: string;
+  period_streams: number;
+  previous_streams: number;
+  growth_pct: number;
+}
+
+export interface OrgAnalyticsData {
+  period_days: number;
+  period_start: string;
+  period_end: string;
+  artist_profile_id: string | null;
+  period_streams: number;
+  previous_period_streams: number;
+  period_listeners: number;
+  previous_period_listeners: number;
+  period_revenue: number;
+  previous_period_revenue: number;
+  avg_completion: number;
+  streams_by_day: Array<{ date: string; streams: number; listeners: number }>;
+  top_countries: OrgAnalyticsNamedCount[];
+  top_cities: Array<{ city: string; streams: number }>;
+  devices: OrgAnalyticsNamedCount[];
+  age_gender: OrgAnalyticsNamedCount[];
+  top_songs: OrgAnalyticsTitleItem[];
+  top_albums: OrgAnalyticsTitleItem[];
+  playlist_placements: unknown[];
+  traffic_sources: unknown[];
+  growth_comparison: OrgAnalyticsGrowthArtist[];
+  top_artists: OrgAnalyticsGrowthArtist[];
+}
+
+export interface OrgRevenueArtistRow {
+  artist_profile_id: string;
+  stage_name: string;
+  total_earnings: number;
+  period_ads: number;
+  pct_of_org: number;
+}
+
+export interface OrgRevenueData {
+  period_days: number;
+  available: number;
+  total: number;
+  treats: number;
+  ads: number;
+  pending: number;
+  by_artist: OrgRevenueArtistRow[];
+  monthly_trend: Array<{ month: string; amount: number }>;
+}
+
+export async function getOrganizationAnalytics(
+  orgId: string,
+  options?: { days?: number; artistProfileId?: string | null }
+): Promise<OrgAnalyticsData> {
+  const { data, error } = await supabase.rpc('get_organization_analytics', {
+    p_org_id: orgId,
+    p_days: options?.days ?? 30,
+    p_artist_profile_id: options?.artistProfileId ?? null,
+  });
+  if (error) throw error;
+  return data as OrgAnalyticsData;
+}
+
+export async function getOrganizationRevenue(
+  orgId: string,
+  days = 30
+): Promise<OrgRevenueData> {
+  const { data, error } = await supabase.rpc('get_organization_revenue', {
+    p_org_id: orgId,
+    p_days: days,
+  });
+  if (error) throw error;
+  return data as OrgRevenueData;
+}
+
 export type OrgArtistSort = 'streams' | 'monthly_streams' | 'followers' | 'revenue' | 'stage_name' | 'linked_at';
 
 export async function listOrganizationArtists(
