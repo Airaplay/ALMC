@@ -21,7 +21,7 @@ export function ConsoleAuthShell({
     maxWidth === '2xl' ? 'max-w-2xl' : maxWidth === 'lg' ? 'max-w-lg' : 'max-w-md';
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-[#0a0a0b] p-4">
       <div
         className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden"
         aria-hidden

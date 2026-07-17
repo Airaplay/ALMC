@@ -1,5 +1,7 @@
 /* ALMC theme — same design tokens as src/web/web-theme.css (Airaplay web).
-   ALMC uses the same Supabase project as Airaplay-DB-V2 for auth and org data. */
+   ALMC uses the same Supabase project as Airaplay-DB-V2 for auth and org data.
+   Tokens apply on `.almc-app` (shell wrapper) so they work even when
+   VITE_APP_TARGET=web skips the body class, or before the body effect runs. */
 
 html.almc-app,
 body.almc-app #app {
@@ -13,6 +15,7 @@ body.almc-app #app {
   min-height: 100dvh;
 }
 
+.almc-app,
 body.almc-app {
   --background: 0 0% 6%;
   --foreground: 0 0% 95%;

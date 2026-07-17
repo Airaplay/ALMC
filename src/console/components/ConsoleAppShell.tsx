@@ -1,17 +1,13 @@
 import { useEffect } from 'react';
-import { BUILD_TARGET } from '../../lib/buildTarget';
 import '../almc-theme.css';
 
-/** Applies Airaplay web design tokens to ALMC (standalone + embedded /console routes). */
+/** Applies Airaplay console design tokens (standalone ALMC + embedded /console). */
 export function ConsoleAppShell({ children }: { children: React.ReactNode }): JSX.Element {
   useEffect(() => {
-    if (BUILD_TARGET === 'web') {
-      return;
-    }
-    document.documentElement.classList.add('almc-app');
+    document.documentElement.classList.add('almc-app', 'dark');
     document.body.classList.add('almc-app');
     return () => {
-      document.documentElement.classList.remove('almc-app');
+      document.documentElement.classList.remove('almc-app', 'dark');
       document.body.classList.remove('almc-app');
     };
   }, []);

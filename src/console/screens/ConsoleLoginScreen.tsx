@@ -235,7 +235,7 @@ export function ConsoleLoginScreen(): JSX.Element {
 
   if (isCheckingAuth) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b]">
         <LoadingLogo />
       </div>
     );
