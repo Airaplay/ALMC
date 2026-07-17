@@ -4,12 +4,31 @@
     <meta charset="utf-8" />
     <title>Airaplay Console — Label & Management</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0a0a0b" />
+    <meta name="theme-color" content="#f4f5f3" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script>
+      (function () {
+        try {
+          var pref = localStorage.getItem('almc-theme') || 'system';
+          var dark =
+            pref === 'dark' ||
+            (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.classList.add('almc-app');
+          if (dark) document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+          var bg = dark ? '#0a0a0b' : '#f4f5f3';
+          document.documentElement.style.backgroundColor = bg;
+          document.addEventListener('DOMContentLoaded', function () {
+            document.body.classList.add('almc-app');
+            document.body.style.backgroundColor = bg;
+          });
+        } catch (e) {}
+      })();
+    </script>
     <style>
-      html, body, #app { height: 100%; margin: 0; background: #0a0a0b; color: #fff; font-family: Inter, system-ui, sans-serif; }
+      html, body, #app { height: 100%; margin: 0; font-family: Inter, system-ui, sans-serif; }
     </style>
   </head>
   <body>

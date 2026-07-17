@@ -1,4 +1,5 @@
 import { useOrganization } from '../contexts/OrganizationContext';
+import { ConsoleThemeToggle } from '../components/ConsoleThemeToggle';
 
 export function SettingsSection() {
   const { organization } = useOrganization();
@@ -34,6 +35,17 @@ export function SettingsSection() {
         <p className="text-sm text-muted-foreground/80">
           Advanced settings (branding, billing, API keys, audit logs) ship in Phase 2.
         </p>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground/80">Appearance</p>
+          <p className="mt-1 text-lg font-semibold text-foreground">Theme</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Choose light, dark, or follow your system setting.
+          </p>
+        </div>
+        <ConsoleThemeToggle />
       </div>
     </div>
   );

@@ -21,6 +21,7 @@ import { TeamSection } from '../sections/TeamSection';
 import { SettingsSection } from '../sections/SettingsSection';
 import { OrgArtistItem } from '../../lib/orgAccess';
 import { OrgContentUploadModal } from '../components/OrgContentUploadModal';
+import { ConsoleThemeToggle } from '../components/ConsoleThemeToggle';
 import { getConsoleGreetingParts } from '../utils/consoleGreeting';
 
 function ConsoleDashboardContent(): JSX.Element {
@@ -215,6 +216,7 @@ function ConsoleDashboardContent(): JSX.Element {
               }}
               onFocusArtist={() => setActiveSection('dashboard')}
             />
+            <ConsoleThemeToggle compact />
             <button
               type="button"
               onClick={handleLogout}
@@ -239,6 +241,7 @@ function ConsoleDashboardContent(): JSX.Element {
             }}
             onFocusArtist={() => setActiveSection('dashboard')}
           />
+          <ConsoleThemeToggle compact />
           <button type="button" onClick={handleLogout} className="rounded-lg p-2 text-muted-foreground hover:text-foreground">
             <LogOut className="h-5 w-5" />
           </button>

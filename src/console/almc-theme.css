@@ -1,7 +1,5 @@
-/* ALMC theme — same design tokens as src/web/web-theme.css (Airaplay web).
-   ALMC uses the same Supabase project as Airaplay-DB-V2 for auth and org data.
-   Tokens apply on `.almc-app` (shell wrapper) so they work even when
-   VITE_APP_TARGET=web skips the body class, or before the body effect runs. */
+/* ALMC theme — light + dark tokens.
+   `.almc-app` = light defaults; `html.dark` / `.dark.almc-app` = dark. */
 
 html.almc-app,
 body.almc-app #app {
@@ -15,8 +13,48 @@ body.almc-app #app {
   min-height: 100dvh;
 }
 
+/* Light */
 .almc-app,
 body.almc-app {
+  --background: 80 10% 96%;
+  --foreground: 0 0% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 10%;
+  --primary: 102 94% 30%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 80 8% 93%;
+  --secondary-foreground: 0 0% 25%;
+  --muted: 80 8% 93%;
+  --muted-foreground: 0 0% 42%;
+  --accent: 102 94% 30%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 80 8% 88%;
+  --input: 80 8% 88%;
+  --ring: 102 94% 30%;
+  --radius: 0.75rem;
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 0 0% 40%;
+  --sidebar-primary: 102 94% 30%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 80 10% 94%;
+  --sidebar-accent-foreground: 0 0% 12%;
+  --sidebar-border: 80 8% 90%;
+  --sidebar-ring: 102 94% 30%;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  scrollbar-width: thin;
+  scrollbar-color: hsl(0 0% 70%) transparent;
+}
+
+/* Dark */
+html.dark .almc-app,
+html.dark body.almc-app,
+.almc-app.dark,
+body.almc-app.dark {
   --background: 0 0% 6%;
   --foreground: 0 0% 95%;
   --card: 0 0% 9%;
@@ -36,7 +74,6 @@ body.almc-app {
   --border: 0 0% 16%;
   --input: 0 0% 16%;
   --ring: 102 94% 30%;
-  --radius: 0.75rem;
   --sidebar-background: 0 0% 8%;
   --sidebar-foreground: 0 0% 65%;
   --sidebar-primary: 102 94% 30%;
@@ -45,15 +82,12 @@ body.almc-app {
   --sidebar-accent-foreground: 0 0% 95%;
   --sidebar-border: 0 0% 14%;
   --sidebar-ring: 102 94% 30%;
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  scrollbar-width: thin;
   scrollbar-color: hsl(0 0% 28%) transparent;
 }
 
 body.almc-app * {
   scrollbar-width: thin;
-  scrollbar-color: hsl(0 0% 28%) transparent;
+  scrollbar-color: inherit transparent;
   -ms-overflow-style: auto;
 }
 
@@ -64,18 +98,18 @@ body.almc-app ::-webkit-scrollbar {
 }
 
 body.almc-app ::-webkit-scrollbar-track {
-  background: hsl(0 0% 8% / 0.6);
+  background: hsl(var(--muted) / 0.6);
   border-radius: 4px;
 }
 
 body.almc-app ::-webkit-scrollbar-thumb {
-  background: hsl(0 0% 32%);
+  background: hsl(var(--muted-foreground) / 0.45);
   border-radius: 4px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 body.almc-app ::-webkit-scrollbar-thumb:hover {
-  background: hsl(0 0% 42%);
+  background: hsl(var(--muted-foreground) / 0.65);
   background-clip: padding-box;
 }

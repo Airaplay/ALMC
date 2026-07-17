@@ -235,7 +235,7 @@ export function ConsoleLoginScreen(): JSX.Element {
 
   if (isCheckingAuth) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0b]">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingLogo />
       </div>
     );
@@ -253,14 +253,14 @@ export function ConsoleLoginScreen(): JSX.Element {
               disabled={isSigningOut}
               title="Sign out"
               aria-label="Sign out"
-              className="absolute right-4 top-4 rounded-full p-2.5 text-white/50 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50 sm:right-6 sm:top-6"
+              className="rounded-full p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
             >
               <LogOut className="h-5 w-5" />
             </button>
           ) : undefined
         }
         footer={
-          <div className="mt-6 space-y-3 text-center text-[13px] text-white/50">
+          <div className="mt-6 space-y-3 text-center text-[13px] text-muted-foreground">
             {!pendingVerification && (
               <p>
                 {isSignUp ? 'Already have an account?' : 'New to Airaplay?'}{' '}
@@ -287,8 +287,8 @@ export function ConsoleLoginScreen(): JSX.Element {
       >
         {signedInEmail && !pendingVerification && (
           <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
-            <p className="text-[13px] text-white/80">
-              Signed in as <span className="font-medium text-white">{signedInEmail}</span>
+            <p className="text-[13px] text-secondary-foreground">
+              Signed in as <span className="font-medium text-foreground">{signedInEmail}</span>
             </p>
             <ConsolePrimaryButton type="button" onClick={routeAfterLogin} className="mt-3">
               Continue to Console
@@ -314,7 +314,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                     setOtpCode(next.join('').slice(0, 6));
                     setError(null);
                   }}
-                  className="h-12 w-10 min-w-0 rounded-xl border border-white/20 bg-white/5 text-center text-lg font-bold text-white outline-none transition-all focus:border-[#3ba208] focus:ring-2 focus:ring-[#3ba208]/30 sm:h-12 sm:w-11"
+                  className="h-12 w-10 min-w-0 rounded-xl border border-border bg-secondary text-center text-lg font-bold text-foreground outline-none transition-all focus:border-[#3ba208] focus:ring-2 focus:ring-[#3ba208]/30 sm:h-12 sm:w-11"
                 />
               ))}
             </div>
@@ -329,7 +329,7 @@ export function ConsoleLoginScreen(): JSX.Element {
               type="button"
               onClick={handleResendCode}
               disabled={resendCooldownSeconds > 0}
-              className="w-full text-[12px] font-semibold text-[#3ba208] disabled:text-white/30"
+              className="w-full text-[12px] font-semibold text-[#3ba208] disabled:text-muted-foreground/50"
             >
               {resendCooldownSeconds > 0
                 ? `Resend code in ${resendCooldownSeconds}s`
@@ -371,12 +371,12 @@ export function ConsoleLoginScreen(): JSX.Element {
             />
 
             {isSignUp && (
-              <label className="flex items-start gap-2 text-[12px] text-white/60">
+              <label className="flex items-start gap-2 text-[12px] text-muted-foreground">
                 <input
                   type="checkbox"
                   checked={agreedToTerms}
                   onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-0.5 rounded border-white/20 bg-transparent text-[#3ba208] focus:ring-[#3ba208]/30"
+                  className="mt-0.5 rounded border-border bg-transparent text-[#3ba208] focus:ring-[#3ba208]/30"
                 />
                 <span>
                   I agree to the{' '}

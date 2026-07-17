@@ -20,7 +20,7 @@ export const ConsoleFloatingInput = React.forwardRef<HTMLInputElement, FloatingI
             'pointer-events-none absolute left-0 select-none font-["Inter",sans-serif] transition-all duration-200',
             lifted
               ? 'top-0 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#3ba208]'
-              : 'top-[17px] text-sm text-white/50'
+              : 'top-[17px] text-sm text-muted-foreground'
           )}
         >
           {label}
@@ -37,14 +37,14 @@ export const ConsoleFloatingInput = React.forwardRef<HTMLInputElement, FloatingI
           }}
           onChange={onChange}
           className={cn(
-            'w-full border-0 border-b bg-transparent pb-2 pt-6 text-sm font-["Inter",sans-serif] text-white outline-none transition-colors duration-200 placeholder-white/30',
-            focused ? 'border-[#3ba208]' : 'border-white/20',
+            'w-full border-0 border-b bg-transparent pb-2 pt-6 text-sm font-["Inter",sans-serif] text-foreground outline-none transition-colors duration-200 placeholder:text-muted-foreground/50',
+            focused ? 'border-[#3ba208]' : 'border-border',
             rightSlot ? 'pr-8' : '',
             className
           )}
           {...props}
         />
-        {rightSlot ? <div className="absolute right-0 top-5 text-white/50">{rightSlot}</div> : null}
+        {rightSlot ? <div className="absolute right-0 top-5 text-muted-foreground">{rightSlot}</div> : null}
       </div>
     );
   }
@@ -79,7 +79,11 @@ export function ConsolePasswordToggle({
   onToggle: () => void;
 }): JSX.Element {
   return (
-    <button type="button" onClick={onToggle} className="text-white/50 hover:text-white/80">
+    <button
+      type="button"
+      onClick={onToggle}
+      className="text-muted-foreground hover:text-foreground"
+    >
       {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
     </button>
   );
@@ -89,7 +93,7 @@ export function ConsoleErrorAlert({ message }: { message: string }): JSX.Element
   return (
     <div className="flex items-start gap-2.5 rounded-xl border border-red-500/20 bg-red-500/10 p-3.5">
       <div className="mt-0.5 h-full w-1 shrink-0 rounded-full bg-red-400" />
-      <p className="text-[12px] leading-relaxed text-red-400">{message}</p>
+      <p className="text-[12px] leading-relaxed text-red-500 dark:text-red-400">{message}</p>
     </div>
   );
 }
