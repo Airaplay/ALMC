@@ -212,6 +212,7 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
       userId: uploadUserId,
       contentType,
       customPath,
+      organizationId: adminUploadContext?.organizationId,
       onProgress: (percent) => {
         setCompressionStatus(`Uploading: ${percent.toFixed(0)}%`);
         const tid = taskId || uploadTaskId;
@@ -221,7 +222,7 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
     setCompressionStatus(null);
     if (!result.success || !result.publicUrl) throw new Error(result.error || 'Upload failed');
     return result.publicUrl;
-  }, [uploadTaskId, updateUploadProgress, ownerUserId]);
+  }, [uploadTaskId, updateUploadProgress, ownerUserId, adminUploadContext?.organizationId]);
 
   const handleUpload = async (releaseAction: ContentReleaseAction = 'publish') => {
     if (!ownerUserId || !artistProfile) return;

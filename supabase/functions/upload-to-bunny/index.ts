@@ -80,9 +80,65 @@ async function verifyUserIsCreator(userId: string): Promise<void> {
   }
 }
 
+async function verifyOrgDelegatedUpload(
+  authenticatedUserId: string,
+  targetUserId: string,
+  organizationId: string | null,
+): Promise<boolean> {
+  if (!organizationId) return false;
+
+  const supabase = getServiceClient();
+
+  // Prefer RPC used by ALMC; fall back to direct membership + link checks.
+  const { data: hasUpload, error: permError } = await supabase.rpc(
+    "org_member_has_permission",
+    {
+      p_org_id: organizationId,
+      p_permission: "content.upload",
+      p_user_id: authenticatedUserId,
+    },
+  );
+
+  if (permError) {
+    console.error("Org permission check failed:", permError);
+  } else if (!hasUpload) {
+    return false;
+  }
+
+  if (permError) {
+    const { data: membership, error: memberError } = await supabase
+      .from("organization_members")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .eq("user_id", authenticatedUserId)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (memberError || !membership) {
+      return false;
+    }
+  }
+
+  const { data: link, error: linkError } = await supabase
+    .from("organization_artist_links")
+    .select("id")
+    .eq("organization_id", organizationId)
+    .eq("user_id", targetUserId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (linkError) {
+    console.error("Org artist link check failed:", linkError);
+    return false;
+  }
+
+  return !!link;
+}
+
 async function verifyUploadPermission(
   authenticatedUserId: string,
   targetUserId: string | null,
+  organizationId: string | null = null,
 ): Promise<void> {
   const supabase = getServiceClient();
   const { data: caller, error } = await supabase
@@ -105,7 +161,18 @@ async function verifyUploadPermission(
   }
 
   if (!isAdminOrManager && targetUserId && targetUserId !== authenticatedUserId) {
-    throw new Error("Not authorized to upload on behalf of another user");
+    const allowedViaOrg = await verifyOrgDelegatedUpload(
+      authenticatedUserId,
+      targetUserId,
+      organizationId,
+    );
+    if (!allowedViaOrg) {
+      throw new Error(
+        "Not authorized to upload on behalf of another user. Organization content.upload + active artist link required.",
+      );
+    }
+    await verifyUserIsCreator(targetUserId);
+    return;
   }
 
   await verifyUserIsCreator(authenticatedUserId);
@@ -143,18 +210,19 @@ Deno.serve(async (req: Request) => {
 
     const formData = await req.formData();
     const clientUserId = formData.get("userId") as string | null;
+    const organizationId = (formData.get("organizationId") as string | null)?.trim() || null;
 
-    // Verify caller can upload (creators for self; admins/managers for target user)
+    // Creators for self; admins/managers or org members (content.upload + active link) for target
     try {
-      await verifyUploadPermission(authenticatedUserId, clientUserId);
+      await verifyUploadPermission(authenticatedUserId, clientUserId, organizationId);
       console.log(`✅ Upload permission verified`);
     } catch (authError) {
       console.error("Upload permission check failed:", authError instanceof Error ? authError.message : authError);
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Creator verification required",
-          details: authError instanceof Error ? authError.message : "User is not registered as a creator"
+          error: "Upload authorization failed",
+          details: authError instanceof Error ? authError.message : "Not authorized to upload"
         }),
         {
           status: 403,

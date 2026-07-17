@@ -286,6 +286,7 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext, consoleEmbed
         userId: uploadUserId,
         contentType,
         customPath,
+        organizationId: adminUploadContext?.organizationId,
         onProgress: (percent) => {
           setCompressionStatus(`Uploading: ${percent.toFixed(0)}%`);
           const currentTaskId = taskId || uploadTaskId;

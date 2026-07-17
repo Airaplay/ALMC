@@ -4,6 +4,8 @@ export interface DirectUploadOptions {
   userId: string;
   contentType: 'audio' | 'image' | 'video';
   customPath?: string;
+  /** When set, Edge Function allows org-delegated upload for this workspace. */
+  organizationId?: string;
   onProgress?: (percent: number) => void;
 }
 
@@ -125,6 +127,9 @@ async function uploadToBunnyStorage(
     if (customPath) {
       formData.append('customPath', customPath);
     }
+    if (options.organizationId) {
+      formData.append('organizationId', options.organizationId);
+    }
     formData.append('skipHash', 'true');
 
     // Prefer Supabase function invoke to avoid browser-level XHR/CORS network errors.
@@ -133,12 +138,31 @@ async function uploadToBunnyStorage(
     });
 
     if (error) {
-      throw new Error(error.message || 'Failed to invoke upload-to-bunny function');
+      // FunctionsHttpError often hides the JSON body; surface details when present.
+      const ctx = error as { context?: Response; message?: string };
+      let detail = error.message || 'Failed to invoke upload-to-bunny function';
+      try {
+        if (ctx.context && typeof ctx.context.json === 'function') {
+          const body = (await ctx.context.json()) as {
+            error?: string;
+            details?: string;
+          };
+          detail = body.details || body.error || detail;
+        }
+      } catch {
+        /* keep generic message */
+      }
+      throw new Error(detail);
     }
 
-    const response = data as { success?: boolean; publicUrl?: string; error?: string } | null;
+    const response = data as {
+      success?: boolean;
+      publicUrl?: string;
+      error?: string;
+      details?: string;
+    } | null;
     if (!response?.success || !response.publicUrl) {
-      throw new Error(response?.error || 'Upload failed');
+      throw new Error(response?.details || response?.error || 'Upload failed');
     }
 
     console.log('✅ Upload successful to Bunny Storage:', response.publicUrl);
