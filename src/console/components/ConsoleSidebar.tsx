@@ -59,7 +59,7 @@ export function ConsoleSidebar({
         <img
           src="/airaplay-console-logo.png"
           alt="Airaplay"
-          className="h-8 w-auto max-w-[160px] object-contain object-left dark:invert"
+          className="h-11 w-auto max-w-[220px] object-contain object-left dark:invert"
         />
         {isMobile && (
           <button
