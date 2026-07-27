@@ -55,11 +55,11 @@ export function ConsoleSidebar({
 
   const sidebarContent = (
     <div className="flex h-full flex-col border-r border-sidebar-border bg-sidebar">
-      <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-5">
+      <div className="flex items-center gap-3 border-b border-sidebar-border px-4 py-5">
         <img
           src="/airaplay-console-logo.png"
           alt="Airaplay"
-          className="h-11 w-auto max-w-[220px] object-contain object-left dark:invert"
+          className="h-10 w-auto max-w-[180px] object-contain object-left dark:invert"
         />
         {isMobile && (
           <button
@@ -126,7 +126,7 @@ export function ConsoleSidebar({
         )}
         <div
           className={cn(
-            'fixed inset-y-0 left-0 z-50 w-64 transform transition-transform',
+            'fixed inset-y-0 left-0 z-50 w-56 transform transition-transform',
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
@@ -136,7 +136,7 @@ export function ConsoleSidebar({
     );
   }
 
-  return <aside className="hidden w-60 shrink-0 lg:block">{sidebarContent}</aside>;
+  return <aside className="hidden w-52 shrink-0 lg:block">{sidebarContent}</aside>;
 }
 
 export function ConsoleMobileHeader({
