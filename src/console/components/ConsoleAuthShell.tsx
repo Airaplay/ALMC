@@ -1,8 +1,7 @@
-import { Music2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface ConsoleAuthShellProps {
-  title: string;
+  title?: string;
   subtitle?: string;
   maxWidth?: 'md' | 'lg' | '2xl';
   headerAction?: React.ReactNode;
@@ -40,21 +39,19 @@ export function ConsoleAuthShell({
 
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col justify-center gap-12 px-6 py-12 lg:flex-row lg:items-center lg:justify-between lg:gap-16 lg:px-10">
         <div className="max-w-xl text-white lg:flex-1">
-          <div className="mb-8 flex items-center gap-2">
-            <span className="text-2xl font-extrabold tracking-[0.18em] sm:text-3xl">AIRAPLAY</span>
-            <span className="relative ml-1 flex h-6 w-16 items-center" aria-hidden>
-              <span className="absolute inset-x-0 top-1/2 border-t border-dashed border-white/70" />
-              <Music2 className="absolute -right-1 top-1/2 h-4 w-4 -translate-y-1/2 text-white" strokeWidth={2} />
-            </span>
-          </div>
-          <h1 className="text-4xl font-extrabold uppercase leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-            Own the Stage
+          <img
+            src="/airaplay-console-logo.png"
+            alt="Airaplay"
+            className="mb-6 h-10 object-contain brightness-0 invert sm:h-12"
+          />
+          <h1 className="text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl">
+            Label & Management Console
           </h1>
           <p className="mt-5 text-base font-medium text-white/90 sm:text-lg">
             Where music meets control.
           </p>
           <p className="mt-2 max-w-md text-sm leading-relaxed text-white/70 sm:text-[15px]">
-            Manage artists, releases, and your roster from the Airaplay Label & Management Console.
+            Manage artists, releases, and your roster from one secure console.
           </p>
         </div>
 
@@ -65,12 +62,18 @@ export function ConsoleAuthShell({
               widthClass
             )}
           >
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold tracking-tight text-white">{title}</h2>
-              {subtitle ? (
-                <p className="mt-2 text-sm leading-snug text-white/75">{subtitle}</p>
-              ) : null}
-            </div>
+            {title || subtitle ? (
+              <div className="mb-6">
+                {title ? (
+                  <h2 className="text-2xl font-bold tracking-tight text-white">{title}</h2>
+                ) : null}
+                {subtitle ? (
+                  <p className={cn('text-sm leading-snug text-white/75', title ? 'mt-2' : '')}>
+                    {subtitle}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
             {children}
             {footer}
           </div>

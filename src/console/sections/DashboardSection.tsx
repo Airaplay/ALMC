@@ -333,8 +333,8 @@ export function DashboardSection() {
                 <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                   <defs>
                     <linearGradient id="orgStreamsFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#d9f99d" stopOpacity={0.55} />
-                      <stop offset="95%" stopColor="#d9f99d" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#33AA2D" stopOpacity={0.55} />
+                      <stop offset="95%" stopColor="#33AA2D" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="orgListenersFill" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#000000" stopOpacity={0.12} />
@@ -368,7 +368,7 @@ export function DashboardSection() {
                     type="monotone"
                     dataKey="streams"
                     name="Streams"
-                    stroke="#65a30d"
+                    stroke="#33AA2D"
                     fill="url(#orgStreamsFill)"
                     strokeWidth={2.5}
                   />
@@ -399,7 +399,7 @@ export function DashboardSection() {
                   className="flex items-center justify-between gap-3 rounded-2xl bg-secondary/60 px-3.5 py-2.5"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--almc-lime)] text-xs font-bold text-foreground">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--almc-lime)] text-xs font-bold text-white">
                       {index + 1}
                     </span>
                     <span className="truncate font-medium text-foreground">{artist.stage_name}</span>

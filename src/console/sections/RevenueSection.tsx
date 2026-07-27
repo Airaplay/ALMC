@@ -149,7 +149,7 @@ export function RevenueSection() {
                         }}
                         formatter={(value: number) => formatUsd(value)}
                       />
-                      <Bar dataKey="total" fill="#d9f99d" radius={[10, 10, 4, 4]} />
+                      <Bar dataKey="total" fill="#33AA2D" radius={[10, 10, 4, 4]} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}

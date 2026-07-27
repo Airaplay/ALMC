@@ -222,7 +222,7 @@ export function ConsoleLoginScreen(): JSX.Element {
     ? 'Verify your email'
     : isSignUp
       ? 'Create account'
-      : 'Label & Management Console';
+      : undefined;
   const subline = pendingVerification
     ? `Enter the 6-digit code sent to ${email}`
     : isSignUp
@@ -231,15 +231,15 @@ export function ConsoleLoginScreen(): JSX.Element {
 
   const glassLabel = 'mb-2 block text-sm font-medium text-white/85';
   const glassInput =
-    'w-full rounded-md bg-white px-4 py-3.5 text-[15px] text-zinc-900 placeholder:text-zinc-400 outline-none transition focus:ring-2 focus:ring-[#2B87F5]/40';
+    'w-full rounded-md bg-white px-4 py-3.5 text-[15px] text-zinc-900 placeholder:text-zinc-400 outline-none transition focus:ring-2 focus:ring-[#33AA2D]/40';
   const glassBtn =
-    'inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#2B87F5] text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#1f75e0] disabled:cursor-not-allowed disabled:opacity-70';
+    'inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#33AA2D] text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#2d9628] disabled:cursor-not-allowed disabled:opacity-70';
   const glassLink =
     'text-white underline decoration-white/50 underline-offset-2 transition hover:decoration-white';
 
   if (isCheckingAuth) {
     return (
-      <ConsoleAuthShell title="Label & Management Console" subtitle="Loading…">
+      <ConsoleAuthShell subtitle="Loading…">
         <div className="flex items-center justify-center gap-3 py-6">
           <LoadingLogo />
         </div>
@@ -320,7 +320,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                     setOtpCode(next.join('').slice(0, 6));
                     setError(null);
                   }}
-                  className="h-12 w-10 min-w-0 rounded-md bg-white text-center text-lg font-bold text-zinc-900 outline-none transition focus:ring-2 focus:ring-[#2B87F5]/40 sm:h-12 sm:w-11"
+                  className="h-12 w-10 min-w-0 rounded-md bg-white text-center text-lg font-bold text-zinc-900 outline-none transition focus:ring-2 focus:ring-[#33AA2D]/40 sm:h-12 sm:w-11"
                 />
               ))}
             </div>
@@ -399,7 +399,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                   type="checkbox"
                   checked={agreedToTerms}
                   onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-0.5 rounded border-white/40 bg-white/20 text-[#2B87F5] focus:ring-[#2B87F5]/30"
+                  className="mt-0.5 rounded border-white/40 bg-white/20 text-[#33AA2D] focus:ring-[#33AA2D]/30"
                 />
                 <span>
                   I agree to the{' '}

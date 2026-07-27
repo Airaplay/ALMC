@@ -3,11 +3,11 @@
  * Visual language inspired by Bond-style dashboards: extreme rounding, white cards
  * on an off-white canvas, black active states, lime CTAs.
  */
-export const AIRAPLAY_GREEN = '#65a30d';
-export const AIRAPLAY_GREEN_LIGHT = '#84cc16';
-export const ALMC_LIME = '#d9f99d';
+export const AIRAPLAY_GREEN = '#33AA2D';
+export const AIRAPLAY_GREEN_LIGHT = '#4bc044';
+export const ALMC_LIME = '#33AA2D';
 export const ALMC_INK = '#000000';
-export const ALMC_LIME_DEEP = '#65a30d';
+export const ALMC_LIME_DEEP = '#33AA2D';
 
 export const consoleTheme = {
   page: "min-h-screen bg-background text-foreground font-['Inter',system-ui,sans-serif]",
@@ -22,7 +22,7 @@ export const consoleTheme = {
   btnPrimary:
     'inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-[13px] font-semibold tracking-wide text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40',
   btnLime:
-    'inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--almc-lime)] px-5 text-[13px] font-semibold tracking-wide text-foreground transition-all hover:brightness-[0.97] active:scale-[0.98] disabled:opacity-40',
+    'inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--almc-lime)] px-5 text-[13px] font-semibold tracking-wide text-white transition-all hover:brightness-95 active:scale-[0.98] disabled:opacity-40',
   btnSecondary:
     'inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border/80 bg-card px-5 text-[13px] font-semibold text-secondary-foreground transition-colors hover:bg-muted',
   btnGhost:

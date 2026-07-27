@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, AlertCircle, Clock, Shield, RefreshCw, Music2 } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Clock, Shield, RefreshCw } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getCurrentAdminAccess } from '../../lib/adminAccess';
 import { LoadingLogo } from '../../components/LoadingLogo';
@@ -27,12 +27,12 @@ const glassCardClass =
   'w-full max-w-[420px] rounded-[2rem] border border-white/30 bg-white/15 p-10 shadow-[0_8px_32px_rgba(0,0,0,0.25)] backdrop-blur-[22px] sm:p-12';
 
 const inputClass =
-  'w-full rounded-md bg-white px-4 py-3.5 text-[15px] text-zinc-900 placeholder:text-zinc-400 outline-none transition focus:ring-2 focus:ring-[#2B87F5]/40 disabled:cursor-not-allowed disabled:bg-white/80';
+  'w-full rounded-md bg-white px-4 py-3.5 text-[15px] text-zinc-900 placeholder:text-zinc-400 outline-none transition focus:ring-2 focus:ring-[#33AA2D]/40 disabled:cursor-not-allowed disabled:bg-white/80';
 
 const labelClass = 'mb-2 block text-sm font-medium text-white/85';
 
 const primaryBtnClass =
-  'w-full rounded-md bg-[#2B87F5] py-3.5 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#1f75e0] disabled:cursor-not-allowed disabled:opacity-70';
+  'w-full rounded-md bg-[#33AA2D] py-3.5 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#2d9628] disabled:cursor-not-allowed disabled:opacity-70';
 
 function AdminLoginShell({ children }: { children: React.ReactNode }): JSX.Element {
   return (
@@ -50,15 +50,13 @@ function AdminLoginShell({ children }: { children: React.ReactNode }): JSX.Eleme
 
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col justify-center gap-12 px-6 py-12 lg:flex-row lg:items-center lg:justify-between lg:gap-16 lg:px-10">
         <div className="max-w-xl text-white lg:flex-1">
-          <div className="mb-8 flex items-center gap-2">
-            <span className="text-2xl font-extrabold tracking-[0.18em] sm:text-3xl">AIRAPLAY</span>
-            <span className="relative ml-1 flex h-6 w-16 items-center" aria-hidden>
-              <span className="absolute inset-x-0 top-1/2 border-t border-dashed border-white/70" />
-              <Music2 className="absolute -right-1 top-1/2 h-4 w-4 -translate-y-1/2 text-white" strokeWidth={2} />
-            </span>
-          </div>
-          <h1 className="text-4xl font-extrabold uppercase leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-            Own the Stage
+          <img
+            src="/airaplay-console-logo.png"
+            alt="Airaplay"
+            className="mb-6 h-10 object-contain brightness-0 invert sm:h-12"
+          />
+          <h1 className="text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl">
+            Label & Management Console
           </h1>
           <p className="mt-5 text-base font-medium text-white/90 sm:text-lg">
             Where music meets control.

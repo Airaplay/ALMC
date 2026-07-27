@@ -336,7 +336,7 @@ export function OrgContentUploadWizard({
                 type="button"
                 disabled={!selectedArtist}
                 onClick={() => setWizardStep(1)}
-                className="rounded-full bg-[var(--almc-lime)] px-5 py-2.5 text-sm font-semibold text-foreground hover:brightness-[0.97] disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-full bg-[var(--almc-lime)] px-5 py-2.5 text-sm font-semibold text-white hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Next
               </button>

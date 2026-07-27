@@ -184,7 +184,7 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
           <button
             type="button"
             onClick={onUpload}
-            className="rounded-full bg-[var(--almc-lime)] px-4 py-2.5 text-sm font-semibold text-foreground hover:brightness-[0.97]"
+            className="rounded-full bg-[var(--almc-lime)] px-4 py-2.5 text-sm font-semibold text-white hover:brightness-95"
           >
             Upload release
           </button>
@@ -276,7 +276,7 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
             <button
               type="button"
               onClick={onUpload}
-              className="mt-4 rounded-full bg-[var(--almc-lime)] px-4 py-2 text-sm font-semibold text-foreground hover:brightness-[0.97]"
+              className="mt-4 rounded-full bg-[var(--almc-lime)] px-4 py-2 text-sm font-semibold text-white hover:brightness-95"
             >
               Schedule release
             </button>

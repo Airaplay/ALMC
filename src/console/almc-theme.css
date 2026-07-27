@@ -45,8 +45,8 @@ body.almc-app {
   --sidebar-accent-foreground: 0 0% 0%;
   --sidebar-border: 0 0% 92%;
   --sidebar-ring: 0 0% 0%;
-  --almc-lime: #d9f99d;
-  --almc-lime-deep: #65a30d;
+  --almc-lime: #33AA2D;
+  --almc-lime-deep: #33AA2D;
   --almc-ink: #000000;
   --almc-tag-blue: #dbeafe;
   --almc-tag-blue-fg: #1e40af;
@@ -94,8 +94,8 @@ body.almc-app.dark {
   --sidebar-accent-foreground: 0 0% 96%;
   --sidebar-border: 0 0% 14%;
   --sidebar-ring: 84 81% 80%;
-  --almc-lime: #d9f99d;
-  --almc-lime-deep: #a3e635;
+  --almc-lime: #33AA2D;
+  --almc-lime-deep: #33AA2D;
   --almc-ink: #fafafa;
   --almc-tag-blue: #1e3a5f;
   --almc-tag-blue-fg: #93c5fd;
@@ -118,7 +118,7 @@ body.almc-app.dark {
 
 .almc-app .almc-card-accent {
   background: var(--almc-lime);
-  color: var(--almc-ink);
+  color: #fff;
   border: none;
   border-radius: var(--radius);
   box-shadow: var(--almc-shadow);
