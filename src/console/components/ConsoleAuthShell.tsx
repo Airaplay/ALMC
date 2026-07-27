@@ -29,6 +29,10 @@ export function ConsoleAuthShell({
         aria-hidden
       />
       <div
+        className="absolute inset-0 bg-gradient-to-br from-[#33AA2D]/25 via-transparent to-[#33AA2D]/15"
+        aria-hidden
+      />
+      <div
         className="absolute inset-0 bg-gradient-to-r from-[#07111f]/75 via-[#07111f]/35 to-[#07111f]/55"
         aria-hidden
       />
@@ -42,15 +46,15 @@ export function ConsoleAuthShell({
           <img
             src="/airaplay-console-logo.png"
             alt="Airaplay"
-            className="mb-6 h-10 object-contain brightness-0 invert sm:h-12"
+            className="mb-7 h-14 object-contain brightness-0 invert sm:h-16 lg:h-20"
           />
-          <h1 className="text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl">
+          <h1 className="text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
             Label & Management Console
           </h1>
-          <p className="mt-5 text-base font-medium text-white/90 sm:text-lg">
+          <p className="mt-6 text-lg font-medium text-white/90 sm:text-xl">
             Where music meets control.
           </p>
-          <p className="mt-2 max-w-md text-sm leading-relaxed text-white/70 sm:text-[15px]">
+          <p className="mt-3 max-w-md text-base leading-relaxed text-white/70 sm:text-lg">
             Manage artists, releases, and your roster from one secure console.
           </p>
         </div>
