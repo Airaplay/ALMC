@@ -55,11 +55,11 @@ export function ConsoleSidebar({
 
   const sidebarContent = (
     <div className="flex h-full flex-col border-r border-sidebar-border bg-sidebar">
-      <div className="flex items-center gap-3 border-b border-sidebar-border px-4 py-5">
+      <div className="flex items-center gap-3 border-b border-sidebar-border px-3 py-4">
         <img
           src="/airaplay-console-logo.png"
           alt="Airaplay"
-          className="h-10 w-auto max-w-[180px] object-contain object-left dark:invert"
+          className="h-12 w-auto max-w-[196px] object-contain object-left dark:invert"
         />
         {isMobile && (
           <button
