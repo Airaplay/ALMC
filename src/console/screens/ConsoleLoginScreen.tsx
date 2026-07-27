@@ -10,12 +10,8 @@ import { LoadingLogo } from '../../components/LoadingLogo';
 import { ConsoleAuthShell } from '../components/ConsoleAuthShell';
 import {
   ConsoleErrorAlert,
-  ConsoleFloatingInput,
   ConsolePasswordToggle,
-  ConsolePrimaryButton,
-  ConsoleSubmitArrow,
 } from '../components/ConsoleFormControls';
-import { consoleTheme } from '../consoleTheme';
 
 export function ConsoleLoginScreen(): JSX.Element {
   const navigate = useNavigate();
@@ -233,11 +229,21 @@ export function ConsoleLoginScreen(): JSX.Element {
       ? 'Join Airaplay — manage artists and releases'
       : 'Sign in with your Airaplay account';
 
+  const glassLabel = 'mb-2 block text-sm font-medium text-white/85';
+  const glassInput =
+    'w-full rounded-md bg-white px-4 py-3.5 text-[15px] text-zinc-900 placeholder:text-zinc-400 outline-none transition focus:ring-2 focus:ring-[#2B87F5]/40';
+  const glassBtn =
+    'inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#2B87F5] text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#1f75e0] disabled:cursor-not-allowed disabled:opacity-70';
+  const glassLink =
+    'text-white underline decoration-white/50 underline-offset-2 transition hover:decoration-white';
+
   if (isCheckingAuth) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <LoadingLogo />
-      </div>
+      <ConsoleAuthShell title="Label & Management Console" subtitle="Loading…">
+        <div className="flex items-center justify-center gap-3 py-6">
+          <LoadingLogo />
+        </div>
+      </ConsoleAuthShell>
     );
   }
 
@@ -253,17 +259,17 @@ export function ConsoleLoginScreen(): JSX.Element {
               disabled={isSigningOut}
               title="Sign out"
               aria-label="Sign out"
-              className="rounded-full p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+              className="rounded-full p-2.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
             >
               <LogOut className="h-5 w-5" />
             </button>
           ) : undefined
         }
         footer={
-          <div className="mt-6 space-y-3 text-center text-[13px] text-muted-foreground">
+          <div className="mt-6 space-y-3 text-center text-[13px] text-white/80">
             {!pendingVerification && (
               <p>
-                {isSignUp ? 'Already have an account?' : 'New to Airaplay?'}{' '}
+                {isSignUp ? 'Already have an account?' : 'Are you new?'}{' '}
                 <button
                   type="button"
                   onClick={() => {
@@ -271,14 +277,14 @@ export function ConsoleLoginScreen(): JSX.Element {
                     setError(null);
                     setPendingVerification(false);
                   }}
-                  className={consoleTheme.link}
+                  className={glassLink}
                 >
-                  {isSignUp ? 'Sign in' : 'Create account'}
+                  {isSignUp ? 'Sign in' : 'Create an Account'}
                 </button>
               </p>
             )}
             <p>
-              <a href={almcRoutes.consumerHome()} className={consoleTheme.link}>
+              <a href={almcRoutes.consumerHome()} className={glassLink}>
                 Back to Airaplay
               </a>
             </p>
@@ -286,18 +292,18 @@ export function ConsoleLoginScreen(): JSX.Element {
         }
       >
         {signedInEmail && !pendingVerification && (
-          <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
-            <p className="text-[13px] text-secondary-foreground">
-              Signed in as <span className="font-medium text-foreground">{signedInEmail}</span>
+          <div className="rounded-lg border border-white/25 bg-white/10 p-4">
+            <p className="text-[13px] text-white/85">
+              Signed in as <span className="font-medium text-white">{signedInEmail}</span>
             </p>
-            <ConsolePrimaryButton type="button" onClick={routeAfterLogin} className="mt-3">
+            <button type="button" onClick={routeAfterLogin} className={`${glassBtn} mt-3`}>
               Continue to Console
-            </ConsolePrimaryButton>
+            </button>
           </div>
         )}
 
         {pendingVerification ? (
-          <form onSubmit={handleVerifyOtp} className="space-y-6">
+          <form onSubmit={handleVerifyOtp} className="space-y-5">
             {error ? <ConsoleErrorAlert message={error} /> : null}
             <div className="flex justify-center gap-1.5 sm:gap-2">
               {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -314,69 +320,86 @@ export function ConsoleLoginScreen(): JSX.Element {
                     setOtpCode(next.join('').slice(0, 6));
                     setError(null);
                   }}
-                  className="h-12 w-10 min-w-0 rounded-xl border border-border bg-secondary text-center text-lg font-bold text-foreground outline-none transition-all focus:border-[var(--almc-lime-deep)] focus:ring-2 focus:ring-[var(--almc-lime-deep)]/30 sm:h-12 sm:w-11"
+                  className="h-12 w-10 min-w-0 rounded-md bg-white text-center text-lg font-bold text-zinc-900 outline-none transition focus:ring-2 focus:ring-[#2B87F5]/40 sm:h-12 sm:w-11"
                 />
               ))}
             </div>
-            <ConsolePrimaryButton
+            <button
               type="submit"
               disabled={isVerifyingOtp || otpCode.length !== 6}
-              loading={isVerifyingOtp}
+              className={glassBtn}
             >
-              <ConsoleSubmitArrow label="Verify & continue" />
-            </ConsolePrimaryButton>
+              {isVerifyingOtp ? 'Verifying…' : 'Verify & continue'}
+            </button>
             <button
               type="button"
               onClick={handleResendCode}
               disabled={resendCooldownSeconds > 0}
-              className="w-full text-[12px] font-semibold text-[var(--almc-lime-deep)] disabled:text-muted-foreground/50"
+              className="w-full text-sm text-white underline decoration-white/50 underline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline"
             >
               {resendCooldownSeconds > 0
                 ? `Resend code in ${resendCooldownSeconds}s`
                 : 'Resend code'}
             </button>
           </form>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
+        ) : !signedInEmail ? (
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error ? <ConsoleErrorAlert message={error} /> : null}
 
             {isSignUp && (
-              <ConsoleFloatingInput
-                label="Full name"
-                required
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-              />
+              <div>
+                <label className={glassLabel} htmlFor="almc-name">Full name</label>
+                <input
+                  id="almc-name"
+                  required
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className={glassInput}
+                  placeholder="Enter your name"
+                />
+              </div>
             )}
 
-            <ConsoleFloatingInput
-              label="Email"
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <div>
+              <label className={glassLabel} htmlFor="almc-email">Email</label>
+              <input
+                id="almc-email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={glassInput}
+                placeholder="Enter your email"
+              />
+            </div>
 
-            <ConsoleFloatingInput
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              required
-              autoComplete={isSignUp ? 'new-password' : 'current-password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              rightSlot={
-                <ConsolePasswordToggle show={showPassword} onToggle={() => setShowPassword((v) => !v)} />
-              }
-            />
+            <div>
+              <label className={glassLabel} htmlFor="almc-password">Password</label>
+              <div className="relative">
+                <input
+                  id="almc-password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`${glassInput} pr-11`}
+                  placeholder="••••••••"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                  <ConsolePasswordToggle show={showPassword} onToggle={() => setShowPassword((v) => !v)} />
+                </div>
+              </div>
+            </div>
 
             {isSignUp && (
-              <label className="flex items-start gap-2 text-[12px] text-muted-foreground">
+              <label className="flex items-start gap-2 text-[12px] text-white/75">
                 <input
                   type="checkbox"
                   checked={agreedToTerms}
                   onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-0.5 rounded border-border bg-transparent text-[var(--almc-lime-deep)] focus:ring-[var(--almc-lime-deep)]/30"
+                  className="mt-0.5 rounded border-white/40 bg-white/20 text-[#2B87F5] focus:ring-[#2B87F5]/30"
                 />
                 <span>
                   I agree to the{' '}
@@ -384,7 +407,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                     href={almcRoutes.consumerTermsSignup()}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={consoleTheme.link}
+                    className={glassLink}
                   >
                     Terms & Conditions
                   </a>
@@ -392,21 +415,21 @@ export function ConsoleLoginScreen(): JSX.Element {
               </label>
             )}
 
-            <ConsolePrimaryButton
+            <button
               type="submit"
               disabled={isSubmitting || (isSignUp && !agreedToTerms)}
-              loading={isSubmitting}
+              className={glassBtn}
             >
-              <ConsoleSubmitArrow
-                label={
-                  isSignUp
-                    ? 'Create account'
-                    : 'Sign in to Console'
-                }
-              />
-            </ConsolePrimaryButton>
+              {isSubmitting
+                ? isSignUp
+                  ? 'Creating…'
+                  : 'Signing in…'
+                : isSignUp
+                  ? 'Create account'
+                  : 'Sign In'}
+            </button>
           </form>
-        )}
+        ) : null}
       </ConsoleAuthShell>
   );
 }

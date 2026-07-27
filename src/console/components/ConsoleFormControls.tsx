@@ -89,9 +89,9 @@ export function ConsolePasswordToggle({
 
 export function ConsoleErrorAlert({ message }: { message: string }): JSX.Element {
   return (
-    <div className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/10 p-3.5">
-      <div className="mt-0.5 h-full w-1 shrink-0 rounded-full bg-red-400" />
-      <p className="text-[12px] leading-relaxed text-red-500 dark:text-red-400">{message}</p>
+    <div className="flex items-start gap-2.5 rounded-lg border border-red-300/40 bg-red-500/20 p-3.5">
+      <div className="mt-0.5 h-full w-1 shrink-0 rounded-full bg-red-300" />
+      <p className="text-[12px] leading-relaxed text-red-50">{message}</p>
     </div>
   );
 }

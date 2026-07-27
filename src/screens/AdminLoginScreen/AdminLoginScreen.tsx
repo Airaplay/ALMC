@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, Clock, Shield, RefreshCw } from 'lucide-react';
-import { Card, CardContent } from '../../components/ui/card';
+import { Eye, EyeOff, AlertCircle, Clock, Shield, RefreshCw, Music2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getCurrentAdminAccess } from '../../lib/adminAccess';
 import { LoadingLogo } from '../../components/LoadingLogo';
@@ -16,7 +15,6 @@ import {
   sendAdminLoginEmailOtp,
   verifyAdminLoginEmailOtp,
 } from '../../lib/adminEmailOtpGate';
-import '../AdminDashboardScreen/admin-theme.css';
 
 const getClientInfo = () => ({
   userAgent: navigator.userAgent || '',
@@ -24,6 +22,57 @@ const getClientInfo = () => ({
 });
 
 type OtpPhase = 'idle' | 'email_otp';
+
+const glassCardClass =
+  'w-full max-w-[420px] rounded-[2rem] border border-white/30 bg-white/15 p-10 shadow-[0_8px_32px_rgba(0,0,0,0.25)] backdrop-blur-[22px] sm:p-12';
+
+const inputClass =
+  'w-full rounded-md bg-white px-4 py-3.5 text-[15px] text-zinc-900 placeholder:text-zinc-400 outline-none transition focus:ring-2 focus:ring-[#2B87F5]/40 disabled:cursor-not-allowed disabled:bg-white/80';
+
+const labelClass = 'mb-2 block text-sm font-medium text-white/85';
+
+const primaryBtnClass =
+  'w-full rounded-md bg-[#2B87F5] py-3.5 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#1f75e0] disabled:cursor-not-allowed disabled:opacity-70';
+
+function AdminLoginShell({ children }: { children: React.ReactNode }): JSX.Element {
+  return (
+    <div className="relative flex min-h-screen w-full overflow-hidden">
+      <div className="absolute inset-0 bg-[#07111f]" aria-hidden />
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-45"
+        style={{ backgroundImage: "url('/admin-login-bg.png')" }}
+        aria-hidden
+      />
+      <div
+        className="absolute inset-0 bg-gradient-to-r from-[#07111f]/75 via-[#07111f]/35 to-[#07111f]/55"
+        aria-hidden
+      />
+
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col justify-center gap-12 px-6 py-12 lg:flex-row lg:items-center lg:justify-between lg:gap-16 lg:px-10">
+        <div className="max-w-xl text-white lg:flex-1">
+          <div className="mb-8 flex items-center gap-2">
+            <span className="text-2xl font-extrabold tracking-[0.18em] sm:text-3xl">AIRAPLAY</span>
+            <span className="relative ml-1 flex h-6 w-16 items-center" aria-hidden>
+              <span className="absolute inset-x-0 top-1/2 border-t border-dashed border-white/70" />
+              <Music2 className="absolute -right-1 top-1/2 h-4 w-4 -translate-y-1/2 text-white" strokeWidth={2} />
+            </span>
+          </div>
+          <h1 className="text-4xl font-extrabold uppercase leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
+            Own the Stage
+          </h1>
+          <p className="mt-5 text-base font-medium text-white/90 sm:text-lg">
+            Where music meets control.
+          </p>
+          <p className="mt-2 max-w-md text-sm leading-relaxed text-white/70 sm:text-[15px]">
+            Sign in to manage artists, content, and the Airaplay platform from one secure console.
+          </p>
+        </div>
+
+        <div className="w-full lg:flex lg:justify-end lg:flex-1">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 export const AdminLoginScreen = (): JSX.Element => {
   const navigate = useNavigate();
@@ -393,10 +442,12 @@ export const AdminLoginScreen = (): JSX.Element => {
 
   if (isCheckingAuth) {
     return (
-      <div className="admin-layout flex items-center justify-center min-h-screen">
-        <LoadingLogo variant="pulse" size={32} />
-        <p className="ml-4 text-zinc-900 font-medium">Checking authentication...</p>
-      </div>
+      <AdminLoginShell>
+        <div className={`${glassCardClass} flex items-center justify-center gap-3`}>
+          <LoadingLogo variant="pulse" size={28} />
+          <p className="font-medium text-white">Checking authentication...</p>
+        </div>
+      </AdminLoginShell>
     );
   }
 
@@ -404,197 +455,194 @@ export const AdminLoginScreen = (): JSX.Element => {
 
   if (otpPhase === 'email_otp' && otpEmail) {
     return (
-      <div className="admin-layout flex items-center justify-center min-h-screen p-4 w-full">
-        <div className="w-full flex items-center justify-center">
-          <Card className="w-full max-w-md admin-card border-0 shadow-none bg-white rounded-[1.25rem]">
-            <CardContent className="p-8">
-              <div className="text-center mb-6">
-                <img src="/Black_logo.fw.png" alt="Airaplay Admin" className="h-10 mx-auto mb-4" />
-                <h1 className="text-2xl font-bold text-zinc-900 mb-2 tracking-tight">Check your email</h1>
-                <p className="text-zinc-500 text-sm">
-                  We sent a one-time code to <span className="font-medium text-zinc-800">{otpEmail}</span>. Enter the 6-digit code to finish signing in.
-                </p>
+      <AdminLoginShell>
+        <div className={glassCardClass}>
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold tracking-tight text-white">Check your email</h2>
+            <p className="mt-2 text-sm text-white/75">
+              We sent a one-time code to{' '}
+              <span className="font-medium text-white">{otpEmail}</span>. Enter it to finish signing in.
+            </p>
+          </div>
+
+          <div className="mb-5 flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3.5 py-2.5">
+            <Shield className="h-4 w-4 flex-shrink-0 text-white/90" strokeWidth={1.75} />
+            <p className="text-xs text-white/80">Admin login uses password plus an email code.</p>
+          </div>
+
+          <form onSubmit={handleOtpSubmit} className="space-y-5">
+            <div>
+              <label className={labelClass}>6-digit code</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                className={`${inputClass} text-center text-lg tracking-[0.35em]`}
+                placeholder="••••••"
+                maxLength={6}
+                required
+              />
+            </div>
+
+            {error && (
+              <div className="flex items-start gap-3 rounded-lg border border-red-300/40 bg-red-500/20 p-3.5">
+                <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-200" />
+                <p className="text-sm text-red-50">{error}</p>
               </div>
+            )}
 
-              <div className="flex items-center gap-2 mb-4 px-3.5 py-2.5 bg-[#eef8c9] rounded-2xl">
-                <Shield className="w-4 h-4 text-lime-700 flex-shrink-0" strokeWidth={1.75} />
-                <p className="text-xs text-zinc-700">Admin login uses password plus an email code from Supabase Auth.</p>
-              </div>
+            <button
+              type="submit"
+              disabled={isSubmitting || otpCode.length !== 6}
+              className={primaryBtnClass}
+            >
+              {isSubmitting ? 'Verifying...' : 'Continue'}
+            </button>
 
-              <form onSubmit={handleOtpSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-zinc-700 text-sm font-medium mb-2">6-digit code</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    className="w-full px-4 py-3 bg-white border border-zinc-900/[0.08] rounded-2xl text-zinc-900 tracking-widest text-center text-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/20"
-                    placeholder="••••••"
-                    maxLength={6}
-                    required
-                  />
-                </div>
+            <button
+              type="button"
+              onClick={handleResendOtp}
+              disabled={resendCooldownSeconds > 0 || isSendingOtp}
+              className="flex w-full items-center justify-center gap-2 py-1 text-sm text-white underline decoration-white/50 underline-offset-2 hover:decoration-white disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline"
+            >
+              <RefreshCw className={`h-4 w-4 ${isSendingOtp ? 'animate-spin' : ''}`} strokeWidth={1.75} />
+              {resendCooldownSeconds > 0
+                ? `Resend code in ${resendCooldownSeconds}s`
+                : isSendingOtp
+                  ? 'Sending...'
+                  : 'Resend code'}
+            </button>
 
-                {error && (
-                  <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-700">{error}</p>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting || otpCode.length !== 6}
-                  className="admin-btn-primary w-full py-3 font-medium disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? 'Verifying...' : 'Continue'}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleResendOtp}
-                  disabled={resendCooldownSeconds > 0 || isSendingOtp}
-                  className="w-full flex items-center justify-center gap-2 py-2 text-sm text-lime-700 hover:text-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isSendingOtp ? 'animate-spin' : ''}`} strokeWidth={1.75} />
-                  {resendCooldownSeconds > 0
-                    ? `Resend code in ${resendCooldownSeconds}s`
-                    : isSendingOtp
-                      ? 'Sending...'
-                      : 'Resend code'}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleCancelOtp()}
-                  className="w-full py-2 text-sm text-zinc-500 hover:text-zinc-900"
-                >
-                  Cancel and sign out
-                </button>
-              </form>
-            </CardContent>
-          </Card>
+            <button
+              type="button"
+              onClick={() => handleCancelOtp()}
+              className="w-full py-1 text-sm text-white/70 underline decoration-white/40 underline-offset-2 hover:text-white hover:decoration-white"
+            >
+              Cancel and sign out
+            </button>
+          </form>
         </div>
-      </div>
+      </AdminLoginShell>
     );
   }
 
   return (
-    <div className="admin-layout flex items-center justify-center min-h-screen p-4 w-full">
-      <div className="w-full flex items-center justify-center">
-        <Card className="w-full max-w-md admin-card border-0 shadow-none bg-white rounded-[1.25rem]">
-          <CardContent className="p-8">
-            <div className="text-center mb-8">
-              <img
-                src="/Black_logo.fw.png"
-                alt="Airaplay Admin"
-                className="h-10 mx-auto mb-4"
+    <AdminLoginShell>
+      <div className={glassCardClass}>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="mb-1 flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3.5 py-2.5">
+            <Shield className="h-4 w-4 flex-shrink-0 text-white/90" strokeWidth={1.75} />
+            <p className="text-xs text-white/80">
+              Protected area. Password, then a one-time email code.
+            </p>
+          </div>
+
+          <div>
+            <label className={labelClass} htmlFor="admin-email">
+              Email
+            </label>
+            <input
+              id="admin-email"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+              disabled={isLocked}
+              className={inputClass}
+              placeholder="Enter your email"
+            />
+          </div>
+
+          <div>
+            <label className={labelClass} htmlFor="admin-password">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="admin-password"
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+                disabled={isLocked}
+                className={`${inputClass} pr-11`}
+                placeholder="••••••••"
               />
-              <h1 className="text-2xl font-bold text-zinc-900 mb-2 tracking-tight">Admin Login</h1>
-              <p className="text-zinc-500">Sign in to access the admin dashboard</p>
-            </div>
-
-            <div className="flex items-center gap-2 mb-6 px-3.5 py-2.5 bg-[#eef8c9] rounded-2xl">
-              <Shield className="w-4 h-4 text-lime-700 flex-shrink-0" strokeWidth={1.75} />
-              <p className="text-xs text-zinc-700">Protected area. You will sign in with password, then a one-time code sent to your email.</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="flex items-center gap-2 text-zinc-700 text-sm font-medium mb-2">
-                  <Mail className="w-4 h-4" strokeWidth={1.75} />
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  disabled={isLocked}
-                  className="w-full px-4 py-3 bg-white border border-zinc-900/[0.08] rounded-2xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:border-transparent disabled:bg-zinc-100 disabled:cursor-not-allowed"
-                  placeholder="admin@example.com"
-                />
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2 text-zinc-700 text-sm font-medium mb-2">
-                  <Lock className="w-4 h-4" strokeWidth={1.75} />
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    required
-                    disabled={isLocked}
-                    className="w-full px-4 py-3 bg-white border border-zinc-900/[0.08] rounded-2xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:border-transparent disabled:bg-zinc-100 disabled:cursor-not-allowed"
-                    placeholder="••••••••"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-400 hover:text-zinc-700"
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-
-              {isLocked && (
-                <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-start gap-3">
-                  <Clock className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-orange-800 text-sm font-medium">Account temporarily locked</p>
-                    <p className="text-orange-700 text-sm mt-1">
-                      Too many failed attempts. Try again in{' '}
-                      <span className="font-bold tabular-nums">{formatLockoutTime(lockoutSeconds)}</span>
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {error && !isLocked && (
-                <div className={`p-4 border rounded-2xl flex items-start gap-3 ${
-                  failuresRemaining !== null && failuresRemaining <= 2
-                    ? 'bg-orange-50 border-orange-100'
-                    : 'bg-red-50 border-red-100'
-                }`}>
-                  <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                    failuresRemaining !== null && failuresRemaining <= 2 ? 'text-orange-500' : 'text-red-500'
-                  }`} />
-                  <p className={`text-sm ${
-                    failuresRemaining !== null && failuresRemaining <= 2 ? 'text-orange-800' : 'text-red-700'
-                  }`}>{error}</p>
-                </div>
-              )}
-
               <button
-                type="submit"
-                disabled={isSubmitting || isLocked}
-                className="admin-btn-primary w-full py-3 font-medium disabled:opacity-70 disabled:cursor-not-allowed"
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700"
+                tabIndex={-1}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {isSubmitting ? 'Signing In...' : isLocked ? `Locked (${formatLockoutTime(lockoutSeconds)})` : 'Sign In'}
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
+            </div>
+          </div>
 
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => navigate('/')}
-                  className="text-zinc-500 hover:text-zinc-900 text-sm transition-colors duration-200"
-                >
-                  Back to Home
-                </button>
+          {isLocked && (
+            <div className="flex items-start gap-3 rounded-lg border border-orange-300/40 bg-orange-500/20 p-3.5">
+              <Clock className="mt-0.5 h-5 w-5 flex-shrink-0 text-orange-200" />
+              <div>
+                <p className="text-sm font-medium text-orange-50">Account temporarily locked</p>
+                <p className="mt-1 text-sm text-orange-100/90">
+                  Too many failed attempts. Try again in{' '}
+                  <span className="font-bold tabular-nums">{formatLockoutTime(lockoutSeconds)}</span>
+                </p>
               </div>
-            </form>
-          </CardContent>
-        </Card>
+            </div>
+          )}
+
+          {error && !isLocked && (
+            <div
+              className={`flex items-start gap-3 rounded-lg border p-3.5 ${
+                failuresRemaining !== null && failuresRemaining <= 2
+                  ? 'border-orange-300/40 bg-orange-500/20'
+                  : 'border-red-300/40 bg-red-500/20'
+              }`}
+            >
+              <AlertCircle
+                className={`mt-0.5 h-5 w-5 flex-shrink-0 ${
+                  failuresRemaining !== null && failuresRemaining <= 2
+                    ? 'text-orange-200'
+                    : 'text-red-200'
+                }`}
+              />
+              <p
+                className={`text-sm ${
+                  failuresRemaining !== null && failuresRemaining <= 2
+                    ? 'text-orange-50'
+                    : 'text-red-50'
+                }`}
+              >
+                {error}
+              </p>
+            </div>
+          )}
+
+          <button type="submit" disabled={isSubmitting || isLocked} className={primaryBtnClass}>
+            {isSubmitting
+              ? 'Signing In...'
+              : isLocked
+                ? `Locked (${formatLockoutTime(lockoutSeconds)})`
+                : 'Sign In'}
+          </button>
+
+          <div className="pt-1 text-center">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="text-sm text-white underline decoration-white/50 underline-offset-2 transition hover:decoration-white"
+            >
+              Back to Home
+            </button>
+          </div>
+        </form>
       </div>
-    </div>
+    </AdminLoginShell>
   );
 };
