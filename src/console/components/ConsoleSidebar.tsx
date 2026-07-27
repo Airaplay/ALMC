@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Users, LayoutDashboard, UserCog, Settings, LogOut, Menu, X, Building2, CalendarDays, BarChart3, DollarSign } from 'lucide-react';
+import { Users, LayoutDashboard, UserCog, Settings, LogOut, Menu, X, CalendarDays, BarChart3, DollarSign } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { orgHasPermission, OrgPermission } from '../../lib/orgAccess';
@@ -47,7 +47,7 @@ export function ConsoleSidebar({
   isMobile,
   onSignOut,
 }: ConsoleSidebarProps) {
-  const { organization, permissions } = useOrganization();
+  const { permissions } = useOrganization();
 
   const visibleItems = NAV_ITEMS.filter(
     (item) => !item.permission || orgHasPermission(permissions, item.permission)
@@ -55,24 +55,18 @@ export function ConsoleSidebar({
 
   const sidebarContent = (
     <div className="flex h-full flex-col border-r border-sidebar-border bg-sidebar">
-      <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-6">
-        {organization?.logo_url ? (
-          <img src={organization.logo_url} alt="" className="h-10 w-10 rounded-2xl object-cover" />
-        ) : (
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--almc-lime)] text-foreground">
-            <Building2 className="h-5 w-5" strokeWidth={1.75} />
-          </div>
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold tracking-tight text-sidebar-accent-foreground">
-            {organization?.name ?? 'Console'}
-          </p>
-          <p className="truncate text-[11px] capitalize text-sidebar-foreground">
-            {organization?.type?.replace('_', ' ')}
-          </p>
-        </div>
+      <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-5">
+        <img
+          src="/airaplay-console-logo.png"
+          alt="Airaplay"
+          className="h-8 w-auto max-w-[160px] object-contain object-left dark:invert"
+        />
         {isMobile && (
-          <button type="button" onClick={onCloseSidebar} className="rounded-full p-1.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+          <button
+            type="button"
+            onClick={onCloseSidebar}
+            className="ml-auto rounded-full p-1.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
             <X className="h-5 w-5" strokeWidth={1.75} />
           </button>
         )}
