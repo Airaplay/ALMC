@@ -31,7 +31,7 @@ ALMC uses the **same Supabase project** as Airaplay-DB-V2 (shared auth, org tabl
 
 ## Design
 
-UI follows the Airaplay web design system (AuthModal, sidebar tokens, brand green `#309605` / `#3ba208`).
+Soft minimalist SaaS UI: off-white canvas, white cards, charcoal/black anchors, lime accent `#d9f99d`.
 
 ## Sync from Airaplay-DB-V2
 

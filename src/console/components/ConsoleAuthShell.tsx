@@ -1,5 +1,6 @@
 import { cn } from '../../lib/utils';
 import { ConsoleThemeToggle } from './ConsoleThemeToggle';
+import { consoleTheme } from '../consoleTheme';
 
 interface ConsoleAuthShellProps {
   title: string;
@@ -24,12 +25,16 @@ export function ConsoleAuthShell({
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background p-4">
       <div
-        className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
         aria-hidden
       >
         <div
-          className="h-[320px] w-[320px] rounded-full opacity-[0.12] dark:opacity-[0.07] sm:h-[420px] sm:w-[420px]"
-          style={{ background: 'radial-gradient(circle, hsl(102,94%,30%) 0%, transparent 70%)' }}
+          className="absolute -right-24 -top-24 h-[420px] w-[420px] rounded-full opacity-40"
+          style={{ background: 'radial-gradient(circle, var(--almc-lime) 0%, transparent 68%)' }}
+        />
+        <div
+          className="absolute -bottom-32 -left-16 h-[360px] w-[360px] rounded-full opacity-25"
+          style={{ background: 'radial-gradient(circle, hsl(0 0% 0% / 0.06) 0%, transparent 70%)' }}
         />
       </div>
 
@@ -39,16 +44,16 @@ export function ConsoleAuthShell({
       </div>
 
       <div className={cn('relative w-full', widthClass)}>
-        <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-[0_24px_64px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-[#0d0d0d]/97 dark:shadow-[0_32px_80px_rgba(0,0,0,0.6)] backdrop-blur-2xl">
-          <div className="h-[2px] w-full shrink-0 bg-gradient-to-r from-transparent via-[#3ba208] to-transparent opacity-80" />
-          <div className="space-y-6 px-6 py-8 sm:space-y-7 sm:px-8 sm:py-8">
+        <div className={cn(consoleTheme.card, 'overflow-hidden')}>
+          <div className="h-1.5 w-full shrink-0 bg-[var(--almc-lime)]" />
+          <div className="space-y-6 px-6 py-8 sm:space-y-7 sm:px-8 sm:py-9">
             <div>
               <img
                 src="/official_airaplay_logo.png"
                 alt="Airaplay"
                 className="h-7 object-contain sm:h-8"
               />
-              <h1 className="mt-4 text-2xl font-black leading-none tracking-tight text-foreground sm:text-[28px]">
+              <h1 className="mt-5 text-2xl font-bold leading-none tracking-tight text-foreground sm:text-[28px]">
                 {title}
               </h1>
               {subtitle ? (

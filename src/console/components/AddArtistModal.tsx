@@ -275,7 +275,7 @@ export function AddArtistModal({
         className="relative flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-white/20 bg-[#0d0d0d]/97 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="h-[2px] shrink-0 bg-gradient-to-r from-transparent via-[#3ba208] to-transparent opacity-80" />
+        <div className="h-1.5 shrink-0 bg-[var(--almc-lime)]" />
 
         <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border px-6 py-5">
           <div>
@@ -357,7 +357,7 @@ export function AddArtistModal({
                       'rounded-lg px-2 py-2 text-xs font-medium transition-colors sm:text-sm',
                       item.disabled && 'cursor-not-allowed opacity-40',
                       tab === item.id
-                        ? 'bg-card text-[#3ba208] shadow-sm'
+                        ? 'bg-card text-[var(--almc-lime-deep)] shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
                     )}
                   >
@@ -513,7 +513,7 @@ export function AddArtistModal({
                 </Field>
 
                 <p className="flex items-start gap-2 text-xs text-muted-foreground">
-                  <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#3ba208]" />
+                  <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--almc-lime-deep)]" />
                   A verification code is emailed only to the artist. Enter it on the next step to
                   confirm them.
                 </p>

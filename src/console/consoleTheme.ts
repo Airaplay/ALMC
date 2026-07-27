@@ -1,24 +1,45 @@
 /**
- * ALMC design tokens — aligned with Airaplay-DB-V2 web theme (AuthModal, LeftSidebar).
- * Uses the same Supabase project for auth, organizations, and delegated content RLS.
+ * ALMC design tokens — soft minimalist SaaS (lime accent + charcoal/black anchors).
+ * Visual language inspired by Bond-style dashboards: extreme rounding, white cards
+ * on an off-white canvas, black active states, lime CTAs.
  */
-export const AIRAPLAY_GREEN = '#309605';
-export const AIRAPLAY_GREEN_LIGHT = '#3ba208';
+export const AIRAPLAY_GREEN = '#65a30d';
+export const AIRAPLAY_GREEN_LIGHT = '#84cc16';
+export const ALMC_LIME = '#d9f99d';
+export const ALMC_INK = '#000000';
+export const ALMC_LIME_DEEP = '#65a30d';
 
 export const consoleTheme = {
-  page: "min-h-screen bg-background text-foreground font-['Inter',sans-serif]",
-  card: 'rounded-2xl border border-border bg-card text-card-foreground',
-  cardInner: 'rounded-xl border border-border bg-secondary',
+  page: "min-h-screen bg-background text-foreground font-['Inter',system-ui,sans-serif]",
+  card: 'almc-card rounded-[1.25rem] border border-border/80 bg-card text-card-foreground',
+  cardPad: 'almc-card rounded-[1.25rem] border border-border/80 bg-card p-5 text-card-foreground',
+  cardInner: 'rounded-2xl border border-border/60 bg-secondary/70',
+  cardAccent: 'almc-card-accent rounded-[1.25rem]',
   muted: 'text-muted-foreground',
-  link: 'font-semibold text-[#3ba208] transition-colors hover:text-[#3ba208]/90',
+  label: 'almc-label',
+  display: 'text-2xl font-bold tracking-tight text-foreground tabular-nums sm:text-3xl',
+  link: 'font-semibold text-[var(--almc-lime-deep)] transition-colors hover:opacity-90',
   btnPrimary:
-    'h-12 rounded-xl bg-[#3ba208] text-[13px] font-bold tracking-wide text-white hover:bg-[#3ba208]/90 active:scale-[0.98] disabled:opacity-40',
-  btnSecondary: 'rounded-xl border border-border bg-secondary text-secondary-foreground hover:bg-muted',
+    'inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-[13px] font-semibold tracking-wide text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40',
+  btnLime:
+    'inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--almc-lime)] px-5 text-[13px] font-semibold tracking-wide text-foreground transition-all hover:brightness-[0.97] active:scale-[0.98] disabled:opacity-40',
+  btnSecondary:
+    'inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border/80 bg-card px-5 text-[13px] font-semibold text-secondary-foreground transition-colors hover:bg-muted',
+  btnGhost:
+    'inline-flex items-center justify-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
   input:
-    'rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30',
-  activeNav: 'bg-sidebar-accent font-semibold text-sidebar-accent-foreground',
+    'rounded-2xl border border-border/80 bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-foreground/20 focus:outline-none focus:ring-2 focus:ring-foreground/10',
+  select:
+    'rounded-full border border-border/80 bg-card px-3.5 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10',
+  activeNav: 'bg-primary font-medium text-primary-foreground',
   inactiveNav:
-    'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
-  iconAccent: 'text-[#3ba208]',
-  banner: 'rounded-xl border border-primary/30 bg-primary/10',
+    'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+  iconAccent: 'text-[var(--almc-lime-deep)]',
+  iconWell: 'rounded-2xl bg-muted p-2 text-[var(--almc-lime-deep)]',
+  banner: 'rounded-2xl border border-[var(--almc-lime)]/50 bg-[var(--almc-lime)]/30',
+  tag: 'almc-pill border border-transparent',
+  positive: 'text-[var(--almc-lime-deep)]',
+  chartStroke: ALMC_LIME_DEEP,
+  chartFill: ALMC_LIME,
+  chartInk: ALMC_INK,
 } as const;

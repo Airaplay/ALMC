@@ -45,6 +45,7 @@ import { ArtistEarningsLedgerSection } from './ArtistEarningsLedgerSection';
 import { ListenerEarningsLedgerSection } from './ListenerEarningsLedgerSection';
 import { FlaggedManagementSection } from './FlaggedManagementSection';
 import { ExternalRevenueSection } from './ExternalRevenueSection';
+import './admin-theme.css';
 
 type SectionType = 'users' | 'content' | 'faqs' | 'analytics' | 'country_performance' | 'settings' | 'earnings' | 'withdrawal_requests' | 'exchange_rates' | 'analysis' | 'announcements' | 'admin_settings' | 'ad_management' | 'native_ads' | 'web_ads' | 'feature_banners' | 'treat_manager' | 'daily_checkin' | 'referral_management' | 'promotion_manager' | 'reports' | 'featured_artists' | 'mix_manager' | 'daily_mix_manager' | 'global_daily_mix_manager' | 'genre_manager' | 'payment_monitoring' | 'mood_analysis' | 'listener_curations' | 'contribution_rewards' | 'content_thresholds' | 'financial_controls' | 'promotional_credits' | 'support' | 'blog' | 'accounting' | 'artist_earnings_ledger' | 'listener_earnings_ledger' | 'flagged' | 'external_revenue';
 
@@ -346,14 +347,14 @@ export const AdminDashboardScreen = (): JSX.Element => {
     try {
       if (!hasAccessToSection(activeSection)) {
         return (
-          <div className="p-6 bg-white rounded-xl border border-gray-100 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Access Restricted</h2>
-            <p className="text-gray-500 mb-4">
+          <div className="admin-card p-6">
+            <h2 className="text-xl font-bold text-zinc-900 mb-2">Access Restricted</h2>
+            <p className="text-zinc-500 mb-4">
               Your role does not include access to {getSectionLabel(activeSection)}.
             </p>
             <button
               onClick={() => adminAccess && handleSectionChange(getFirstAccessibleSection(adminAccess))}
-              className="px-4 py-2 bg-[#309605] text-white rounded-lg hover:bg-[#3ba208] transition-colors text-sm font-medium"
+              className="admin-btn-primary px-5 py-2 text-sm font-medium"
             >
               Go to Available Section
             </button>
@@ -403,9 +404,9 @@ export const AdminDashboardScreen = (): JSX.Element => {
         case 'external_revenue': return <ExternalRevenueSection />;
         case 'settings':
           return (
-            <div className="p-6 bg-white rounded-xl border border-gray-100 shadow-sm">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Settings</h2>
-              <p className="text-gray-500">Admin settings will be implemented in a future update.</p>
+            <div className="admin-card p-6">
+              <h2 className="text-xl font-bold text-zinc-900 mb-2">Settings</h2>
+              <p className="text-zinc-500">Admin settings will be implemented in a future update.</p>
             </div>
           );
         default: return <AnalyticsOverviewSection />;
@@ -413,19 +414,19 @@ export const AdminDashboardScreen = (): JSX.Element => {
     } catch (error) {
       console.error('Error rendering section:', error);
       return (
-        <div className="p-6 bg-white rounded-xl border border-gray-100 shadow-sm">
+        <div className="admin-card p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-red-50 rounded-2xl flex items-center justify-center">
               <span className="text-red-500 font-bold">!</span>
             </div>
-            <h2 className="text-xl font-bold text-gray-900">Section Error</h2>
+            <h2 className="text-xl font-bold text-zinc-900">Section Error</h2>
           </div>
-          <p className="text-gray-500 mb-4">
+          <p className="text-zinc-500 mb-4">
             An error occurred: {error instanceof Error ? error.message : 'Unknown error'}
           </p>
           <button
             onClick={() => handleSectionChange('analytics')}
-            className="px-4 py-2 bg-[#309605] text-white rounded-lg hover:bg-[#3ba208] transition-colors text-sm font-medium"
+            className="admin-btn-primary px-5 py-2 text-sm font-medium"
           >
             Go to Dashboard
           </button>
@@ -440,13 +441,13 @@ export const AdminDashboardScreen = (): JSX.Element => {
     return (
       <button
         onClick={() => handleSectionChange(section)}
-        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
+        className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-full text-sm transition-all duration-150 ${
           isActive
-            ? 'bg-[#309605] text-white font-medium shadow-sm'
-            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            ? 'bg-zinc-900 text-white font-medium shadow-sm'
+            : 'text-zinc-500 hover:bg-zinc-100/80 hover:text-zinc-900'
         }`}
       >
-        <span className={`flex-shrink-0 ${isActive ? 'text-white' : 'text-gray-400'}`}>{icon}</span>
+        <span className={`flex-shrink-0 ${isActive ? 'text-white' : 'text-zinc-400'}`}>{icon}</span>
         <span className="truncate">{label}</span>
       </button>
     );
@@ -455,13 +456,13 @@ export const AdminDashboardScreen = (): JSX.Element => {
   const NavActionItem = ({ onClick, icon, label, variant = 'default' }: { onClick: () => void; icon: React.ReactNode; label: string; variant?: 'default' | 'danger' }) => (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
+      className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-full text-sm transition-all duration-150 ${
         variant === 'danger'
-          ? 'text-gray-600 hover:bg-red-50 hover:text-red-600'
-          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+          ? 'text-zinc-500 hover:bg-red-50 hover:text-red-600'
+          : 'text-zinc-500 hover:bg-zinc-100/80 hover:text-zinc-900'
       }`}
     >
-      <span className="flex-shrink-0 text-gray-400">{icon}</span>
+      <span className="flex-shrink-0 text-zinc-400">{icon}</span>
       <span className="truncate">{label}</span>
     </button>
   );
@@ -470,12 +471,12 @@ export const AdminDashboardScreen = (): JSX.Element => {
     <div className="mb-1">
       <button
         onClick={() => toggleGroup(groupKey)}
-        className="w-full flex items-center justify-between px-3 py-1.5 mb-1"
+        className="w-full flex items-center justify-between px-3.5 py-1.5 mb-1"
       >
-        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{label}</span>
+        <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.14em]">{label}</span>
         {expandedGroups[groupKey]
-          ? <ChevronDown className="w-3 h-3 text-gray-400" />
-          : <ChevronRight className="w-3 h-3 text-gray-400" />
+          ? <ChevronDown className="w-3 h-3 text-zinc-400" />
+          : <ChevronRight className="w-3 h-3 text-zinc-400" />
         }
       </button>
       {expandedGroups[groupKey] && (
@@ -488,10 +489,10 @@ export const AdminDashboardScreen = (): JSX.Element => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="admin-layout flex items-center justify-center min-h-screen">
         <div className="flex items-center gap-3">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#309605] border-t-transparent"></div>
-          <p className="text-gray-600 font-medium">Loading dashboard...</p>
+          <div className="animate-spin rounded-full h-6 w-6 border-2 border-zinc-900 border-t-transparent"></div>
+          <p className="text-zinc-600 font-medium">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -499,15 +500,15 @@ export const AdminDashboardScreen = (): JSX.Element => {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
-        <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-4 border border-red-100">
+      <div className="admin-layout flex flex-col items-center justify-center min-h-screen p-6">
+        <div className="w-16 h-16 bg-red-50 rounded-3xl flex items-center justify-center mb-4">
           <span className="text-red-500 text-2xl font-bold">!</span>
         </div>
-        <h1 className="text-xl font-bold text-gray-900 mb-2">Access Denied</h1>
-        <p className="text-gray-500 mb-6 text-center text-sm max-w-sm">{error}</p>
+        <h1 className="text-xl font-bold text-zinc-900 mb-2">Access Denied</h1>
+        <p className="text-zinc-500 mb-6 text-center text-sm max-w-sm">{error}</p>
         <button
           onClick={() => navigate('/admin/login')}
-          className="px-5 py-2.5 bg-[#309605] text-white rounded-lg hover:bg-[#3ba208] transition-colors text-sm font-medium"
+          className="admin-btn-primary px-6 py-2.5 text-sm font-medium"
         >
           Go to Login
         </button>
@@ -517,149 +518,149 @@ export const AdminDashboardScreen = (): JSX.Element => {
 
   if (!userRole) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="admin-layout flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#309605] border-t-transparent mx-auto mb-3"></div>
-          <p className="text-gray-600 font-medium text-sm">Verifying access...</p>
+          <div className="animate-spin rounded-full h-6 w-6 border-2 border-zinc-900 border-t-transparent mx-auto mb-3"></div>
+          <p className="text-zinc-600 font-medium text-sm">Verifying access...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="admin-layout flex h-screen overflow-hidden bg-gray-50 w-full">
+    <div className="admin-layout flex h-screen overflow-hidden w-full">
       {/* Mobile Overlay */}
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+          className="fixed inset-0 bg-zinc-900/30 backdrop-blur-sm z-40"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={`
-        w-[220px] h-screen bg-white border-r border-gray-100 flex flex-col fixed z-50
+        w-[240px] h-screen bg-white border-r border-zinc-900/[0.06] flex flex-col fixed z-50
         transition-transform duration-300 ease-in-out
         ${isMobile ? (sidebarOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
       `}>
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-5 border-b border-zinc-900/[0.06]">
           <img src="/Black_logo.fw.png" alt="Airaplay Admin" className="h-9 object-contain" />
           {isMobile && (
-            <button onClick={() => setSidebarOpen(false)} className="p-1.5 hover:bg-gray-100 rounded-lg">
-              <X className="w-4 h-4 text-gray-500" />
+            <button onClick={() => setSidebarOpen(false)} className="p-1.5 hover:bg-zinc-100 rounded-full">
+              <X className="w-4 h-4 text-zinc-500" />
             </button>
           )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
+        <nav className="flex-1 px-3 py-5 overflow-y-auto space-y-5">
           <NavGroup groupKey="overview" label="Overview">
-            <NavItem section="analytics" icon={<BarChart className="w-4 h-4" />} label="Dashboard" />
-            <NavItem section="country_performance" icon={<Globe className="w-4 h-4" />} label="Country Performance" />
-            <NavItem section="analysis" icon={<BarChart2 className="w-4 h-4" />} label="Ad Analysis" />
+            <NavItem section="analytics" icon={<BarChart className="w-4 h-4" strokeWidth={1.75} />} label="Dashboard" />
+            <NavItem section="country_performance" icon={<Globe className="w-4 h-4" strokeWidth={1.75} />} label="Country Performance" />
+            <NavItem section="analysis" icon={<BarChart2 className="w-4 h-4" strokeWidth={1.75} />} label="Ad Analysis" />
           </NavGroup>
 
           <NavGroup groupKey="users" label="Users & Content">
-            <NavItem section="users" icon={<Users className="w-4 h-4" />} label="Users" />
-            <NavItem section="content" icon={<FileText className="w-4 h-4" />} label="Content" />
-            <NavItem section="content_thresholds" icon={<Tags className="w-4 h-4" />} label="Section Thresholds" />
-            <NavItem section="featured_artists" icon={<Star className="w-4 h-4" />} label="Featured Artists" />
-            <NavItem section="reports" icon={<Flag className="w-4 h-4" />} label="Reports" />
-            <NavItem section="flagged" icon={<AlertTriangle className="w-4 h-4" />} label="Flagged" />
+            <NavItem section="users" icon={<Users className="w-4 h-4" strokeWidth={1.75} />} label="Users" />
+            <NavItem section="content" icon={<FileText className="w-4 h-4" strokeWidth={1.75} />} label="Content" />
+            <NavItem section="content_thresholds" icon={<Tags className="w-4 h-4" strokeWidth={1.75} />} label="Section Thresholds" />
+            <NavItem section="featured_artists" icon={<Star className="w-4 h-4" strokeWidth={1.75} />} label="Featured Artists" />
+            <NavItem section="reports" icon={<Flag className="w-4 h-4" strokeWidth={1.75} />} label="Reports" />
+            <NavItem section="flagged" icon={<AlertTriangle className="w-4 h-4" strokeWidth={1.75} />} label="Flagged" />
           </NavGroup>
 
           <NavGroup groupKey="monetization" label="Monetization">
-            <NavItem section="earnings" icon={<DollarSign className="w-4 h-4" />} label="Earnings & Payouts" />
-            <NavItem section="support" icon={<Wallet className="w-4 h-4" />} label="Support & Withdrawals" />
-            <NavItem section="treat_manager" icon={<Coins className="w-4 h-4" />} label="Treat Manager" />
-            <NavItem section="external_revenue" icon={<Banknote className="w-4 h-4" />} label="External Revenue" />
-            <NavItem section="promotional_credits" icon={<Gift className="w-4 h-4" />} label="Promo Credits" />
+            <NavItem section="earnings" icon={<DollarSign className="w-4 h-4" strokeWidth={1.75} />} label="Earnings & Payouts" />
+            <NavItem section="support" icon={<Wallet className="w-4 h-4" strokeWidth={1.75} />} label="Support & Withdrawals" />
+            <NavItem section="treat_manager" icon={<Coins className="w-4 h-4" strokeWidth={1.75} />} label="Treat Manager" />
+            <NavItem section="external_revenue" icon={<Banknote className="w-4 h-4" strokeWidth={1.75} />} label="External Revenue" />
+            <NavItem section="promotional_credits" icon={<Gift className="w-4 h-4" strokeWidth={1.75} />} label="Promo Credits" />
           </NavGroup>
 
           <NavGroup groupKey="accountant" label="Accountant">
-            <NavItem section="payment_monitoring" icon={<Activity className="w-4 h-4" />} label="Payment Monitoring" />
-            <NavItem section="withdrawal_requests" icon={<Wallet className="w-4 h-4" />} label="Withdrawal Requests" />
-            <NavItem section="exchange_rates" icon={<Globe className="w-4 h-4" />} label="Exchange Rates" />
-            <NavItem section="financial_controls" icon={<Shield className="w-4 h-4" />} label="Financial Controls" />
-            <NavItem section="accounting" icon={<BookOpen className="w-4 h-4" />} label="Accounting" />
-            <NavItem section="artist_earnings_ledger" icon={<ScrollText className="w-4 h-4" />} label="Artist Earnings Ledger" />
-            <NavItem section="listener_earnings_ledger" icon={<Headphones className="w-4 h-4" />} label="Listener Earnings Ledger" />
+            <NavItem section="payment_monitoring" icon={<Activity className="w-4 h-4" strokeWidth={1.75} />} label="Payment Monitoring" />
+            <NavItem section="withdrawal_requests" icon={<Wallet className="w-4 h-4" strokeWidth={1.75} />} label="Withdrawal Requests" />
+            <NavItem section="exchange_rates" icon={<Globe className="w-4 h-4" strokeWidth={1.75} />} label="Exchange Rates" />
+            <NavItem section="financial_controls" icon={<Shield className="w-4 h-4" strokeWidth={1.75} />} label="Financial Controls" />
+            <NavItem section="accounting" icon={<BookOpen className="w-4 h-4" strokeWidth={1.75} />} label="Accounting" />
+            <NavItem section="artist_earnings_ledger" icon={<ScrollText className="w-4 h-4" strokeWidth={1.75} />} label="Artist Earnings Ledger" />
+            <NavItem section="listener_earnings_ledger" icon={<Headphones className="w-4 h-4" strokeWidth={1.75} />} label="Listener Earnings Ledger" />
           </NavGroup>
 
           <NavGroup groupKey="advertising" label="Advertising">
-            <NavItem section="ad_management" icon={<Zap className="w-4 h-4" />} label="Ad Management" />
-            <NavItem section="native_ads" icon={<Image className="w-4 h-4" />} label="Native Ads" />
-            <NavItem section="web_ads" icon={<Monitor className="w-4 h-4" />} label="Web Ads" />
-            <NavItem section="feature_banners" icon={<Image className="w-4 h-4" />} label="Feature Banners" />
+            <NavItem section="ad_management" icon={<Zap className="w-4 h-4" strokeWidth={1.75} />} label="Ad Management" />
+            <NavItem section="native_ads" icon={<Image className="w-4 h-4" strokeWidth={1.75} />} label="Native Ads" />
+            <NavItem section="web_ads" icon={<Monitor className="w-4 h-4" strokeWidth={1.75} />} label="Web Ads" />
+            <NavItem section="feature_banners" icon={<Image className="w-4 h-4" strokeWidth={1.75} />} label="Feature Banners" />
           </NavGroup>
 
           <NavGroup groupKey="engagement" label="Engagement">
-            <NavItem section="promotion_manager" icon={<Megaphone className="w-4 h-4" />} label="Promotions" />
-            <NavItem section="listener_curations" icon={<ListMusic className="w-4 h-4" />} label="Listener Curations" />
-            <NavItem section="contribution_rewards" icon={<Award className="w-4 h-4" />} label="Contribution System" />
-            <NavItem section="daily_checkin" icon={<Calendar className="w-4 h-4" />} label="Daily Check-in" />
-            <NavItem section="referral_management" icon={<UserPlus className="w-4 h-4" />} label="Referrals" />
-            <NavItem section="announcements" icon={<Bell className="w-4 h-4" />} label="Announcements" />
+            <NavItem section="promotion_manager" icon={<Megaphone className="w-4 h-4" strokeWidth={1.75} />} label="Promotions" />
+            <NavItem section="listener_curations" icon={<ListMusic className="w-4 h-4" strokeWidth={1.75} />} label="Listener Curations" />
+            <NavItem section="contribution_rewards" icon={<Award className="w-4 h-4" strokeWidth={1.75} />} label="Contribution System" />
+            <NavItem section="daily_checkin" icon={<Calendar className="w-4 h-4" strokeWidth={1.75} />} label="Daily Check-in" />
+            <NavItem section="referral_management" icon={<UserPlus className="w-4 h-4" strokeWidth={1.75} />} label="Referrals" />
+            <NavItem section="announcements" icon={<Bell className="w-4 h-4" strokeWidth={1.75} />} label="Announcements" />
           </NavGroup>
 
           <NavGroup groupKey="system" label="System">
-            <NavItem section="mix_manager" icon={<Music className="w-4 h-4" />} label="Mix Manager" />
-            <NavItem section="daily_mix_manager" icon={<Sparkles className="w-4 h-4" />} label="Daily Mix AI" />
-            <NavItem section="global_daily_mix_manager" icon={<Globe className="w-4 h-4" />} label="Global Daily Mix" />
-            <NavItem section="genre_manager" icon={<Tags className="w-4 h-4" />} label="Genre Manager" />
-            <NavItem section="mood_analysis" icon={<TrendingUp className="w-4 h-4" />} label="Mood Analysis" />
-            <NavItem section="faqs" icon={<HelpCircle className="w-4 h-4" />} label="FAQs" />
-            <NavItem section="blog" icon={<BookOpen className="w-4 h-4" />} label="Blog" />
+            <NavItem section="mix_manager" icon={<Music className="w-4 h-4" strokeWidth={1.75} />} label="Mix Manager" />
+            <NavItem section="daily_mix_manager" icon={<Sparkles className="w-4 h-4" strokeWidth={1.75} />} label="Daily Mix AI" />
+            <NavItem section="global_daily_mix_manager" icon={<Globe className="w-4 h-4" strokeWidth={1.75} />} label="Global Daily Mix" />
+            <NavItem section="genre_manager" icon={<Tags className="w-4 h-4" strokeWidth={1.75} />} label="Genre Manager" />
+            <NavItem section="mood_analysis" icon={<TrendingUp className="w-4 h-4" strokeWidth={1.75} />} label="Mood Analysis" />
+            <NavItem section="faqs" icon={<HelpCircle className="w-4 h-4" strokeWidth={1.75} />} label="FAQs" />
+            <NavItem section="blog" icon={<BookOpen className="w-4 h-4" strokeWidth={1.75} />} label="Blog" />
           </NavGroup>
 
           <NavGroup groupKey="account" label="Account">
-            <NavItem section="settings" icon={<Settings className="w-4 h-4" />} label="Settings" />
-            <NavItem section="admin_settings" icon={<UserCog className="w-4 h-4" />} label="Admin Settings & Roles" />
-            <NavActionItem onClick={() => navigate('/')} icon={<Home className="w-4 h-4" />} label="Back to App" />
-            <NavActionItem onClick={handleSignOut} icon={<LogOut className="w-4 h-4" />} label="Sign Out" variant="danger" />
+            <NavItem section="settings" icon={<Settings className="w-4 h-4" strokeWidth={1.75} />} label="Settings" />
+            <NavItem section="admin_settings" icon={<UserCog className="w-4 h-4" strokeWidth={1.75} />} label="Admin Settings & Roles" />
+            <NavActionItem onClick={() => navigate('/')} icon={<Home className="w-4 h-4" strokeWidth={1.75} />} label="Back to App" />
+            <NavActionItem onClick={handleSignOut} icon={<LogOut className="w-4 h-4" strokeWidth={1.75} />} label="Sign Out" variant="danger" />
           </NavGroup>
         </nav>
 
         {/* User Footer */}
-        <div className="px-3 py-3 border-t border-gray-100">
-          <div className="flex items-center gap-3 px-2 py-2 mb-2">
-            <div className="w-8 h-8 rounded-full bg-[#e6f7f1] flex items-center justify-center flex-shrink-0">
+        <div className="px-3 py-4 border-t border-zinc-900/[0.06]">
+          <div className="flex items-center gap-3 px-2 py-2 rounded-2xl bg-zinc-50/80">
+            <div className="w-8 h-8 rounded-full bg-[#eef8c9] flex items-center justify-center flex-shrink-0">
               {userProfile?.avatar_url ? (
                 <img src={userProfile.avatar_url} alt="Profile" className="w-full h-full rounded-full object-cover" />
               ) : (
-                <span className="text-[#309605] text-sm font-semibold">
+                <span className="text-zinc-800 text-sm font-semibold">
                   {userProfile?.display_name?.charAt(0) || 'A'}
                 </span>
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-gray-900 font-medium text-sm truncate">{userProfile?.display_name || 'Admin'}</p>
-              <p className="text-xs text-gray-400 truncate capitalize">{userRole}</p>
+              <p className="text-zinc-900 font-medium text-sm truncate">{userProfile?.display_name || 'Admin'}</p>
+              <p className="text-xs text-zinc-400 truncate capitalize">{userRole}</p>
             </div>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col overflow-hidden ${isMobile ? 'ml-0' : 'ml-[220px]'}`}>
+      <div className={`flex-1 flex flex-col overflow-hidden ${isMobile ? 'ml-0' : 'ml-[240px]'}`}>
         {/* Top Header */}
-        <header className="flex-shrink-0 bg-white border-b border-gray-100 px-6 py-3.5">
+        <header className="flex-shrink-0 bg-transparent px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {isMobile && (
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-white rounded-full transition-colors shadow-sm border border-zinc-900/[0.06]"
                 >
-                  <Menu className="w-5 h-5 text-gray-600" />
+                  <Menu className="w-5 h-5 text-zinc-600" />
                 </button>
               )}
               <div>
-                <h1 className="text-base font-semibold text-gray-900 leading-tight">
+                <h1 className="text-lg font-semibold text-zinc-900 leading-tight tracking-tight">
                   {getSectionLabel(activeSection)}
               </h1>
-                <p className="text-xs text-gray-400 leading-tight">Airaplay Admin</p>
+                <p className="text-xs text-zinc-400 leading-tight mt-0.5">Airaplay Admin</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -670,19 +671,19 @@ export const AdminDashboardScreen = (): JSX.Element => {
 
         {/* Content Area */}
         <main className="flex-1 overflow-auto">
-          <div className="p-6 w-full min-h-full">
+          <div className="px-6 pb-8 w-full min-h-full">
           {renderError ? (
-              <div className="p-6 bg-white rounded-xl border border-gray-100 shadow-sm">
+              <div className="admin-card p-6">
               <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-red-50 rounded-2xl flex items-center justify-center">
                   <span className="text-red-500 font-bold">!</span>
                   </div>
-                  <h2 className="text-lg font-bold text-gray-900">Section Error</h2>
+                  <h2 className="text-lg font-bold text-zinc-900">Section Error</h2>
                 </div>
-                <p className="text-gray-500 mb-4 text-sm">{renderError}</p>
+                <p className="text-zinc-500 mb-4 text-sm">{renderError}</p>
               <button
                   onClick={() => { setRenderError(null); handleSectionChange('analytics'); }}
-                  className="px-4 py-2 bg-[#309605] text-white rounded-lg hover:bg-[#3ba208] transition-colors text-sm font-medium"
+                  className="admin-btn-primary px-5 py-2 text-sm font-medium"
               >
                 Go to Dashboard
               </button>
@@ -691,21 +692,21 @@ export const AdminDashboardScreen = (): JSX.Element => {
             <ErrorBoundary
               key={activeSection}
               fallback={(error, resetError) => (
-                  <div className="p-6 bg-white rounded-xl border border-gray-100 shadow-sm">
+                  <div className="admin-card p-6">
                   <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                      <div className="w-10 h-10 bg-red-50 rounded-2xl flex items-center justify-center">
                       <span className="text-red-500 font-bold">!</span>
                       </div>
-                      <h2 className="text-lg font-bold text-gray-900">Section Error</h2>
+                      <h2 className="text-lg font-bold text-zinc-900">Section Error</h2>
                     </div>
-                    <p className="text-gray-500 mb-4 text-sm">
+                    <p className="text-zinc-500 mb-4 text-sm">
                       Failed to load {activeSection}: {error.message}
                     </p>
                     <div className="flex gap-2">
-                      <button onClick={resetError} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+                      <button onClick={resetError} className="px-5 py-2 bg-zinc-100 text-zinc-700 rounded-full hover:bg-zinc-200 transition-colors text-sm font-medium">
                       Try Again
                     </button>
-                      <button onClick={() => handleSectionChange('analytics')} className="px-4 py-2 bg-[#309605] text-white rounded-lg hover:bg-[#3ba208] transition-colors text-sm font-medium">
+                      <button onClick={() => handleSectionChange('analytics')} className="admin-btn-primary px-5 py-2 text-sm font-medium">
                       Go to Dashboard
                     </button>
                   </div>

@@ -36,7 +36,7 @@ const TABS: Array<{ id: AnalyticsTab; label: string }> = [
   { id: 'demographics', label: 'Demographics' },
 ];
 
-const PIE_COLORS = ['#3ba208', '#60a5fa', '#f59e0b', '#a78bfa', '#f472b6', '#94a3b8'];
+const PIE_COLORS = ['var(--almc-lime-deep)', '#60a5fa', '#f59e0b', '#a78bfa', '#f472b6', '#94a3b8'];
 
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -65,7 +65,7 @@ function Delta({ current, previous }: { current: number; previous: number }) {
   const positive = delta >= 0;
   const Icon = positive ? TrendingUp : TrendingDown;
   return (
-    <span className={cn('inline-flex items-center gap-1 text-xs font-medium', positive ? 'text-[#3ba208]' : 'text-red-400')}>
+    <span className={cn('inline-flex items-center gap-1 text-xs font-medium', positive ? 'text-[var(--almc-lime-deep)]' : 'text-red-400')}>
       <Icon className="h-3 w-3" />
       {positive ? '+' : ''}
       {delta}%
@@ -236,8 +236,8 @@ export function AnalyticsSection({
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#3ba208]/30 bg-[#3ba208]/10 px-2.5 py-1 text-[11px] font-semibold text-[#3ba208]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#3ba208]" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--almc-lime-deep)]/30 bg-[var(--almc-lime)]/35 px-2.5 py-1 text-[11px] font-semibold text-[var(--almc-lime-deep)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
             Live data
           </span>
           {data && organization && (
@@ -255,13 +255,13 @@ export function AnalyticsSection({
 
       <div className="flex flex-wrap items-center gap-3">
         {!fromArtists && (
-          <div className="inline-flex rounded-xl border border-border bg-card p-1">
+          <div className="inline-flex rounded-full border border-border/80 bg-card p-1">
             <button
               type="button"
               onClick={clearArtistScope}
               className={cn(
-                'rounded-lg px-3 py-1.5 text-sm font-medium',
-                scope === 'org' ? 'bg-[#3ba208] text-white' : 'text-muted-foreground hover:text-foreground'
+                'rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors',
+                scope === 'org' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               )}
             >
               Org-wide
@@ -270,8 +270,8 @@ export function AnalyticsSection({
               type="button"
               onClick={() => setScope('artist')}
               className={cn(
-                'rounded-lg px-3 py-1.5 text-sm font-medium',
-                scope === 'artist' ? 'bg-[#3ba208] text-white' : 'text-muted-foreground hover:text-foreground'
+                'rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors',
+                scope === 'artist' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               )}
             >
               Per Artist
@@ -302,7 +302,7 @@ export function AnalyticsSection({
             className={cn(
               'rounded-full border px-3 py-1.5 text-xs font-semibold',
               tab === id
-                ? 'border-[#3ba208]/40 bg-[#3ba208]/10 text-[#3ba208]'
+                ? 'border-transparent bg-primary text-primary-foreground'
                 : 'border-border bg-card text-muted-foreground hover:text-foreground'
             )}
           >
@@ -386,7 +386,7 @@ export function AnalyticsSection({
                         />
                         <Bar
                           dataKey={tab === 'listeners' ? 'listeners' : 'streams'}
-                          fill="#3ba208"
+                          fill="var(--almc-lime-deep)"
                           radius={[6, 6, 0, 0]}
                         />
                       </BarChart>
@@ -587,7 +587,7 @@ export function AnalyticsSection({
                         <span
                           className={cn(
                             'tabular-nums text-xs font-semibold',
-                            a.growth_pct >= 0 ? 'text-[#3ba208]' : 'text-red-400'
+                            a.growth_pct >= 0 ? 'text-[var(--almc-lime-deep)]' : 'text-red-400'
                           )}
                         >
                           {a.growth_pct >= 0 ? '+' : ''}

@@ -14,6 +14,7 @@ import { DollarSign } from 'lucide-react';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { getOrganizationRevenue, OrgRevenueData } from '../../lib/orgAccess';
 import { LoadingLogo } from '../../components/LoadingLogo';
+import { consoleTheme } from '../consoleTheme';
 
 const PERIOD_OPTIONS = [
   { label: 'Last 7 days', value: 7 },
@@ -72,7 +73,7 @@ export function RevenueSection() {
         <select
           value={days}
           onChange={(e) => setDays(Number(e.target.value))}
-          className="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
+          className={consoleTheme.select}
         >
           {PERIOD_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -87,19 +88,19 @@ export function RevenueSection() {
           <LoadingLogo />
         </div>
       ) : error ? (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">{error}</div>
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-500">{error}</div>
       ) : !data ? null : (
         <>
-          <div className="rounded-2xl border border-border bg-card p-5">
+          <div className={`${consoleTheme.card} p-5`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Lifetime (lifetime earnings)</p>
-                <p className="mt-1 text-3xl font-semibold tabular-nums text-foreground">{formatUsd(data.available)}</p>
+                <p className={consoleTheme.label}>Lifetime earnings</p>
+                <p className={`mt-2 ${consoleTheme.display}`}>{formatUsd(data.available)}</p>
               </div>
               <button
                 type="button"
                 disabled
-                className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground opacity-60"
+                className={`${consoleTheme.btnSecondary} opacity-50`}
                 title="Org withdrawals come in a later phase"
               >
                 Withdraw
@@ -113,57 +114,69 @@ export function RevenueSection() {
               { label: 'Treats (pending)', value: data.treats },
               { label: 'Pending', value: data.pending },
             ].map((kpi) => (
-              <div key={kpi.label} className="rounded-2xl border border-border bg-card p-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">{kpi.label}</span>
-                  <div className="rounded-lg bg-muted p-2">
-                    <DollarSign className="h-4 w-4 text-[#3ba208]" />
+              <div key={kpi.label} className={`${consoleTheme.card} p-5`}>
+                <div className="mb-4 flex items-center justify-between">
+                  <span className={consoleTheme.label}>{kpi.label}</span>
+                  <div className={consoleTheme.iconWell}>
+                    <DollarSign className="h-4 w-4" strokeWidth={1.75} />
                   </div>
                 </div>
-                <p className="text-xl font-semibold tabular-nums text-foreground">{formatUsd(kpi.value)}</p>
+                <p className="text-2xl font-bold tabular-nums tracking-tight text-foreground">
+                  {formatUsd(kpi.value)}
+                </p>
               </div>
             ))}
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <h3 className="text-sm font-semibold text-foreground">Revenue by Artist</h3>
+            <div className={`${consoleTheme.card} p-5`}>
+              <h3 className={consoleTheme.label}>Revenue by Artist</h3>
               <div className="mt-4 h-64">
                 {artistChart.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No earnings yet</p>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={artistChart}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                      <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                      <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} axisLine={false} tickLine={false} />
                       <Tooltip
-                        contentStyle={{ background: '#141416', border: '1px solid #2a2a2e', borderRadius: 12 }}
+                        contentStyle={{
+                          background: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: 20,
+                          fontSize: 12,
+                        }}
                         formatter={(value: number) => formatUsd(value)}
                       />
-                      <Bar dataKey="total" fill="#3ba208" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="total" fill="#d9f99d" radius={[10, 10, 4, 4]} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <h3 className="text-sm font-semibold text-foreground">Monthly trend</h3>
+            <div className={`${consoleTheme.card} p-5`}>
+              <h3 className={consoleTheme.label}>Monthly trend</h3>
               <div className="mt-4 h-64">
                 {(data.monthly_trend ?? []).length === 0 ? (
                   <p className="text-sm text-muted-foreground">No monthly payouts yet</p>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data.monthly_trend}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                      <XAxis dataKey="month" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                      <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis dataKey="month" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} axisLine={false} tickLine={false} />
                       <Tooltip
-                        contentStyle={{ background: '#141416', border: '1px solid #2a2a2e', borderRadius: 12 }}
+                        contentStyle={{
+                          background: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: 20,
+                          fontSize: 12,
+                        }}
                         formatter={(value: number) => formatUsd(value)}
                       />
-                      <Line type="monotone" dataKey="amount" stroke="#3ba208" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="amount" stroke="#000000" strokeWidth={2.5} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 )}
@@ -171,9 +184,9 @@ export function RevenueSection() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-border bg-card">
-            <div className="border-b border-border px-5 py-3">
-              <h3 className="text-sm font-semibold text-foreground">By Artist</h3>
+          <div className={`overflow-hidden ${consoleTheme.card}`}>
+            <div className="border-b border-border/70 px-5 py-3.5">
+              <h3 className={consoleTheme.label}>By Artist</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">

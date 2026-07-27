@@ -1,0 +1,74 @@
+/* Soft minimalist SaaS look — scoped to admin shell */
+
+.admin-layout {
+  --admin-bg: #f5f6f4;
+  --admin-surface: #ffffff;
+  --admin-ink: #18181b;
+  --admin-ink-soft: #3f3f46;
+  --admin-muted: #71717a;
+  --admin-faint: #a1a1aa;
+  --admin-line: rgba(24, 24, 27, 0.06);
+  --admin-lime: #d9f99d;
+  --admin-lime-deep: #65a30d;
+  --admin-radius: 1.25rem;
+  --admin-radius-sm: 0.875rem;
+  --admin-shadow: 0 1px 2px rgba(24, 24, 27, 0.04), 0 8px 24px rgba(24, 24, 27, 0.04);
+  --admin-shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.03), 0 4px 12px rgba(24, 24, 27, 0.03);
+  background-color: var(--admin-bg);
+  color: var(--admin-ink);
+}
+
+.admin-layout .admin-card {
+  background: var(--admin-surface);
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-line);
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.admin-layout .admin-card-accent {
+  background: var(--admin-ink);
+  color: #fff;
+  border-radius: var(--admin-radius);
+  border: none;
+  box-shadow: var(--admin-shadow);
+}
+
+.admin-layout .admin-pill {
+  border-radius: 9999px;
+}
+
+.admin-layout .admin-btn-primary {
+  background: var(--admin-ink);
+  color: #fff;
+  border-radius: 9999px;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.admin-layout .admin-btn-primary:hover {
+  background: #27272a;
+}
+
+.admin-layout .admin-btn-lime {
+  background: var(--admin-lime);
+  color: var(--admin-ink);
+  border-radius: 9999px;
+  transition: filter 0.15s ease;
+}
+
+.admin-layout .admin-btn-lime:hover {
+  filter: brightness(0.97);
+}
+
+.admin-layout aside {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(24, 24, 27, 0.2) transparent;
+}
+
+.admin-layout aside::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-layout aside::-webkit-scrollbar-thumb {
+  background: rgba(24, 24, 27, 0.18);
+  border-radius: 9999px;
+}

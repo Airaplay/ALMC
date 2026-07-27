@@ -55,30 +55,33 @@ export function ConsoleSidebar({
 
   const sidebarContent = (
     <div className="flex h-full flex-col border-r border-sidebar-border bg-sidebar">
-      <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-5">
+      <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-6">
         {organization?.logo_url ? (
-          <img src={organization.logo_url} alt="" className="h-9 w-9 rounded-lg object-cover" />
+          <img src={organization.logo_url} alt="" className="h-10 w-10 rounded-2xl object-cover" />
         ) : (
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/20 text-[#3ba208]">
-            <Building2 className="h-5 w-5" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--almc-lime)] text-foreground">
+            <Building2 className="h-5 w-5" strokeWidth={1.75} />
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-sidebar-accent-foreground">
+          <p className="truncate text-sm font-bold tracking-tight text-sidebar-accent-foreground">
             {organization?.name ?? 'Console'}
           </p>
-          <p className="truncate text-xs capitalize text-sidebar-foreground">
+          <p className="truncate text-[11px] capitalize text-sidebar-foreground">
             {organization?.type?.replace('_', ' ')}
           </p>
         </div>
         {isMobile && (
-          <button type="button" onClick={onCloseSidebar} className="text-sidebar-foreground hover:text-sidebar-accent-foreground">
-            <X className="h-5 w-5" />
+          <button type="button" onClick={onCloseSidebar} className="rounded-full p-1.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+            <X className="h-5 w-5" strokeWidth={1.75} />
           </button>
         )}
       </div>
 
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex-1 space-y-0.5 p-3">
+        <p className="mb-2 px-3.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Workspace
+        </p>
         {visibleItems.map(({ section, label, icon: Icon }) => (
           <button
             key={section}
@@ -88,20 +91,20 @@ export function ConsoleSidebar({
               if (isMobile) onCloseSidebar();
             }}
             className={cn(
-              'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+              'flex w-full items-center gap-3 rounded-full px-3.5 py-2.5 text-sm transition-colors',
               activeSection === section ? consoleTheme.activeNav : consoleTheme.inactiveNav
             )}
           >
-            <Icon className="h-4 w-4 shrink-0" />
+            <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
             {label}
           </button>
         ))}
       </nav>
 
-      <div className="space-y-1 border-t border-sidebar-border p-3">
+      <div className="space-y-0.5 border-t border-sidebar-border p-3">
         <a
           href={almcRoutes.consumerHome()}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+          className="flex w-full items-center gap-3 rounded-full px-3.5 py-2.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
           ← Back to Airaplay
         </a>
@@ -111,9 +114,9 @@ export function ConsoleSidebar({
             onClick={onSignOut}
             title="Sign out"
             aria-label="Sign out"
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+            className="flex w-full items-center gap-3 rounded-full px-3.5 py-2.5 text-sm text-sidebar-foreground hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
           >
-            <LogOut className="h-4 w-4 shrink-0" />
+            <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.75} />
             Sign out
           </button>
         )}
@@ -125,7 +128,7 @@ export function ConsoleSidebar({
     return (
       <>
         {sidebarOpen && (
-          <div className="fixed inset-0 z-40 bg-black/60" onClick={onCloseSidebar} aria-hidden />
+          <div className="fixed inset-0 z-40 bg-foreground/30 backdrop-blur-sm" onClick={onCloseSidebar} aria-hidden />
         )}
         <div
           className={cn(
@@ -150,9 +153,9 @@ export function ConsoleMobileHeader({
   title: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 border-b border-border px-4 py-3 lg:hidden">
-      <button type="button" onClick={onOpenSidebar} className="text-muted-foreground hover:text-foreground">
-        <Menu className="h-5 w-5" />
+    <div className="flex items-center gap-3 border-b border-border/70 px-4 py-3 lg:hidden">
+      <button type="button" onClick={onOpenSidebar} className="rounded-full p-2 text-muted-foreground hover:bg-card hover:text-foreground">
+        <Menu className="h-5 w-5" strokeWidth={1.75} />
       </button>
       <div className="min-w-0 flex-1">{title}</div>
     </div>

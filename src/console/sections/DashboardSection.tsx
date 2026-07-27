@@ -29,6 +29,7 @@ import {
   pctChange,
 } from '../utils/formatOrgActivity';
 import { exportDashboardCsv } from '../utils/exportDashboardCsv';
+import { consoleTheme } from '../consoleTheme';
 
 const PERIOD_OPTIONS = [
   { label: 'Last 7 days', value: 7 },
@@ -71,7 +72,7 @@ function DeltaBadge({ current, previous }: { current: number; previous: number }
   return (
     <span
       className={`inline-flex items-center gap-1 text-xs font-medium ${
-        positive ? 'text-[#3ba208]' : 'text-red-400'
+        positive ? 'text-[var(--almc-lime-deep)]' : 'text-red-400'
       }`}
     >
       <Icon className="h-3 w-3" />
@@ -95,16 +96,16 @@ function KpiCard({
   sublabel?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
-      <div className="mb-3 flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">{label}</span>
-        <div className="rounded-lg bg-muted p-2">
-          <Icon className="h-4 w-4 text-[#3ba208]" />
+    <div className={`${consoleTheme.card} p-5`}>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <span className={consoleTheme.label}>{label}</span>
+        <div className={consoleTheme.iconWell}>
+          <Icon className="h-4 w-4" strokeWidth={1.75} />
         </div>
       </div>
-      <p className="text-2xl font-semibold tabular-nums text-foreground">{value}</p>
+      <p className={consoleTheme.display}>{value}</p>
       {(delta || sublabel) && (
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="mt-2.5 flex flex-wrap items-center gap-2">
           {delta && <DeltaBadge current={delta.current} previous={delta.previous} />}
           {sublabel && <span className="text-xs text-muted-foreground">{sublabel}</span>}
         </div>
@@ -194,22 +195,22 @@ export function DashboardSection() {
           <button
             type="button"
             onClick={clearFocus}
-            className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm text-secondary-foreground hover:bg-muted"
+            className={`${consoleTheme.btnSecondary} h-10 px-4`}
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" strokeWidth={1.75} />
             View all artists
           </button>
         </div>
 
-        <div className="flex items-center gap-4 rounded-2xl border border-[#3ba208]/30 bg-[#309605]/10 p-4">
+        <div className={`flex items-center gap-4 p-4 ${consoleTheme.banner}`}>
           {selectedArtist.profile_photo_url ? (
             <img
               src={selectedArtist.profile_photo_url}
               alt=""
-              className="h-14 w-14 rounded-full object-cover"
+              className="h-14 w-14 rounded-full object-cover ring-2 ring-white"
             />
           ) : (
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted text-lg font-semibold">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-card text-lg font-semibold">
               {selectedArtist.stage_name.charAt(0)}
             </div>
           )}
@@ -253,7 +254,7 @@ export function DashboardSection() {
           <select
             value={periodDays}
             onChange={(e) => setPeriodDays(Number(e.target.value))}
-            className="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
+            className={consoleTheme.select}
           >
             {PERIOD_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -264,7 +265,7 @@ export function DashboardSection() {
           <button
             type="button"
             onClick={() => organization && exportDashboardCsv(data, organization.name)}
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm text-secondary-foreground hover:bg-muted"
+            className={`${consoleTheme.btnSecondary} h-10 px-4`}
           >
             <Download className="h-4 w-4" />
             Export CSV
@@ -319,9 +320,9 @@ export function DashboardSection() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <h3 className="text-sm font-medium text-muted-foreground">Streams &amp; listener growth</h3>
-          <p className="mt-1 text-xs text-muted-foreground/80">Daily activity over the selected period</p>
+        <div className={`${consoleTheme.card} p-5`}>
+          <h3 className={consoleTheme.label}>Streams &amp; listener growth</h3>
+          <p className="mt-1.5 text-xs text-muted-foreground">Daily activity over the selected period</p>
           <div className="mt-4 h-64">
             {chartData.length === 0 ? (
               <div className="flex h-full items-center justify-center text-sm text-muted-foreground/80">
@@ -332,12 +333,12 @@ export function DashboardSection() {
                 <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                   <defs>
                     <linearGradient id="orgStreamsFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#309605" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#309605" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#d9f99d" stopOpacity={0.55} />
+                      <stop offset="95%" stopColor="#d9f99d" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="orgListenersFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3ba208" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#3ba208" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#000000" stopOpacity={0.12} />
+                      <stop offset="95%" stopColor="#000000" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
@@ -358,23 +359,24 @@ export function DashboardSection() {
                     contentStyle={{
                       backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
-                      borderRadius: '12px',
+                      borderRadius: '20px',
                       fontSize: 12,
+                      boxShadow: 'none',
                     }}
                   />
                   <Area
                     type="monotone"
                     dataKey="streams"
                     name="Streams"
-                    stroke="#309605"
+                    stroke="#65a30d"
                     fill="url(#orgStreamsFill)"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                   />
                   <Area
                     type="monotone"
                     dataKey="listeners"
                     name="Listeners"
-                    stroke="#3ba208"
+                    stroke="#000000"
                     fill="url(#orgListenersFill)"
                     strokeWidth={2}
                   />
@@ -384,25 +386,25 @@ export function DashboardSection() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <h3 className="text-sm font-medium text-muted-foreground">Top performing artists</h3>
-          <p className="mt-1 text-xs text-muted-foreground/80">By streams in the selected period</p>
+        <div className={`${consoleTheme.card} p-5`}>
+          <h3 className={consoleTheme.label}>Top performing artists</h3>
+          <p className="mt-1.5 text-xs text-muted-foreground">By streams in the selected period</p>
           {(data.top_performing_artists ?? []).length === 0 ? (
             <p className="mt-4 text-sm text-muted-foreground/80">No artists linked yet</p>
           ) : (
-            <ol className="mt-4 space-y-3">
+            <ol className="mt-4 space-y-2.5">
               {data.top_performing_artists.map((artist, index) => (
                 <li
                   key={artist.artist_profile_id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-border/60 px-3 py-2"
+                  className="flex items-center justify-between gap-3 rounded-2xl bg-secondary/60 px-3.5 py-2.5"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#309605]/15 text-xs font-semibold text-[#3ba208]">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--almc-lime)] text-xs font-bold text-foreground">
                       {index + 1}
                     </span>
                     <span className="truncate font-medium text-foreground">{artist.stage_name}</span>
                   </div>
-                  <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
+                  <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
                     {formatNumber(Number(artist.streams))}
                   </span>
                 </li>
@@ -410,9 +412,9 @@ export function DashboardSection() {
             </ol>
           )}
           {data.fastest_growing_artist && (
-            <p className="mt-4 rounded-xl bg-[#309605]/10 px-3 py-2 text-sm text-[#3ba208]">
+            <p className={`mt-4 px-3.5 py-2.5 text-sm ${consoleTheme.banner}`}>
               Fastest growing:{' '}
-              <span className="font-medium text-foreground">
+              <span className="font-semibold text-foreground">
                 {data.fastest_growing_artist.stage_name}
               </span>{' '}
               (+{data.fastest_growing_artist.growth_pct}%)
@@ -421,8 +423,8 @@ export function DashboardSection() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-5">
-        <h3 className="text-sm font-medium text-muted-foreground">Recent activity</h3>
+      <div className={`${consoleTheme.card} p-5`}>
+        <h3 className={consoleTheme.label}>Recent activity</h3>
         <ul className="mt-4 space-y-3">
           {(data.recent_activity ?? []).length === 0 ? (
             <li className="text-sm text-muted-foreground/80">No recent activity</li>
@@ -433,7 +435,7 @@ export function DashboardSection() {
                 className="flex flex-col gap-1 border-b border-border/60 pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
               >
                 <span className="text-sm text-foreground">{formatOrgActivityMessage(item)}</span>
-                <span className="text-xs text-muted-foreground/80">
+                <span className="text-xs text-muted-foreground">
                   {formatRelativeTime(item.created_at)}
                 </span>
               </li>

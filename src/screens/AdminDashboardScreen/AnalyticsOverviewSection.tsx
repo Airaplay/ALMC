@@ -10,15 +10,15 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   PieChart,
   Pie,
   Cell,
   Legend,
 } from 'recharts';
 
-const CHART_COLORS = ['#309605', '#60a5fa', '#f472b6', '#facc15', '#fb923c', '#a3e635'];
+const CHART_COLORS = ['#84cc16', '#a5b4fc', '#f9a8d4', '#fde68a', '#fdba74', '#bef264'];
 
 export const AnalyticsOverviewSection = (): JSX.Element => {
   const [isLoading, setIsLoading] = useState(true);
@@ -264,15 +264,15 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div className="h-7 w-48 bg-gray-100 rounded-lg animate-pulse" />
-          <div className="h-9 w-52 bg-gray-100 rounded-lg animate-pulse" />
+          <div className="h-8 w-52 bg-zinc-200/60 rounded-2xl animate-pulse" />
+          <div className="h-10 w-56 bg-zinc-200/60 rounded-full animate-pulse" />
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl p-5 border border-gray-100 animate-pulse">
-              <div className="h-4 w-24 bg-gray-100 rounded mb-4" />
-              <div className="h-7 w-16 bg-gray-100 rounded mb-2" />
-              <div className="h-3 w-20 bg-gray-100 rounded" />
+            <div key={i} className="admin-card p-5 animate-pulse">
+              <div className="h-4 w-24 bg-zinc-100 rounded-full mb-4" />
+              <div className="h-8 w-20 bg-zinc-100 rounded-full mb-2" />
+              <div className="h-3 w-28 bg-zinc-100 rounded-full" />
             </div>
           ))}
         </div>
@@ -282,13 +282,13 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
 
   if (error) {
     return (
-      <div className="p-6 bg-white rounded-xl border border-red-100 text-center">
+      <div className="admin-card p-6 text-center border-red-100">
         <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-3" />
         <p className="text-red-600 font-medium mb-1">Failed to load analytics</p>
-        <p className="text-gray-500 text-sm mb-4">{error}</p>
+        <p className="text-zinc-500 text-sm mb-4">{error}</p>
         <button
           onClick={fetchAnalyticsData}
-          className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-medium transition-colors"
+          className="px-5 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-full text-sm font-medium transition-colors"
         >
           Try Again
         </button>
@@ -315,23 +315,35 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
     accent?: boolean;
     badge?: { text: string; positive?: boolean; alert?: boolean };
   }) => (
-    <div className={`bg-white rounded-xl p-5 border ${accent ? 'border-[#b0e6d4]' : badge?.alert ? 'border-red-300' : 'border-gray-100'} shadow-sm hover:shadow-md transition-shadow`}>
+    <div
+      className={`p-5 transition-shadow ${
+        accent
+          ? 'admin-card-accent'
+          : badge?.alert
+            ? 'admin-card border-red-200'
+            : 'admin-card hover:shadow-md'
+      }`}
+    >
       <div className="flex items-start justify-between mb-3">
-        <p className="text-xs font-medium text-gray-500 leading-tight">{title}</p>
-        <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0`}>
-          <Icon className={`w-4 h-4 ${iconColor}`} />
+        <p className={`text-xs font-medium leading-tight ${accent ? 'text-zinc-400' : 'text-zinc-500'}`}>{title}</p>
+        <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 ${accent ? 'bg-white/10' : iconBg}`}>
+          <Icon className={`w-4 h-4 ${accent ? 'text-[#d9f99d]' : iconColor}`} strokeWidth={1.75} />
         </div>
       </div>
-      <p className={`text-2xl font-bold tracking-tight mb-1 ${accent ? 'text-[#309605]' : badge?.alert ? 'text-red-600' : 'text-gray-900'}`}>{value}</p>
+      <p className={`text-2xl font-bold tracking-tight mb-1 tabular-nums ${accent ? 'text-white' : badge?.alert ? 'text-red-600' : 'text-zinc-900'}`}>
+        {value}
+      </p>
       <div className="flex flex-col gap-1">
         {badge ? (
           <span
             className={`inline-flex items-center gap-1 text-xs font-semibold w-fit ${
               badge.alert
-                ? 'balance-mismatch-blink text-red-600 bg-red-50 border border-red-200 rounded-md px-2 py-0.5'
-                : badge.positive !== false
-                  ? 'text-[#309605]'
-                  : 'text-gray-500'
+                ? 'balance-mismatch-blink text-red-600 bg-red-50 border border-red-200 rounded-full px-2.5 py-0.5'
+                : accent
+                  ? 'text-[#d9f99d]'
+                  : badge.positive !== false
+                    ? 'text-lime-700'
+                    : 'text-zinc-500'
             }`}
           >
             {badge.alert ? <AlertTriangle className="w-3 h-3" /> : badge.positive !== false ? <ArrowUpRight className="w-3 h-3" /> : null}
@@ -339,7 +351,7 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
           </span>
         ) : null}
         {(badge?.alert || !badge) && (
-          <span className={`text-xs ${badge?.alert ? 'text-red-600 font-medium' : 'text-gray-400'}`}>{sub}</span>
+          <span className={`text-xs ${badge?.alert ? 'text-red-600 font-medium' : accent ? 'text-zinc-400' : 'text-zinc-400'}`}>{sub}</span>
         )}
       </div>
     </div>
@@ -350,18 +362,18 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 leading-tight">Analytics Overview</h2>
-          <p className="text-sm text-gray-400 mt-0.5">Platform performance at a glance</p>
+          <h2 className="text-2xl font-bold text-zinc-900 leading-tight tracking-tight">Analytics Overview</h2>
+          <p className="text-sm text-zinc-400 mt-1">Platform performance at a glance</p>
         </div>
-        <div className="flex items-center bg-white border border-gray-200 rounded-lg p-1 shadow-sm flex-shrink-0">
+        <div className="flex items-center bg-white border border-zinc-900/[0.06] rounded-full p-1 shadow-sm flex-shrink-0">
           {(['7d', '30d', '90d'] as const).map((r) => (
             <button
               key={r}
               onClick={() => setTimeRange(r)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
                 timeRange === r
-                  ? 'bg-[#309605] text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  ? 'bg-zinc-900 text-white shadow-sm'
+                  : 'text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50'
               }`}
             >
               {r === '7d' ? '7D' : r === '30d' ? '30D' : '90D'}
@@ -377,8 +389,8 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
           value={formatNumber(stats.totalUsers)}
           sub="Registered accounts"
           icon={Users}
-          iconBg="bg-blue-50"
-          iconColor="text-blue-500"
+          iconBg="bg-violet-50"
+          iconColor="text-violet-500"
           badge={{ text: `+${stats.newUsersToday} today`, positive: true }}
         />
         <StatCard
@@ -386,8 +398,8 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
           value={formatNumber(stats.totalContent)}
           sub="Uploads"
           icon={Music}
-          iconBg="bg-[#e6f7f1]"
-          iconColor="text-[#309605]"
+          iconBg="bg-[#eef8c9]"
+          iconColor="text-lime-700"
           badge={{ text: `+${stats.newContentToday} today`, positive: true }}
         />
         <StatCard
@@ -395,8 +407,8 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
           value={formatNumber(stats.totalPlays)}
           sub="All time"
           icon={Play}
-          iconBg="bg-emerald-50"
-          iconColor="text-emerald-500"
+          iconBg="bg-sky-50"
+          iconColor="text-sky-500"
           badge={{ text: `+${stats.playsToday} today`, positive: true }}
         />
         <StatCard
@@ -416,8 +428,8 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
           value={formatCurrency(stats.netRevenueUSD)}
           sub="Airaplay earned after buffers, fees, and user payout splits"
           icon={DollarSign}
-          iconBg="bg-[#e6f7f1]"
-          iconColor="text-[#309605]"
+          iconBg="bg-[#eef8c9]"
+          iconColor="text-lime-700"
           accent
           badge={{ text: 'After all deductions', positive: true }}
         />
@@ -438,8 +450,8 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
               : `Integrity warning: ${formatCurrency(stats.liveBalanceOverpaymentUSD)} above auditable credits`
           }
           icon={Users}
-          iconBg="bg-blue-50"
-          iconColor="text-blue-500"
+          iconBg="bg-violet-50"
+          iconColor="text-violet-500"
           badge={
             stats.liveBalanceIntegrityOk
               ? undefined
@@ -451,8 +463,8 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
           value={formatCurrency(stats.totalWithdrawnUSD)}
           sub="Paid out to users"
           icon={TrendingUp}
-          iconBg="bg-red-50"
-          iconColor="text-red-400"
+          iconBg="bg-rose-50"
+          iconColor="text-rose-400"
         />
         <StatCard
           title="Treat Revenue (USD)"
@@ -491,103 +503,109 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
         {/* User Growth */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+        <div className="admin-card p-6">
           <div className="flex items-center gap-2.5 mb-5">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-              <Users className="w-4 h-4 text-blue-500" />
+            <div className="w-9 h-9 rounded-2xl bg-violet-50 flex items-center justify-center">
+              <Users className="w-4 h-4 text-violet-500" strokeWidth={1.75} />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">User Growth</h3>
-              <p className="text-xs text-gray-400">New registrations over time</p>
+              <h3 className="text-sm font-semibold text-zinc-900">User Growth</h3>
+              <p className="text-xs text-zinc-400">New registrations over time</p>
             </div>
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={userGrowth} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#F4F4F5" vertical={false} />
                 <XAxis
                   dataKey="label"
-                  tick={{ fill: '#9CA3AF', fontSize: 10 }}
+                  tick={{ fill: '#A1A1AA', fontSize: 10 }}
                   axisLine={false}
                   tickLine={false}
                   interval="preserveStartEnd"
                 />
                 <YAxis
-                  tick={{ fill: '#9CA3AF', fontSize: 10 }}
+                  tick={{ fill: '#A1A1AA', fontSize: 10 }}
                   axisLine={false}
                   tickLine={false}
                   allowDecimals={false}
                 />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', fontSize: 12 }}
-                  cursor={{ fill: '#F9FAFB' }}
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid rgba(24,24,27,0.06)', borderRadius: '16px', boxShadow: '0 8px 24px rgba(24,24,27,0.06)', fontSize: 12 }}
+                  cursor={{ fill: '#FAFAF9' }}
                 />
-                <Bar dataKey="count" fill="#3B82F6" radius={[4, 4, 0, 0]} maxBarSize={24} />
+                <Bar dataKey="count" fill="#18181b" radius={[8, 8, 8, 8]} maxBarSize={20} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Recent Plays */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+        <div className="admin-card p-6">
           <div className="flex items-center gap-2.5 mb-5">
-            <div className="w-8 h-8 rounded-lg bg-[#e6f7f1] flex items-center justify-center">
-              <Play className="w-4 h-4 text-[#309605]" />
+            <div className="w-9 h-9 rounded-2xl bg-[#eef8c9] flex items-center justify-center">
+              <Play className="w-4 h-4 text-lime-700" strokeWidth={1.75} />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">Recent Plays</h3>
-              <p className="text-xs text-gray-400">Daily play activity</p>
+              <h3 className="text-sm font-semibold text-zinc-900">Recent Plays</h3>
+              <p className="text-xs text-zinc-400">Daily play activity</p>
             </div>
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={recentPlays} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+              <AreaChart data={recentPlays} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="playsFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#84cc16" stopOpacity={0.28} />
+                    <stop offset="100%" stopColor="#84cc16" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F4F4F5" vertical={false} />
                 <XAxis
                   dataKey="label"
-                  tick={{ fill: '#9CA3AF', fontSize: 10 }}
+                  tick={{ fill: '#A1A1AA', fontSize: 10 }}
                   axisLine={false}
                   tickLine={false}
                   interval="preserveStartEnd"
                 />
                 <YAxis
-                  tick={{ fill: '#9CA3AF', fontSize: 10 }}
+                  tick={{ fill: '#A1A1AA', fontSize: 10 }}
                   axisLine={false}
                   tickLine={false}
                   allowDecimals={false}
                 />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', fontSize: 12 }}
-                  cursor={{ stroke: '#E5E7EB' }}
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid rgba(24,24,27,0.06)', borderRadius: '16px', boxShadow: '0 8px 24px rgba(24,24,27,0.06)', fontSize: 12 }}
+                  cursor={{ stroke: '#E4E4E7' }}
                 />
-                <Line
+                <Area
                   type="monotone"
                   dataKey="plays"
-                  stroke="#309605"
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ fill: '#309605', r: 4, stroke: '#fff', strokeWidth: 2 }}
+                  stroke="#65a30d"
+                  strokeWidth={2.5}
+                  fill="url(#playsFill)"
+                  activeDot={{ fill: '#18181b', r: 4, stroke: '#fff', strokeWidth: 2 }}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Content Distribution */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+        <div className="admin-card p-6">
           <div className="flex items-center gap-2.5 mb-5">
-            <div className="w-8 h-8 rounded-lg bg-[#e6f7f1] flex items-center justify-center">
-              <Music className="w-4 h-4 text-[#309605]" />
+            <div className="w-9 h-9 rounded-2xl bg-[#eef8c9] flex items-center justify-center">
+              <Music className="w-4 h-4 text-lime-700" strokeWidth={1.75} />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">Content Distribution</h3>
-              <p className="text-xs text-gray-400">Breakdown by content type</p>
+              <h3 className="text-sm font-semibold text-zinc-900">Content Distribution</h3>
+              <p className="text-xs text-zinc-400">Breakdown by content type</p>
             </div>
           </div>
           <div className="h-64">
             {contentTypeDistribution.length === 0 ? (
               <div className="h-full flex items-center justify-center">
-                <p className="text-gray-400 text-sm">No content data available</p>
+                <p className="text-zinc-400 text-sm">No content data available</p>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -606,7 +624,7 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: 12 }}
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid rgba(24,24,27,0.06)', borderRadius: '16px', fontSize: 12 }}
                     formatter={(value: any) => [`${value} uploads`, '']}
                   />
                   <Legend
@@ -621,39 +639,39 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
         </div>
 
         {/* Top Content */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+        <div className="admin-card p-6">
           <div className="flex items-center gap-2.5 mb-5">
-            <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-amber-500" />
+            <div className="w-9 h-9 rounded-2xl bg-amber-50 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-amber-500" strokeWidth={1.75} />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">Top Content</h3>
-              <p className="text-xs text-gray-400">Most played tracks</p>
+              <h3 className="text-sm font-semibold text-zinc-900">Top Content</h3>
+              <p className="text-xs text-zinc-400">Most played tracks</p>
             </div>
           </div>
           {topContent.length === 0 ? (
             <div className="h-64 flex items-center justify-center">
-              <p className="text-gray-400 text-sm">No content data available</p>
+              <p className="text-zinc-400 text-sm">No content data available</p>
             </div>
           ) : (
             <div className="space-y-2">
               {topContent.map((item, index) => (
-                <div key={item.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                <div key={item.id} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-zinc-50 transition-colors">
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                    index === 0 ? 'bg-amber-50 text-amber-600' :
-                    index === 1 ? 'bg-gray-100 text-gray-500' :
-                    index === 2 ? 'bg-orange-50 text-orange-500' :
-                    'bg-gray-50 text-gray-400'
+                    index === 0 ? 'bg-[#d9f99d] text-zinc-900' :
+                    index === 1 ? 'bg-zinc-100 text-zinc-600' :
+                    index === 2 ? 'bg-amber-50 text-amber-600' :
+                    'bg-zinc-50 text-zinc-400'
                   }`}>
                     {index + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
-                    <p className="text-xs text-gray-400 truncate">{item.artist}</p>
+                    <p className="text-sm font-medium text-zinc-900 truncate">{item.title}</p>
+                    <p className="text-xs text-zinc-400 truncate">{item.artist}</p>
                   </div>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <Play className="w-3.5 h-3.5 text-[#309605]" />
-                    <span className="text-sm font-semibold text-gray-700">{formatNumber(item.plays)}</span>
+                    <Play className="w-3.5 h-3.5 text-lime-700" strokeWidth={1.75} />
+                    <span className="text-sm font-semibold text-zinc-700 tabular-nums">{formatNumber(item.plays)}</span>
                   </div>
                 </div>
               ))}

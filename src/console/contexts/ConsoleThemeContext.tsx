@@ -47,8 +47,8 @@ export function applyConsoleTheme(resolved: ConsoleResolvedTheme) {
   body.classList.add('almc-app');
   root.classList.toggle('dark', resolved === 'dark');
   root.style.colorScheme = resolved;
-  root.style.backgroundColor = resolved === 'dark' ? '#0a0a0b' : '#f4f5f3';
-  body.style.backgroundColor = resolved === 'dark' ? '#0a0a0b' : '#f4f5f3';
+  root.style.backgroundColor = resolved === 'dark' ? '#0f0f10' : '#f5f6f4';
+  body.style.backgroundColor = resolved === 'dark' ? '#0f0f10' : '#f5f6f4';
 }
 
 export function ConsoleThemeProvider({ children }: { children: React.ReactNode }): JSX.Element {

@@ -314,7 +314,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                     setOtpCode(next.join('').slice(0, 6));
                     setError(null);
                   }}
-                  className="h-12 w-10 min-w-0 rounded-xl border border-border bg-secondary text-center text-lg font-bold text-foreground outline-none transition-all focus:border-[#3ba208] focus:ring-2 focus:ring-[#3ba208]/30 sm:h-12 sm:w-11"
+                  className="h-12 w-10 min-w-0 rounded-xl border border-border bg-secondary text-center text-lg font-bold text-foreground outline-none transition-all focus:border-[var(--almc-lime-deep)] focus:ring-2 focus:ring-[var(--almc-lime-deep)]/30 sm:h-12 sm:w-11"
                 />
               ))}
             </div>
@@ -329,7 +329,7 @@ export function ConsoleLoginScreen(): JSX.Element {
               type="button"
               onClick={handleResendCode}
               disabled={resendCooldownSeconds > 0}
-              className="w-full text-[12px] font-semibold text-[#3ba208] disabled:text-muted-foreground/50"
+              className="w-full text-[12px] font-semibold text-[var(--almc-lime-deep)] disabled:text-muted-foreground/50"
             >
               {resendCooldownSeconds > 0
                 ? `Resend code in ${resendCooldownSeconds}s`
@@ -376,7 +376,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                   type="checkbox"
                   checked={agreedToTerms}
                   onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-0.5 rounded border-border bg-transparent text-[#3ba208] focus:ring-[#3ba208]/30"
+                  className="mt-0.5 rounded border-border bg-transparent text-[var(--almc-lime-deep)] focus:ring-[var(--almc-lime-deep)]/30"
                 />
                 <span>
                   I agree to the{' '}

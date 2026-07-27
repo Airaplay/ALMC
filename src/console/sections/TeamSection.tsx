@@ -192,7 +192,7 @@ export function TeamSection() {
               setInviteOpen(true);
               setInviteLink(null);
             }}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#309605] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#3ba208]"
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
           >
             <UserPlus className="h-4 w-4" />
             Invite Member
@@ -258,7 +258,7 @@ export function TeamSection() {
                           <button
                             type="button"
                             onClick={() => openEditMember(member)}
-                            className="text-xs font-medium text-[#3ba208] hover:underline"
+                            className="text-xs font-medium text-[var(--almc-lime-deep)] hover:underline"
                           >
                             Edit
                           </button>
@@ -383,7 +383,7 @@ export function TeamSection() {
               <button
                 type="submit"
                 disabled={inviting}
-                className="w-full rounded-xl bg-[#309605] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#3ba208] disabled:opacity-50"
+                className="w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
               >
                 {inviting ? 'Sending…' : 'Send invite'}
               </button>
@@ -453,7 +453,7 @@ export function TeamSection() {
               <button
                 type="submit"
                 disabled={savingRole || customPermissions.length === 0}
-                className="w-full rounded-xl bg-[#309605] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#3ba208] disabled:opacity-50"
+                className="w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
               >
                 {savingRole ? 'Creating…' : 'Create role'}
               </button>
@@ -507,7 +507,7 @@ export function TeamSection() {
               <button
                 type="submit"
                 disabled={savingMember}
-                className="w-full rounded-xl bg-[#309605] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#3ba208] disabled:opacity-50"
+                className="w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
               >
                 {savingMember ? 'Saving…' : 'Save changes'}
               </button>

@@ -184,7 +184,7 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
           <button
             type="button"
             onClick={onUpload}
-            className="rounded-xl bg-[#3ba208] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#3ba208]/90"
+            className="rounded-full bg-[var(--almc-lime)] px-4 py-2.5 text-sm font-semibold text-foreground hover:brightness-[0.97]"
           >
             Upload release
           </button>
@@ -192,16 +192,16 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="inline-flex rounded-xl border border-border bg-card p-1">
+        <div className="inline-flex rounded-full border border-border/80 bg-card p-1">
           {CALENDAR_VIEW_MODES.map(({ id, label }) => (
             <button
               key={id}
               type="button"
               onClick={() => setViewMode(id)}
               className={cn(
-                'rounded-lg px-3 py-1.5 text-sm font-medium transition',
+                'rounded-full px-3.5 py-1.5 text-sm font-medium transition',
                 viewMode === id
-                  ? 'bg-[#3ba208] text-white'
+                  ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
@@ -248,7 +248,7 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
             className={cn(
               'rounded-full border px-3 py-1 text-xs font-semibold transition',
               statusFilter === id
-                ? 'border-[#3ba208]/40 bg-[#3ba208]/10 text-[#3ba208]'
+                ? 'border-[var(--almc-lime-deep)]/40 bg-[var(--almc-lime)]/35 text-[var(--almc-lime-deep)]'
                 : 'border-border bg-card text-muted-foreground hover:text-foreground'
             )}
           >
@@ -276,7 +276,7 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
             <button
               type="button"
               onClick={onUpload}
-              className="mt-4 rounded-xl bg-[#3ba208] px-4 py-2 text-sm font-bold text-white hover:bg-[#3ba208]/90"
+              className="mt-4 rounded-full bg-[var(--almc-lime)] px-4 py-2 text-sm font-semibold text-foreground hover:brightness-[0.97]"
             >
               Schedule release
             </button>
@@ -308,7 +308,7 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
                       <div
                         className={cn(
                           'mb-2 inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold',
-                          isToday(day) && 'bg-[#3ba208] text-white',
+                          isToday(day) && 'bg-primary text-primary-foreground',
                           !isToday(day) && 'text-foreground'
                         )}
                       >
@@ -345,7 +345,7 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {format(day, 'EEE')}
                       </p>
-                      <p className={cn('text-lg font-bold', isToday(day) ? 'text-[#3ba208]' : 'text-foreground')}>
+                      <p className={cn('text-lg font-bold', isToday(day) ? 'text-[var(--almc-lime-deep)]' : 'text-foreground')}>
                         {format(day, 'd')}
                       </p>
                     </div>

@@ -132,7 +132,7 @@ export function ConsoleAcceptInvitationScreen({ type }: { type: AcceptType }): J
       >
         <div className="flex justify-center py-2">
           {status === 'success' ? (
-            <CheckCircle className="h-12 w-12 text-[#3ba208]" />
+            <CheckCircle className="h-12 w-12 text-[var(--almc-lime-deep)]" />
           ) : (
             <AlertCircle className="h-12 w-12 text-red-400" />
           )}
@@ -170,7 +170,7 @@ export function ConsoleAcceptInvitationScreen({ type }: { type: AcceptType }): J
     return (
       <ConsoleAuthShell title="Invitation accepted" subtitle={message}>
         <div className="flex justify-center py-2">
-          <CheckCircle className="h-12 w-12 text-[#3ba208]" />
+          <CheckCircle className="h-12 w-12 text-[var(--almc-lime-deep)]" />
         </div>
         <ConsolePrimaryButton type="button" onClick={() => navigate(almcRoutes.consumerProfile())}>
           <ConsoleSubmitArrow label="Go to Profile" />

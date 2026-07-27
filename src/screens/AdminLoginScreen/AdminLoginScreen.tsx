@@ -16,6 +16,7 @@ import {
   sendAdminLoginEmailOtp,
   verifyAdminLoginEmailOtp,
 } from '../../lib/adminEmailOtpGate';
+import '../AdminDashboardScreen/admin-theme.css';
 
 const getClientInfo = () => ({
   userAgent: navigator.userAgent || '',
@@ -392,9 +393,9 @@ export const AdminLoginScreen = (): JSX.Element => {
 
   if (isCheckingAuth) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="admin-layout flex items-center justify-center min-h-screen">
         <LoadingLogo variant="pulse" size={32} />
-        <p className="ml-4 text-gray-900 font-medium">Checking authentication...</p>
+        <p className="ml-4 text-zinc-900 font-medium">Checking authentication...</p>
       </div>
     );
   }
@@ -403,33 +404,33 @@ export const AdminLoginScreen = (): JSX.Element => {
 
   if (otpPhase === 'email_otp' && otpEmail) {
     return (
-      <div className="admin-layout flex items-center justify-center min-h-screen bg-gray-50 p-4 w-full">
+      <div className="admin-layout flex items-center justify-center min-h-screen p-4 w-full">
         <div className="w-full flex items-center justify-center">
-          <Card className="w-full max-w-md bg-white border border-gray-200 shadow-xl">
+          <Card className="w-full max-w-md admin-card border-0 shadow-none bg-white rounded-[1.25rem]">
             <CardContent className="p-8">
               <div className="text-center mb-6">
                 <img src="/Black_logo.fw.png" alt="Airaplay Admin" className="h-10 mx-auto mb-4" />
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h1>
-                <p className="text-gray-600 text-sm">
-                  We sent a one-time code to <span className="font-medium text-gray-800">{otpEmail}</span>. Enter the 6-digit code to finish signing in.
+                <h1 className="text-2xl font-bold text-zinc-900 mb-2 tracking-tight">Check your email</h1>
+                <p className="text-zinc-500 text-sm">
+                  We sent a one-time code to <span className="font-medium text-zinc-800">{otpEmail}</span>. Enter the 6-digit code to finish signing in.
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 mb-4 px-3 py-2 bg-[#e6f7f1] border border-[#b0e6d4] rounded-lg">
-                <Shield className="w-4 h-4 text-[#009c68] flex-shrink-0" />
-                <p className="text-xs text-[#008257]">Admin login uses password plus an email code from Supabase Auth.</p>
+              <div className="flex items-center gap-2 mb-4 px-3.5 py-2.5 bg-[#eef8c9] rounded-2xl">
+                <Shield className="w-4 h-4 text-lime-700 flex-shrink-0" strokeWidth={1.75} />
+                <p className="text-xs text-zinc-700">Admin login uses password plus an email code from Supabase Auth.</p>
               </div>
 
               <form onSubmit={handleOtpSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-2">6-digit code</label>
+                  <label className="block text-zinc-700 text-sm font-medium mb-2">6-digit code</label>
                   <input
                     type="text"
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 tracking-widest text-center text-lg"
+                    className="w-full px-4 py-3 bg-white border border-zinc-900/[0.08] rounded-2xl text-zinc-900 tracking-widest text-center text-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/20"
                     placeholder="••••••"
                     maxLength={6}
                     required
@@ -437,7 +438,7 @@ export const AdminLoginScreen = (): JSX.Element => {
                 </div>
 
                 {error && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                  <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-red-700">{error}</p>
                   </div>
@@ -446,7 +447,7 @@ export const AdminLoginScreen = (): JSX.Element => {
                 <button
                   type="submit"
                   disabled={isSubmitting || otpCode.length !== 6}
-                  className="w-full py-3 bg-gradient-to-r from-[#309605] to-[#3ba208] hover:from-[#3ba208] hover:to-[#309605] rounded-lg text-white font-medium transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="admin-btn-primary w-full py-3 font-medium disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Verifying...' : 'Continue'}
                 </button>
@@ -455,9 +456,9 @@ export const AdminLoginScreen = (): JSX.Element => {
                   type="button"
                   onClick={handleResendOtp}
                   disabled={resendCooldownSeconds > 0 || isSendingOtp}
-                  className="w-full flex items-center justify-center gap-2 py-2 text-sm text-[#309605] hover:text-[#267704] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 py-2 text-sm text-lime-700 hover:text-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <RefreshCw className={`w-4 h-4 ${isSendingOtp ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 ${isSendingOtp ? 'animate-spin' : ''}`} strokeWidth={1.75} />
                   {resendCooldownSeconds > 0
                     ? `Resend code in ${resendCooldownSeconds}s`
                     : isSendingOtp
@@ -468,7 +469,7 @@ export const AdminLoginScreen = (): JSX.Element => {
                 <button
                   type="button"
                   onClick={() => handleCancelOtp()}
-                  className="w-full py-2 text-sm text-gray-600 hover:text-gray-900"
+                  className="w-full py-2 text-sm text-zinc-500 hover:text-zinc-900"
                 >
                   Cancel and sign out
                 </button>
@@ -481,9 +482,9 @@ export const AdminLoginScreen = (): JSX.Element => {
   }
 
   return (
-    <div className="admin-layout flex items-center justify-center min-h-screen bg-gray-50 p-4 w-full">
+    <div className="admin-layout flex items-center justify-center min-h-screen p-4 w-full">
       <div className="w-full flex items-center justify-center">
-        <Card className="w-full max-w-md bg-white border border-gray-200 shadow-xl">
+        <Card className="w-full max-w-md admin-card border-0 shadow-none bg-white rounded-[1.25rem]">
           <CardContent className="p-8">
             <div className="text-center mb-8">
               <img
@@ -491,19 +492,19 @@ export const AdminLoginScreen = (): JSX.Element => {
                 alt="Airaplay Admin"
                 className="h-10 mx-auto mb-4"
               />
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Login</h1>
-              <p className="text-gray-600">Sign in to access the admin dashboard</p>
+              <h1 className="text-2xl font-bold text-zinc-900 mb-2 tracking-tight">Admin Login</h1>
+              <p className="text-zinc-500">Sign in to access the admin dashboard</p>
             </div>
 
-            <div className="flex items-center gap-2 mb-6 px-3 py-2 bg-[#e6f7f1] border border-[#b0e6d4] rounded-lg">
-              <Shield className="w-4 h-4 text-[#009c68] flex-shrink-0" />
-              <p className="text-xs text-[#008257]">Protected area. You will sign in with password, then a one-time code sent to your email.</p>
+            <div className="flex items-center gap-2 mb-6 px-3.5 py-2.5 bg-[#eef8c9] rounded-2xl">
+              <Shield className="w-4 h-4 text-lime-700 flex-shrink-0" strokeWidth={1.75} />
+              <p className="text-xs text-zinc-700">Protected area. You will sign in with password, then a one-time code sent to your email.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="flex items-center gap-2 text-gray-700 text-sm font-medium mb-2">
-                  <Mail className="w-4 h-4" />
+                <label className="flex items-center gap-2 text-zinc-700 text-sm font-medium mb-2">
+                  <Mail className="w-4 h-4" strokeWidth={1.75} />
                   Email
                 </label>
                 <input
@@ -513,14 +514,14 @@ export const AdminLoginScreen = (): JSX.Element => {
                   onChange={handleInputChange}
                   required
                   disabled={isLocked}
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#309605] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 bg-white border border-zinc-900/[0.08] rounded-2xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:border-transparent disabled:bg-zinc-100 disabled:cursor-not-allowed"
                   placeholder="admin@example.com"
                 />
               </div>
 
               <div>
-                <label className="flex items-center gap-2 text-gray-700 text-sm font-medium mb-2">
-                  <Lock className="w-4 h-4" />
+                <label className="flex items-center gap-2 text-zinc-700 text-sm font-medium mb-2">
+                  <Lock className="w-4 h-4" strokeWidth={1.75} />
                   Password
                 </label>
                 <div className="relative">
@@ -531,13 +532,13 @@ export const AdminLoginScreen = (): JSX.Element => {
                     onChange={handleInputChange}
                     required
                     disabled={isLocked}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#309605] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-3 bg-white border border-zinc-900/[0.08] rounded-2xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:border-transparent disabled:bg-zinc-100 disabled:cursor-not-allowed"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-400 hover:text-zinc-700"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -546,7 +547,7 @@ export const AdminLoginScreen = (): JSX.Element => {
               </div>
 
               {isLocked && (
-                <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-3">
+                <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-start gap-3">
                   <Clock className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-orange-800 text-sm font-medium">Account temporarily locked</p>
@@ -559,10 +560,10 @@ export const AdminLoginScreen = (): JSX.Element => {
               )}
 
               {error && !isLocked && (
-                <div className={`p-4 border rounded-lg flex items-start gap-3 ${
+                <div className={`p-4 border rounded-2xl flex items-start gap-3 ${
                   failuresRemaining !== null && failuresRemaining <= 2
-                    ? 'bg-orange-50 border-orange-200'
-                    : 'bg-red-50 border-red-200'
+                    ? 'bg-orange-50 border-orange-100'
+                    : 'bg-red-50 border-red-100'
                 }`}>
                   <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
                     failuresRemaining !== null && failuresRemaining <= 2 ? 'text-orange-500' : 'text-red-500'
@@ -576,7 +577,7 @@ export const AdminLoginScreen = (): JSX.Element => {
               <button
                 type="submit"
                 disabled={isSubmitting || isLocked}
-                className="w-full py-3 bg-gradient-to-r from-[#309605] to-[#3ba208] hover:from-[#3ba208] hover:to-[#309605] rounded-lg text-white font-medium transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="admin-btn-primary w-full py-3 font-medium disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Signing In...' : isLocked ? `Locked (${formatLockoutTime(lockoutSeconds)})` : 'Sign In'}
               </button>
@@ -585,7 +586,7 @@ export const AdminLoginScreen = (): JSX.Element => {
                 <button
                   type="button"
                   onClick={() => navigate('/')}
-                  className="text-gray-600 hover:text-gray-900 text-sm transition-colors duration-200"
+                  className="text-zinc-500 hover:text-zinc-900 text-sm transition-colors duration-200"
                 >
                   Back to Home
                 </button>

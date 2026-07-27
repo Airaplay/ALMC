@@ -33,8 +33,8 @@ export const RELEASE_STATUS_STYLES: Record<
     label: 'Scheduled',
   },
   published: {
-    badge: 'bg-[#3ba208]/15 text-[#3ba208] border-[#3ba208]/30',
-    dot: 'bg-[#3ba208]',
+    badge: 'bg-[var(--almc-lime)]/40 text-foreground border-[var(--almc-lime)]/60',
+    dot: 'bg-[var(--almc-lime-deep)]',
     label: 'Published',
   },
   cancelled: {

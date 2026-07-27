@@ -135,7 +135,7 @@ export function ArtistContentPanel({ artist, onBack }: ArtistContentPanelProps) 
           <button
             type="button"
             onClick={() => setWizardOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#3ba208] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#3ba208]/90"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--almc-lime)] px-4 py-2.5 text-sm font-semibold text-foreground hover:brightness-[0.97]"
           >
             <Plus className="h-4 w-4" />
             Upload
@@ -197,7 +197,7 @@ export function ArtistContentPanel({ artist, onBack }: ArtistContentPanelProps) 
             <button
               type="button"
               onClick={() => setWizardOpen(true)}
-              className="mt-3 text-sm font-medium text-[#3ba208] hover:underline"
+              className="mt-3 text-sm font-medium text-[var(--almc-lime-deep)] hover:underline"
             >
               Upload something new
             </button>

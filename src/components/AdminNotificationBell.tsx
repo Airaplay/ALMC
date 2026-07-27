@@ -226,7 +226,7 @@ export const AdminNotificationBell: React.FC<AdminNotificationBellProps> = ({ on
       case 'report_submitted':
         return <AlertTriangle className="w-4 h-4 text-red-500" />;
       default:
-        return <Bell className="w-4 h-4 text-gray-600" />;
+        return <Bell className="w-4 h-4 text-zinc-500" strokeWidth={1.75} />;
     }
   };
 
@@ -255,12 +255,12 @@ export const AdminNotificationBell: React.FC<AdminNotificationBellProps> = ({ on
     <div className="relative">
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        className="relative p-2 hover:bg-white rounded-full transition-colors border border-transparent hover:border-zinc-900/[0.06] hover:shadow-sm"
         title="Notifications"
       >
-        <Bell className="w-5 h-5 text-gray-700" />
+        <Bell className="w-5 h-5 text-zinc-700" strokeWidth={1.75} />
         {counts.total > 0 && (
-          <span className="absolute top-0 right-0 w-5 h-5 bg-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+          <span className="absolute top-0 right-0 w-5 h-5 bg-zinc-900 text-white text-xs font-bold rounded-full flex items-center justify-center">
             {counts.total > 99 ? '99+' : counts.total}
           </span>
         )}
@@ -272,83 +272,91 @@ export const AdminNotificationBell: React.FC<AdminNotificationBellProps> = ({ on
             className="fixed inset-0 z-40"
             onClick={() => setShowDropdown(false)}
           />
-          <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 max-h-[600px] overflow-hidden flex flex-col">
+          <div className="absolute right-0 mt-2 w-96 bg-white rounded-[1.25rem] shadow-[0_8px_32px_rgba(24,24,27,0.08)] border border-zinc-900/[0.06] z-50 max-h-[600px] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="font-bold text-gray-900 text-lg">Notifications</h3>
-              <div className="flex items-center gap-2">
+            <div className="p-4 border-b border-zinc-900/[0.06] flex items-center justify-between">
+              <h3 className="font-bold text-zinc-900 text-lg tracking-tight">Notifications</h3>
+              <div className="flex items-center gap-1">
                 {recentNotifications.length > 0 && (
                   <>
                     <button
                       onClick={toggleSelectAll}
-                      className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-1.5 hover:bg-zinc-100 rounded-full transition-colors"
                       title={allSelected ? 'Unselect all' : 'Select all'}
                       aria-label={allSelected ? 'Unselect all' : 'Select all'}
                     >
                       {allSelected ? (
-                        <CheckSquare className="w-4 h-4 text-gray-700" />
+                        <CheckSquare className="w-4 h-4 text-zinc-700" strokeWidth={1.75} />
                       ) : (
-                        <Square className="w-4 h-4 text-gray-700" />
+                        <Square className="w-4 h-4 text-zinc-700" strokeWidth={1.75} />
                       )}
                     </button>
                     <button
                       onClick={handleDeleteSelected}
                       disabled={isDeleting || selectedCount === 0}
-                      className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                      className="p-1.5 hover:bg-zinc-100 rounded-full transition-colors disabled:opacity-50 disabled:pointer-events-none"
                       title={selectedCount > 0 ? `Delete selected (${selectedCount})` : 'Select notifications to delete'}
                       aria-label="Delete selected notifications"
                     >
-                      <Trash2 className="w-4 h-4 text-red-600" />
+                      <Trash2 className="w-4 h-4 text-red-600" strokeWidth={1.75} />
                     </button>
                   </>
                 )}
                 {counts.total > 0 && (
                   <button
                     onClick={handleMarkAllAsRead}
-                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-1.5 hover:bg-zinc-100 rounded-full transition-colors"
                     title="Mark all as read"
                   >
-                    <Check className="w-4 h-4 text-[#309605]" />
+                    <Check className="w-4 h-4 text-lime-700" strokeWidth={1.75} />
                   </button>
                 )}
                 <button
                   onClick={() => setShowDropdown(false)}
-                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-1.5 hover:bg-zinc-100 rounded-full transition-colors"
                 >
-                  <X className="w-4 h-4 text-gray-500" />
+                  <X className="w-4 h-4 text-zinc-500" strokeWidth={1.75} />
                 </button>
               </div>
             </div>
 
             {/* Stats Summary */}
-            <div className="p-4 bg-gray-50 border-b border-gray-200">
+            <div className="p-4 bg-[#f5f6f4] border-b border-zinc-900/[0.06]">
               <div className="grid grid-cols-2 gap-3">
-                <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
-                  <DollarSign className="w-4 h-4 text-yellow-600" />
+                <div className="flex items-center gap-2 p-2.5 bg-white rounded-2xl">
+                  <div className="w-7 h-7 rounded-xl bg-amber-50 flex items-center justify-center">
+                    <DollarSign className="w-3.5 h-3.5 text-amber-600" strokeWidth={1.75} />
+                  </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-600">Withdrawals</p>
-                    <p className="text-sm font-bold text-gray-900">{counts.withdrawal_requests}</p>
+                    <p className="text-xs text-zinc-500">Withdrawals</p>
+                    <p className="text-sm font-bold text-zinc-900 tabular-nums">{counts.withdrawal_requests}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
-                  <HelpCircle className="w-4 h-4 text-blue-600" />
+                <div className="flex items-center gap-2 p-2.5 bg-white rounded-2xl">
+                  <div className="w-7 h-7 rounded-xl bg-violet-50 flex items-center justify-center">
+                    <HelpCircle className="w-3.5 h-3.5 text-violet-500" strokeWidth={1.75} />
+                  </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-600">Support</p>
-                    <p className="text-sm font-bold text-gray-900">{counts.support_tickets}</p>
+                    <p className="text-xs text-zinc-500">Support</p>
+                    <p className="text-sm font-bold text-zinc-900 tabular-nums">{counts.support_tickets}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
-                  <TrendingUp className="w-4 h-4 text-orange-600" />
+                <div className="flex items-center gap-2 p-2.5 bg-white rounded-2xl">
+                  <div className="w-7 h-7 rounded-xl bg-orange-50 flex items-center justify-center">
+                    <TrendingUp className="w-3.5 h-3.5 text-orange-500" strokeWidth={1.75} />
+                  </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-600">Payments</p>
-                    <p className="text-sm font-bold text-gray-900">{counts.payment_monitoring}</p>
+                    <p className="text-xs text-zinc-500">Payments</p>
+                    <p className="text-sm font-bold text-zinc-900 tabular-nums">{counts.payment_monitoring}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 p-2 bg-white rounded-lg">
-                  <AlertTriangle className="w-4 h-4 text-red-600" />
+                <div className="flex items-center gap-2 p-2.5 bg-white rounded-2xl">
+                  <div className="w-7 h-7 rounded-xl bg-rose-50 flex items-center justify-center">
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-500" strokeWidth={1.75} />
+                  </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-600">Alerts</p>
-                    <p className="text-sm font-bold text-gray-900">{counts.financial_alerts}</p>
+                    <p className="text-xs text-zinc-500">Alerts</p>
+                    <p className="text-sm font-bold text-zinc-900 tabular-nums">{counts.financial_alerts}</p>
                   </div>
                 </div>
               </div>
@@ -358,13 +366,13 @@ export const AdminNotificationBell: React.FC<AdminNotificationBellProps> = ({ on
             <div className="flex-1 overflow-y-auto">
               {isLoading ? (
                 <div className="flex items-center justify-center p-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#309605]"></div>
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-zinc-900 border-t-transparent"></div>
                 </div>
               ) : recentNotifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-8 text-center">
-                  <Bell className="w-12 h-12 text-gray-400 mb-3" />
-                  <p className="text-gray-600 font-medium">No notifications</p>
-                  <p className="text-gray-500 text-sm mt-1">You&apos;re all caught up</p>
+                  <Bell className="w-12 h-12 text-zinc-300 mb-3" strokeWidth={1.5} />
+                  <p className="text-zinc-700 font-medium">No notifications</p>
+                  <p className="text-zinc-400 text-sm mt-1">You&apos;re all caught up</p>
                 </div>
               ) : (
                 <div>
@@ -372,8 +380,8 @@ export const AdminNotificationBell: React.FC<AdminNotificationBellProps> = ({ on
                     <div
                       key={notification.id}
                       onClick={() => handleNotificationClick(notification)}
-                      className={`w-full p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors text-left ${
-                        !notification.is_read ? 'bg-blue-50' : ''
+                      className={`w-full p-4 border-b border-zinc-900/[0.06] hover:bg-zinc-50 transition-colors text-left ${
+                        !notification.is_read ? 'bg-[#eef8c9]/40' : ''
                       } cursor-pointer`}
                       role="button"
                       tabIndex={0}
@@ -386,7 +394,7 @@ export const AdminNotificationBell: React.FC<AdminNotificationBellProps> = ({ on
                     >
                       <div className="flex items-start gap-3">
                         <button
-                          className="flex-shrink-0 mt-1 p-1 rounded hover:bg-white/70"
+                          className="flex-shrink-0 mt-1 p-1 rounded-full hover:bg-white/70"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -396,35 +404,35 @@ export const AdminNotificationBell: React.FC<AdminNotificationBellProps> = ({ on
                           title={selectedIds.has(notification.id) ? 'Unselect' : 'Select'}
                         >
                           {selectedIds.has(notification.id) ? (
-                            <CheckSquare className="w-4 h-4 text-gray-700" />
+                            <CheckSquare className="w-4 h-4 text-zinc-700" strokeWidth={1.75} />
                           ) : (
-                            <Square className="w-4 h-4 text-gray-700" />
+                            <Square className="w-4 h-4 text-zinc-400" strokeWidth={1.75} />
                           )}
                         </button>
-                        <div className="flex-shrink-0 w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-gray-200">
+                        <div className="flex-shrink-0 w-8 h-8 bg-white rounded-2xl flex items-center justify-center border border-zinc-900/[0.06]">
                           {getNotificationIcon(notification.notification_type)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 mb-1">
-                            <p className="text-xs font-medium text-gray-600">
+                            <p className="text-xs font-medium text-zinc-500">
                               {formatNotificationType(notification.notification_type)}
                             </p>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-zinc-400">
                               {formatTimeAgo(notification.created_at)}
                             </span>
                           </div>
-                          <p className="text-sm font-semibold text-gray-900 mb-1">
+                          <p className="text-sm font-semibold text-zinc-900 mb-1">
                             {notification.title}
                           </p>
-                          <p className="text-xs text-gray-600 line-clamp-2">
+                          <p className="text-xs text-zinc-500 line-clamp-2">
                             {notification.message}
                           </p>
                         </div>
                         {!notification.is_read && (
-                          <div className="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                          <div className="flex-shrink-0 w-2 h-2 bg-zinc-900 rounded-full mt-2"></div>
                         )}
                         <button
-                          className="flex-shrink-0 p-1.5 rounded-lg hover:bg-white/70 disabled:opacity-50 disabled:pointer-events-none"
+                          className="flex-shrink-0 p-1.5 rounded-full hover:bg-white/70 disabled:opacity-50 disabled:pointer-events-none"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -434,7 +442,7 @@ export const AdminNotificationBell: React.FC<AdminNotificationBellProps> = ({ on
                           aria-label="Delete notification"
                           title="Delete notification"
                         >
-                          <Trash2 className="w-4 h-4 text-red-600" />
+                          <Trash2 className="w-4 h-4 text-red-600" strokeWidth={1.75} />
                         </button>
                       </div>
                     </div>
@@ -448,3 +456,7 @@ export const AdminNotificationBell: React.FC<AdminNotificationBellProps> = ({ on
     </div>
   );
 };
+
+};
+
+

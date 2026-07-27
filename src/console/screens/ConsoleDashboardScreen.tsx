@@ -58,11 +58,11 @@ function ConsoleDashboardContent(): JSX.Element {
   const greetingBlock = (
     <div className="min-w-0">
       {greeting.hiLine && (
-        <p className="truncate text-base font-bold tracking-tight text-muted-foreground">
+        <p className="truncate text-sm font-medium tracking-tight text-muted-foreground">
           {greeting.hiLine}
         </p>
       )}
-      <h1 className="truncate text-2xl font-black tracking-tight text-foreground lg:text-3xl">
+      <h1 className="truncate text-3xl font-bold tracking-tight text-foreground lg:text-4xl">
         {greeting.timeGreeting}
       </h1>
     </div>
@@ -71,11 +71,11 @@ function ConsoleDashboardContent(): JSX.Element {
   const greetingBlockMobile = (
     <div className="min-w-0">
       {greeting.hiLine && (
-        <p className="truncate text-sm font-bold tracking-tight text-muted-foreground">
+        <p className="truncate text-xs font-medium tracking-tight text-muted-foreground">
           {greeting.hiLine}
         </p>
       )}
-      <h1 className="truncate text-lg font-black tracking-tight text-foreground">
+      <h1 className="truncate text-xl font-bold tracking-tight text-foreground">
         {greeting.timeGreeting}
       </h1>
     </div>
@@ -191,7 +191,7 @@ function ConsoleDashboardContent(): JSX.Element {
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="hidden items-center justify-between border-b border-border px-6 py-4 lg:flex">
+        <header className="hidden items-center justify-between border-b border-border/70 px-6 py-5 lg:flex">
           {greetingBlock}
           <div className="flex items-center gap-3">
             {organizations.length > 1 && (
@@ -199,13 +199,13 @@ function ConsoleDashboardContent(): JSX.Element {
                 <button
                   type="button"
                   onClick={() => setShowOrgMenu((v) => !v)}
-                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm hover:bg-muted"
+                  className="flex items-center gap-2 rounded-full border border-border/70 bg-card px-3.5 py-2 text-sm shadow-[var(--almc-shadow-sm)] hover:bg-muted"
                 >
                   {organization?.name}
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
                 </button>
                 {showOrgMenu && (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-border bg-card py-1 shadow-xl">
+                  <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border border-border/70 bg-card py-1 shadow-[var(--almc-shadow)]">
                     {organizations.map((org) => (
                       <button
                         key={org.id}
@@ -214,8 +214,8 @@ function ConsoleDashboardContent(): JSX.Element {
                           setOrganizationId(org.id);
                           setShowOrgMenu(false);
                         }}
-                        className={`block w-full px-4 py-2 text-left text-sm hover:bg-muted ${
-                          org.id === organization?.id ? 'text-[#3ba208]' : 'text-secondary-foreground'
+                        className={`block w-full px-4 py-2.5 text-left text-sm hover:bg-muted ${
+                          org.id === organization?.id ? 'font-medium text-[var(--almc-lime-deep)]' : 'text-secondary-foreground'
                         }`}
                       >
                         {org.name}
@@ -236,10 +236,10 @@ function ConsoleDashboardContent(): JSX.Element {
             <button
               type="button"
               onClick={handleLogout}
-              className="rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
               title="Sign out"
             >
-              <LogOut className="h-5 w-5" />
+              <LogOut className="h-5 w-5" strokeWidth={1.75} />
             </button>
           </div>
         </header>

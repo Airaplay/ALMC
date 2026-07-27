@@ -185,7 +185,7 @@ export function ArtistsSection({
             setVerifyEmail(artist.email);
             setShowAddModal(true);
           }}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-[#309605]/40 bg-[#309605]/10 px-3 py-2 text-xs text-[#3ba208] hover:bg-[#309605]/20"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--almc-lime-deep)]/40 bg-[var(--almc-lime)]/35 px-3 py-2 text-xs text-[var(--almc-lime-deep)] hover:bg-primary/20"
         >
           Enter code
         </button>
@@ -280,7 +280,7 @@ export function ArtistsSection({
     return (
       <div
         className={`flex h-full flex-col rounded-2xl border bg-card p-5 ${
-          isFocused ? 'border-[#309605]/50 ring-1 ring-[#309605]/30' : 'border-border'
+          isFocused ? 'border-[var(--almc-lime-deep)]/50 ring-1 ring-[var(--almc-lime-deep)]/30' : 'border-border'
         }`}
       >
         <div className="flex items-start gap-4">
@@ -365,7 +365,7 @@ export function ArtistsSection({
                 setVerifyEmail(undefined);
                 setShowAddModal(true);
               }}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#309605] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#3ba208]"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90"
             >
               <UserPlus className="h-4 w-4" />
               Add Artist
@@ -391,7 +391,7 @@ export function ArtistsSection({
             placeholder="Search artists..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground/80 focus:border-[#309605]/50 focus:outline-none"
+            className="w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground/80 focus:border-[var(--almc-lime-deep)]/50 focus:outline-none"
           />
         </div>
         <div className="flex flex-wrap gap-2">
@@ -435,7 +435,7 @@ export function ArtistsSection({
             type="button"
             onClick={() => setViewMode('grid')}
             className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs ${
-              viewMode === 'grid' ? 'bg-[#309605]/15 text-[#3ba208]' : 'text-muted-foreground'
+              viewMode === 'grid' ? 'bg-[var(--almc-lime)]/40 text-[var(--almc-lime-deep)]' : 'text-muted-foreground'
             }`}
           >
             <LayoutGrid className="h-3.5 w-3.5" />
@@ -445,7 +445,7 @@ export function ArtistsSection({
             type="button"
             onClick={() => setViewMode('table')}
             className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs ${
-              viewMode === 'table' ? 'bg-[#309605]/15 text-[#3ba208]' : 'text-muted-foreground'
+              viewMode === 'table' ? 'bg-[var(--almc-lime)]/40 text-[var(--almc-lime-deep)]' : 'text-muted-foreground'
             }`}
           >
             <Table2 className="h-3.5 w-3.5" />
@@ -474,7 +474,7 @@ export function ArtistsSection({
                 setVerifyEmail(undefined);
                 setShowAddModal(true);
               }}
-              className="mt-4 text-sm font-medium text-[#3ba208] hover:underline"
+              className="mt-4 text-sm font-medium text-[var(--almc-lime-deep)] hover:underline"
             >
               Add your first artist
             </button>

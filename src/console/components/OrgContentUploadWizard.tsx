@@ -133,7 +133,7 @@ export function OrgContentUploadWizard({
           value={artistSearch}
           onChange={(e) => setArtistSearch(e.target.value)}
           placeholder="Search artists…"
-          className="w-full rounded-xl border border-border bg-secondary py-2.5 pl-10 pr-4 text-sm text-foreground focus:border-[#309605]/40 focus:outline-none focus:ring-2 focus:ring-[#309605]/20"
+          className="w-full rounded-xl border border-border bg-secondary py-2.5 pl-10 pr-4 text-sm text-foreground focus:border-[var(--almc-lime-deep)]/40 focus:outline-none focus:ring-2 focus:ring-[var(--almc-lime-deep)]/20"
         />
       </div>
       <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
@@ -150,8 +150,8 @@ export function OrgContentUploadWizard({
                 className={cn(
                   'flex w-full items-center gap-3 rounded-xl border p-3 text-left transition',
                   selected
-                    ? 'border-[#309605]/50 bg-[#309605]/10'
-                    : 'border-border bg-secondary hover:border-[#309605]/30'
+                    ? 'border-[var(--almc-lime-deep)]/50 bg-[var(--almc-lime)]/35'
+                    : 'border-border bg-secondary hover:border-[var(--almc-lime-deep)]/30'
                 )}
               >
                 {artist.profile_photo_url ? (
@@ -171,7 +171,7 @@ export function OrgContentUploadWizard({
                     {[artist.genre, artist.country].filter(Boolean).join(' · ') || artist.email}
                   </p>
                 </div>
-                {selected ? <CheckCircle2 className="h-5 w-5 shrink-0 text-[#3ba208]" /> : null}
+                {selected ? <CheckCircle2 className="h-5 w-5 shrink-0 text-[var(--almc-lime-deep)]" /> : null}
               </button>
             );
           })
@@ -193,7 +193,7 @@ export function OrgContentUploadWizard({
             className={cn(
               'relative flex flex-col items-start gap-3 rounded-xl border p-4 text-left transition',
               option.enabled
-                ? 'border-border bg-secondary hover:border-[#309605]/40'
+                ? 'border-border bg-secondary hover:border-[var(--almc-lime-deep)]/40'
                 : 'cursor-not-allowed border-border/60 bg-secondary/50 opacity-60'
             )}
           >
@@ -202,8 +202,8 @@ export function OrgContentUploadWizard({
                 {option.badge}
               </span>
             ) : null}
-            <div className="rounded-lg bg-[#309605]/15 p-2.5">
-              <Icon className="h-5 w-5 text-[#3ba208]" />
+            <div className="rounded-lg bg-[var(--almc-lime)]/40 p-2.5">
+              <Icon className="h-5 w-5 text-[var(--almc-lime-deep)]" />
             </div>
             <div>
               <p className="font-semibold text-foreground">{option.label}</p>
@@ -303,7 +303,7 @@ export function OrgContentUploadWizard({
                 <div
                   className={cn(
                     'h-1 rounded-full transition-colors',
-                    index <= displayStep ? 'bg-[#3ba208]' : 'bg-border'
+                    index <= displayStep ? 'bg-primary' : 'bg-border'
                   )}
                 />
               </div>
@@ -336,7 +336,7 @@ export function OrgContentUploadWizard({
                 type="button"
                 disabled={!selectedArtist}
                 onClick={() => setWizardStep(1)}
-                className="rounded-xl bg-[#3ba208] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#3ba208]/90 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-full bg-[var(--almc-lime)] px-5 py-2.5 text-sm font-semibold text-foreground hover:brightness-[0.97] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Next
               </button>
