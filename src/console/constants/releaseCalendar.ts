@@ -53,9 +53,7 @@ export function formatContentTypeLabel(type: string): string {
     case 'video':
       return 'Video';
     case 'short_clip':
-      return 'Loop';
-    case 'podcast':
-      return 'Podcast';
+      return 'Clip';
     default:
       return type.replace(/_/g, ' ');
   }

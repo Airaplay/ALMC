@@ -60,7 +60,6 @@ function releaseTypeLabel(type: string): string {
     video: 'Video',
     short_clip: 'Clip',
     ep: 'EP',
-    podcast: 'Podcast',
   };
   return map[type] ?? type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
