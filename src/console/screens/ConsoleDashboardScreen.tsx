@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, ChevronDown } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
 import { performCompleteLogout } from '../../lib/logoutService';
 import { almcRoutes } from '../../lib/almcRoutes';
 import { LoadingLogo } from '../../components/LoadingLogo';
@@ -23,6 +22,7 @@ import { OrgArtistItem } from '../../lib/orgAccess';
 import { OrgContentUploadModal } from '../components/OrgContentUploadModal';
 import { ConsoleThemeToggle } from '../components/ConsoleThemeToggle';
 import { getConsoleGreetingParts } from '../utils/consoleGreeting';
+import { useAlmcProtectedRoute } from '../hooks/useAlmcProtectedRoute';
 
 function ConsoleDashboardContent(): JSX.Element {
   const navigate = useNavigate();
@@ -298,18 +298,7 @@ function ConsoleDashboardContent(): JSX.Element {
 }
 
 export function ConsoleDashboardScreen(): JSX.Element {
-  const navigate = useNavigate();
-  const [authChecked, setAuthChecked] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate(almcRoutes.login, { replace: true });
-      } else {
-        setAuthChecked(true);
-      }
-    });
-  }, [navigate]);
+  const authChecked = useAlmcProtectedRoute();
 
   if (!authChecked) {
     return (

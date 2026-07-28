@@ -1,5 +1,6 @@
-import { supabase } from './supabase';
+import { supabase } from '../../lib/supabase';
 import { clearAdminLoginTrustStorage } from './adminEmailOtpGate';
+import { clearAlmcPinGate } from '../console/lib/almcPinGate';
 import { cache } from './cache';
 import { persistentCache } from './persistentCache';
 import { smartCache } from './smartCache';
@@ -126,6 +127,7 @@ export async function performCompleteLogout(): Promise<{ success: boolean; error
 
   try {
     clearAdminLoginTrustStorage();
+    clearAlmcPinGate();
     clearLocalStorage();
     clearSessionStorage();
     await clearAllCaches();

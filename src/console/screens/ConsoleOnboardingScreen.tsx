@@ -13,6 +13,7 @@ import {
   ConsoleSubmitArrow,
 } from '../components/ConsoleFormControls';
 import { consoleTheme } from '../consoleTheme';
+import { useAlmcProtectedRoute } from '../hooks/useAlmcProtectedRoute';
 
 const ORG_TYPES: Array<{ id: OrgType; label: string; description: string; icon: typeof Music2 }> = [
   { id: 'label', label: 'Record Label', description: 'Manage signed artists and releases', icon: Music2 },
@@ -23,7 +24,8 @@ const ORG_TYPES: Array<{ id: OrgType; label: string; description: string; icon: 
 
 export function ConsoleOnboardingScreen(): JSX.Element {
   const navigate = useNavigate();
-  const [authChecked, setAuthChecked] = useState(false);
+  const authChecked = useAlmcProtectedRoute();
+  const [onboardingReady, setOnboardingReady] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [orgType, setOrgType] = useState<OrgType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,6 +43,8 @@ export function ConsoleOnboardingScreen(): JSX.Element {
   });
 
   useEffect(() => {
+    if (!authChecked) return;
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
         navigate(almcRoutes.login, { replace: true });
@@ -68,11 +72,11 @@ export function ConsoleOnboardingScreen(): JSX.Element {
         navigate(almcRoutes.home, { replace: true });
         return;
       }
-      setAuthChecked(true);
+      setOnboardingReady(true);
     });
-  }, [navigate]);
+  }, [authChecked, navigate]);
 
-  if (!authChecked) {
+  if (!authChecked || !onboardingReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingLogo />

@@ -5,13 +5,16 @@ import { supabase } from '../../lib/supabase';
 import { getMyOrganizations, OrgType } from '../../lib/orgAccess';
 import { almcRoutes } from '../../lib/almcRoutes';
 import { performCompleteLogout } from '../../lib/logoutService';
+import { fetchHasSecurityPin, setSecurityPinRpc, verifySecurityPinForSession } from '../../lib/supabase';
 import { toUserFacingAuthError } from '../../lib/criticalErrorMessages';
 import { LoadingLogo } from '../../components/LoadingLogo';
 import { ConsoleAuthShell } from '../components/ConsoleAuthShell';
+import { ConsolePinStep, ConsolePinStepMode } from '../components/ConsolePinStep';
 import {
   ConsoleErrorAlert,
   ConsolePasswordToggle,
 } from '../components/ConsoleFormControls';
+import { isAlmcPinVerified, markAlmcPinVerified } from '../lib/almcPinGate';
 
 const ALMC_ORG_TYPE_OPTIONS: Array<{ value: OrgType; label: string }> = [
   { value: 'label', label: 'Record Label' },
@@ -63,10 +66,13 @@ async function ensureAlmcUserProfile(input: {
   }
 }
 
+type AuthStep = 'credentials' | 'email_otp' | 'pin_verify' | 'pin_setup';
+
 export function ConsoleLoginScreen(): JSX.Element {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect');
+  const pinStepRequested = searchParams.get('step') === 'pin';
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
@@ -84,6 +90,9 @@ export function ConsoleLoginScreen(): JSX.Element {
   const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
   const resendCooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pendingOrgTypeRef = useRef<OrgType | null>(null);
+  const [authStep, setAuthStep] = useState<AuthStep>('credentials');
+  const [pinStepMode, setPinStepMode] = useState<ConsolePinStepMode>('verify');
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -117,8 +126,13 @@ export function ConsoleLoginScreen(): JSX.Element {
   const checkExistingAuth = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email) {
-        setSignedInEmail(session.user.email);
+      if (session?.user) {
+        if (pinStepRequested || !isAlmcPinVerified(session.user.id)) {
+          await beginPinGate(session.user.id, session.user.email ?? null);
+          return;
+        }
+        await routeAfterLogin();
+        return;
       }
     } catch {
       // continue to login form
@@ -140,6 +154,38 @@ export function ConsoleLoginScreen(): JSX.Element {
     }
   };
 
+  const beginPinGate = async (userId: string, userEmail: string | null) => {
+    setSessionUserId(userId);
+    setSignedInEmail(userEmail);
+
+    if (isAlmcPinVerified(userId)) {
+      await routeAfterLogin();
+      return;
+    }
+
+    const hasPin = await fetchHasSecurityPin();
+    setPinStepMode(hasPin ? 'verify' : 'setup');
+    setAuthStep(hasPin ? 'pin_verify' : 'pin_setup');
+  };
+
+  const handlePinVerify = async (pin: string) => {
+    if (!sessionUserId) {
+      throw new Error('Session expired. Please sign in again.');
+    }
+    await verifySecurityPinForSession(pin);
+    markAlmcPinVerified(sessionUserId);
+    await routeAfterLogin();
+  };
+
+  const handlePinSetup = async (pin: string, confirmPin: string) => {
+    if (!sessionUserId) {
+      throw new Error('Session expired. Please sign in again.');
+    }
+    await setSecurityPinRpc(pin, confirmPin);
+    markAlmcPinVerified(sessionUserId);
+    await routeAfterLogin();
+  };
+
   const handleSignOut = async () => {
     setIsSigningOut(true);
     setError(null);
@@ -150,6 +196,8 @@ export function ConsoleLoginScreen(): JSX.Element {
       setOtpCode('');
       setIsSignUp(false);
       setOrgType('');
+      setAuthStep('credentials');
+      setSessionUserId(null);
       pendingOrgTypeRef.current = null;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign out failed');
@@ -206,7 +254,7 @@ export function ConsoleLoginScreen(): JSX.Element {
             orgType: selectedOrgType,
           });
           setSignedInEmail(data.user.email ?? email.trim());
-          await routeAfterLogin();
+          await beginPinGate(data.user.id, data.user.email ?? email.trim());
           return;
         }
 
@@ -222,8 +270,13 @@ export function ConsoleLoginScreen(): JSX.Element {
         password,
       });
       if (signInError) throw signInError;
-      setSignedInEmail(email.trim());
-      await routeAfterLogin();
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        throw new Error('Sign-in succeeded but no session was created. Please try again.');
+      }
+
+      await beginPinGate(session.user.id, session.user.email ?? email.trim());
     } catch (err) {
       setError(toUserFacingAuthError(err));
     } finally {
@@ -266,6 +319,11 @@ export function ConsoleLoginScreen(): JSX.Element {
 
       setSignedInEmail(email.trim());
       setPendingVerification(false);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await beginPinGate(session.user.id, session.user.email ?? email.trim());
+        return;
+      }
       await routeAfterLogin();
     } catch (err) {
       setError(toUserFacingAuthError(err));
@@ -289,12 +347,20 @@ export function ConsoleLoginScreen(): JSX.Element {
     }
   };
 
-  const headline = pendingVerification
+  const headline = authStep === 'pin_verify' || authStep === 'pin_setup'
+    ? authStep === 'pin_setup'
+      ? 'Create security PIN'
+      : 'Enter security PIN'
+    : pendingVerification
     ? 'Verify your email'
     : isSignUp
       ? 'Create account'
       : undefined;
-  const subline = pendingVerification
+  const subline = authStep === 'pin_verify'
+    ? 'One more step before you can open the console'
+    : authStep === 'pin_setup'
+      ? 'Protect your console with a PIN only you know'
+    : pendingVerification
     ? `Enter the 6-digit code sent to ${email}`
     : isSignUp
       ? 'Join Airaplay — manage artists and releases'
@@ -338,7 +404,7 @@ export function ConsoleLoginScreen(): JSX.Element {
         }
         footer={
           <div className="mt-6 space-y-3 text-center text-[13px] text-white/80">
-            {!pendingVerification && (
+            {!pendingVerification && authStep === 'credentials' && (
               <p>
                 {isSignUp ? 'Already have an account?' : 'Are you new?'}{' '}
                 <button
@@ -363,18 +429,14 @@ export function ConsoleLoginScreen(): JSX.Element {
           </div>
         }
       >
-        {signedInEmail && !pendingVerification && (
-          <div className="rounded-lg border border-white/25 bg-white/10 p-4">
-            <p className="text-[13px] text-white/85">
-              Signed in as <span className="font-medium text-white">{signedInEmail}</span>
-            </p>
-            <button type="button" onClick={routeAfterLogin} className={`${glassBtn} mt-3`}>
-              Continue to Console
-            </button>
-          </div>
-        )}
-
-        {pendingVerification ? (
+        {authStep === 'pin_verify' || authStep === 'pin_setup' ? (
+          <ConsolePinStep
+            mode={pinStepMode}
+            email={signedInEmail}
+            onSubmitVerify={handlePinVerify}
+            onSubmitSetup={handlePinSetup}
+          />
+        ) : pendingVerification ? (
           <form onSubmit={handleVerifyOtp} className="space-y-5">
             {error ? <ConsoleErrorAlert message={error} /> : null}
             <div className="flex justify-center gap-1.5 sm:gap-2">
@@ -414,7 +476,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                 : 'Resend code'}
             </button>
           </form>
-        ) : !signedInEmail ? (
+        ) : authStep === 'credentials' ? (
           <form onSubmit={handleSubmit} className="space-y-5">
             {error ? <ConsoleErrorAlert message={error} /> : null}
 
