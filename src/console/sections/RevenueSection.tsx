@@ -52,7 +52,7 @@ export function RevenueSection() {
     () =>
       (data?.by_artist ?? []).slice(0, 8).map((a) => ({
         name: a.stage_name.length > 12 ? `${a.stage_name.slice(0, 12)}…` : a.stage_name,
-        total: Number(a.total_earnings) || 0,
+        total: Number(a.gross_total) || 0,
       })),
     [data]
   );
@@ -67,7 +67,7 @@ export function RevenueSection() {
         <div>
           <h2 className="text-2xl font-semibold text-foreground">Revenue</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Read-only rollup across linked artists. Withdrawals stay on each artist wallet.
+            Read-only rollup across linked artists. Revenue is broken into org share and artist share.
           </p>
         </div>
         <select
@@ -94,8 +94,11 @@ export function RevenueSection() {
           <div className={`${consoleTheme.card} p-5`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className={consoleTheme.label}>Lifetime earnings</p>
-                <p className={`mt-2 ${consoleTheme.display}`}>{formatUsd(data.available)}</p>
+                <p className={consoleTheme.label}>Gross linked artist earnings</p>
+                <p className={`mt-2 ${consoleTheme.display}`}>{formatUsd(data.gross_total)}</p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Default split: {data.org_split_pct}% org / {data.artist_split_pct}% artist
+                </p>
               </div>
               <button
                 type="button"
@@ -110,9 +113,9 @@ export function RevenueSection() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { label: 'Total', value: data.total },
+              { label: 'Org share', value: data.org_share_total },
+              { label: 'Artist share', value: data.artist_share_total },
               { label: 'Treats (pending)', value: data.treats },
-              { label: 'Pending', value: data.pending },
             ].map((kpi) => (
               <div key={kpi.label} className={`${consoleTheme.card} p-5`}>
                 <div className="mb-4 flex items-center justify-between">
@@ -130,7 +133,7 @@ export function RevenueSection() {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <div className={`${consoleTheme.card} p-5`}>
-              <h3 className={consoleTheme.label}>Revenue by Artist</h3>
+              <h3 className={consoleTheme.label}>Gross Revenue by Artist</h3>
               <div className="mt-4 h-64">
                 {artistChart.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No earnings yet</p>
@@ -181,6 +184,9 @@ export function RevenueSection() {
                   </ResponsiveContainer>
                 )}
               </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Trend reflects linked artist payout activity before any ALMC share is applied.
+              </p>
             </div>
           </div>
 
@@ -193,14 +199,16 @@ export function RevenueSection() {
                 <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-5 py-3 font-semibold">Artist</th>
-                    <th className="px-5 py-3 font-semibold">Total</th>
-                    <th className="px-5 py-3 font-semibold">% of org</th>
+                    <th className="px-5 py-3 font-semibold">Gross</th>
+                    <th className="px-5 py-3 font-semibold">Org share</th>
+                    <th className="px-5 py-3 font-semibold">Artist share</th>
+                    <th className="px-5 py-3 font-semibold">% of gross</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(data.by_artist ?? []).length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="px-5 py-8 text-center text-muted-foreground">
+                      <td colSpan={5} className="px-5 py-8 text-center text-muted-foreground">
                         No revenue rows yet
                       </td>
                     </tr>
@@ -208,7 +216,9 @@ export function RevenueSection() {
                     data.by_artist.map((row) => (
                       <tr key={row.artist_profile_id} className="border-t border-border">
                         <td className="px-5 py-3 font-medium text-foreground">{row.stage_name}</td>
-                        <td className="px-5 py-3 tabular-nums text-foreground">{formatUsd(row.total_earnings)}</td>
+                        <td className="px-5 py-3 tabular-nums text-foreground">{formatUsd(row.gross_total)}</td>
+                        <td className="px-5 py-3 tabular-nums text-foreground">{formatUsd(row.org_share_total)}</td>
+                        <td className="px-5 py-3 tabular-nums text-foreground">{formatUsd(row.artist_share_total)}</td>
                         <td className="px-5 py-3 tabular-nums text-muted-foreground">{row.pct_of_org}%</td>
                       </tr>
                     ))

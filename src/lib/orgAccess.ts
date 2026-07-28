@@ -111,6 +111,9 @@ export interface OrgArtistItem {
   streams: number;
   monthly_streams: number;
   revenue: number;
+  org_split_pct_override?: number | null;
+  org_split_pct?: number | null;
+  artist_split_pct?: number | null;
   latest_release: {
     title: string;
     type: string;
@@ -327,13 +330,33 @@ export interface OrgAnalyticsData {
 export interface OrgRevenueArtistRow {
   artist_profile_id: string;
   stage_name: string;
+  gross_total: number;
+  org_share_total: number;
+  artist_share_total: number;
   total_earnings: number;
+  org_split_pct_override?: number | null;
+  org_split_pct?: number | null;
+  artist_split_pct?: number | null;
   period_ads: number;
   pct_of_org: number;
 }
 
+export interface OrgSplitSettings {
+  org_split_pct: number;
+  artist_split_pct: number;
+}
+
+export interface ArtistSplitSettings extends OrgSplitSettings {
+  org_split_pct_override: number | null;
+}
+
 export interface OrgRevenueData {
   period_days: number;
+  org_split_pct: number;
+  artist_split_pct: number;
+  gross_total: number;
+  org_share_total: number;
+  artist_share_total: number;
   available: number;
   total: number;
   treats: number;
@@ -366,6 +389,51 @@ export async function getOrganizationRevenue(
   });
   if (error) throw error;
   return data as OrgRevenueData;
+}
+
+export async function getOrgSplitSettings(orgId: string): Promise<OrgSplitSettings> {
+  const { data, error } = await supabase.rpc('almc_get_org_split_settings', {
+    p_org_id: orgId,
+  });
+  if (error) throw error;
+  return data as OrgSplitSettings;
+}
+
+export async function setOrgSplitSettings(
+  orgId: string,
+  orgSplitPct: number
+): Promise<OrgSplitSettings> {
+  const { data, error } = await supabase.rpc('almc_set_org_split_settings', {
+    p_org_id: orgId,
+    p_org_split_pct: orgSplitPct,
+  });
+  if (error) throw error;
+  return data as OrgSplitSettings;
+}
+
+export async function getArtistSplitSettings(
+  orgId: string,
+  artistProfileId: string
+): Promise<ArtistSplitSettings> {
+  const { data, error } = await supabase.rpc('almc_get_artist_split_settings', {
+    p_org_id: orgId,
+    p_artist_profile_id: artistProfileId,
+  });
+  if (error) throw error;
+  return data as ArtistSplitSettings;
+}
+
+export async function setArtistSplitOverride(
+  orgId: string,
+  artistProfileId: string,
+  orgSplitPctOverride: number | null
+): Promise<void> {
+  const { error } = await supabase.rpc('almc_set_artist_split_override', {
+    p_org_id: orgId,
+    p_artist_profile_id: artistProfileId,
+    p_org_split_pct_override: orgSplitPctOverride,
+  });
+  if (error) throw error;
 }
 
 export type OrgArtistSort = 'streams' | 'monthly_streams' | 'followers' | 'revenue' | 'stage_name' | 'linked_at';

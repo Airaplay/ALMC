@@ -19,10 +19,12 @@ import {
 import { useOrganization } from '../contexts/OrganizationContext';
 import {
   cancelArtistOrganizationInvitation,
+  getArtistSplitSettings,
   listOrganizationArtists,
   OrgArtistItem,
   OrgArtistSort,
   revokeOrganizationArtistAccess,
+  setArtistSplitOverride,
 } from '../../lib/orgAccess';
 import { LoadingLogo } from '../../components/LoadingLogo';
 import { AddArtistModal } from '../components/AddArtistModal';
@@ -101,6 +103,7 @@ export function ArtistsSection({
   const [verifyEmail, setVerifyEmail] = useState<string | undefined>();
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [contentArtist, setContentArtist] = useState<OrgArtistItem | null>(null);
+  const [updatingSplitArtistId, setUpdatingSplitArtistId] = useState<string | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -176,6 +179,34 @@ export function ArtistsSection({
     setMenuOpen(null);
   };
 
+  const canEditSplit = hasPermission('org.settings') || hasPermission('org.manage');
+
+  const handleSetArtistSplit = async (artist: OrgArtistItem) => {
+    if (!organization?.id || !artist.artist_profile_id || !canEditSplit) return;
+    setUpdatingSplitArtistId(artist.link_id);
+    try {
+      const current = await getArtistSplitSettings(organization.id, artist.artist_profile_id);
+      const seed = current.org_split_pct_override === null ? '' : String(current.org_split_pct_override);
+      const input = window.prompt(
+        `Set org split % for ${artist.stage_name || artist.email}.\nLeave empty to use org default (${current.org_split_pct}%).`,
+        seed
+      );
+      if (input === null) return;
+      const trimmed = input.trim();
+      const override = trimmed === '' ? null : Number(trimmed);
+      if (override !== null && (!Number.isFinite(override) || override < 0 || override > 100)) {
+        setError('Split must be a number between 0 and 100, or empty for default.');
+        return;
+      }
+      await setArtistSplitOverride(organization.id, artist.artist_profile_id, override);
+      await loadArtists();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update artist split');
+    } finally {
+      setUpdatingSplitArtistId(null);
+    }
+  };
+
   const artistActions = (artist: OrgArtistItem, compact = false) => (
     <div className={`flex flex-wrap items-center gap-2 ${compact ? 'justify-end' : ''}`}>
       {artist.is_pending_invitation && hasPermission('artists.invite') && (
@@ -234,6 +265,16 @@ export function ArtistsSection({
             >
               <BarChart3 className="h-3.5 w-3.5" />
               Analytics
+            </button>
+          )}
+          {canEditSplit && (
+            <button
+              type="button"
+              disabled={updatingSplitArtistId === artist.link_id}
+              onClick={() => void handleSetArtistSplit(artist)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs text-secondary-foreground hover:bg-muted disabled:opacity-50"
+            >
+              {updatingSplitArtistId === artist.link_id ? 'Saving…' : 'Set split'}
             </button>
           )}
         </>
@@ -319,6 +360,14 @@ export function ArtistsSection({
                 {formatNum(Number(artist.followers))} followers ·{' '}
                 {formatNum(Number(artist.monthly_streams ?? 0))} monthly ·{' '}
                 {formatRevenueUsd(Number(artist.revenue))} revenue
+              </p>
+            )}
+            {!artist.is_pending_invitation && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Split: {artist.org_split_pct ?? 0}% org / {artist.artist_split_pct ?? 100}% artist
+                {artist.org_split_pct_override !== null && artist.org_split_pct_override !== undefined
+                  ? ' (override)'
+                  : ' (default)'}
               </p>
             )}
             {artist.latest_release?.title && !artist.is_pending_invitation && (
@@ -497,6 +546,7 @@ export function ArtistsSection({
                 <th className="px-4 py-3 font-medium">Followers</th>
                 <th className="px-4 py-3 font-medium">Monthly</th>
                 <th className="px-4 py-3 font-medium">Revenue</th>
+                <th className="px-4 py-3 font-medium">Split</th>
                 <th className="px-4 py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
@@ -528,6 +578,12 @@ export function ArtistsSection({
                     {formatNum(Number(artist.monthly_streams ?? 0))}
                   </td>
                   <td className="px-4 py-3 tabular-nums">{formatRevenueUsd(Number(artist.revenue))}</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    {artist.org_split_pct ?? 0}%/{artist.artist_split_pct ?? 100}%
+                    {artist.org_split_pct_override !== null && artist.org_split_pct_override !== undefined
+                      ? ' override'
+                      : ''}
+                  </td>
                   <td className="px-4 py-3">{artistActions(artist, true)}</td>
                 </tr>
               ))}

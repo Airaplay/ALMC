@@ -52,7 +52,7 @@ export function ConsoleAuthShell({
             Label & Management Console
           </h1>
           <p className="mt-6 max-w-md text-base leading-relaxed text-white/70 sm:text-lg">
-            Manage artists, releases, and your roster from one secure console.
+            Manage artists, releases, and your roster on Airaplay from one secure console.
           </p>
         </div>
 
