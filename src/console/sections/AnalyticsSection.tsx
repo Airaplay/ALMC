@@ -14,12 +14,7 @@ import {
 import { ArrowLeft, Download, TrendingDown, TrendingUp, Minus } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useOrganization } from '../contexts/OrganizationContext';
-import {
-  getOrganizationAnalytics,
-  OrgAnalyticsData,
-  resolveEffectiveArtistSplitPct,
-} from '../../lib/orgAccess';
-import { applyRevenueSplit } from '../lib/almcRevenueSplit';
+import { getOrganizationAnalytics, OrgAnalyticsData } from '../../lib/orgAccess';
 import { LoadingLogo } from '../../components/LoadingLogo';
 import { pctChange } from '../utils/formatOrgActivity';
 import { exportAnalyticsCsv } from '../utils/exportAnalyticsCsv';
@@ -137,11 +132,6 @@ export function AnalyticsSection({
   const [data, setData] = useState<OrgAnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [splitMeta, setSplitMeta] = useState<{
-    orgSplitPct: number;
-    artistSplitPct: number;
-    override: number | null;
-  }>({ orgSplitPct: 0, artistSplitPct: 100, override: null });
 
   const isArtistScope = scope === 'artist' && Boolean(artistProfileId && selectedArtist);
 
@@ -167,41 +157,6 @@ export function AnalyticsSection({
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load analytics'))
       .finally(() => setLoading(false));
   }, [organization?.id, days, scope, artistProfileId]);
-
-  useEffect(() => {
-    if (!organization?.id) return;
-    let cancelled = false;
-    resolveEffectiveArtistSplitPct(
-      organization.id,
-      scope === 'artist' ? artistProfileId : null
-    )
-      .then((next) => {
-        if (!cancelled) setSplitMeta(next);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setSplitMeta({ orgSplitPct: 0, artistSplitPct: 100, override: null });
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [organization?.id, scope, artistProfileId]);
-
-  const periodRevenueSplit = useMemo(
-    () => applyRevenueSplit(Number(data?.period_revenue ?? 0), splitMeta.orgSplitPct),
-    [data?.period_revenue, splitMeta.orgSplitPct]
-  );
-
-  const previousRevenueSplit = useMemo(
-    () => applyRevenueSplit(Number(data?.previous_period_revenue ?? 0), splitMeta.orgSplitPct),
-    [data?.previous_period_revenue, splitMeta.orgSplitPct]
-  );
-
-  const lifetimeRevenueSplit = useMemo(
-    () => applyRevenueSplit(Number(selectedArtist?.revenue ?? 0), splitMeta.orgSplitPct),
-    [selectedArtist?.revenue, splitMeta.orgSplitPct]
-  );
 
   const chartData = useMemo(
     () =>
@@ -381,11 +336,7 @@ export function AnalyticsSection({
               <div className="rounded-2xl border border-border bg-card p-4">
                 <p className="text-xs text-muted-foreground">Lifetime revenue</p>
                 <p className="mt-1 text-xl font-semibold tabular-nums text-foreground">
-                  {formatUsd(lifetimeRevenueSplit.gross)}
-                </p>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Org {formatUsd(lifetimeRevenueSplit.orgShare)} · Artist{' '}
-                  {formatUsd(lifetimeRevenueSplit.artistShare)}
+                  {formatUsd(Number(selectedArtist.revenue))}
                 </p>
               </div>
               <div className="rounded-2xl border border-border bg-card p-4">
@@ -448,91 +399,30 @@ export function AnalyticsSection({
                 <div className="space-y-6">
                   <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
-                      <p className="text-xs text-muted-foreground">Gross period revenue</p>
+                      <p className="text-xs text-muted-foreground">Period revenue</p>
                       <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
-                        {formatUsd(periodRevenueSplit.gross)}
+                        {formatUsd(data.period_revenue)}
                       </p>
-                      <Delta
-                        current={periodRevenueSplit.gross}
-                        previous={previousRevenueSplit.gross}
-                      />
+                      <Delta current={data.period_revenue} previous={data.previous_period_revenue} />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Org share</p>
+                      <p className="text-xs text-muted-foreground">Previous period</p>
                       <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
-                        {formatUsd(periodRevenueSplit.orgShare)}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {periodRevenueSplit.orgSplitPct}%
-                        {isArtistScope && splitMeta.override !== null ? ' · override' : ' · default'}
+                        {formatUsd(data.previous_period_revenue)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Artist share</p>
-                      <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
-                        {formatUsd(periodRevenueSplit.artistShare)}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {periodRevenueSplit.artistSplitPct}%
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Previous period (gross)</p>
-                      <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
-                        {formatUsd(previousRevenueSplit.gross)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Previous org share</p>
-                      <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
-                        {formatUsd(previousRevenueSplit.orgShare)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Est. per stream (gross)</p>
+                      <p className="text-xs text-muted-foreground">Est. per stream</p>
                       <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
                         {data.period_streams > 0
-                          ? formatUsd(periodRevenueSplit.gross / data.period_streams)
+                          ? formatUsd(data.period_revenue / data.period_streams)
                           : formatUsd(0)}
                       </p>
                     </div>
                   </div>
-
-                  {isArtistScope && selectedArtist ? (
-                    <div className="rounded-xl border border-border bg-muted/30 p-4">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                        Lifetime linked earnings split
-                      </p>
-                      <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                        <div>
-                          <p className="text-xs text-muted-foreground">Gross</p>
-                          <p className="mt-1 text-lg font-semibold tabular-nums">
-                            {formatUsd(lifetimeRevenueSplit.gross)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Org share</p>
-                          <p className="mt-1 text-lg font-semibold tabular-nums">
-                            {formatUsd(lifetimeRevenueSplit.orgShare)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Artist share</p>
-                          <p className="mt-1 text-lg font-semibold tabular-nums">
-                            {formatUsd(lifetimeRevenueSplit.artistShare)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
-
                   <p className="text-sm text-muted-foreground">
-                    Split applied for this {isArtistScope ? 'artist' : 'organization'}:{' '}
-                    {periodRevenueSplit.orgSplitPct}% org / {periodRevenueSplit.artistSplitPct}% artist.
-                    Display-only and scoped to linked ALMC artists — Admin Dashboard revenue is unchanged.
+                    Revenue attributed to this {isArtistScope ? 'artist' : 'organization'} for the selected
+                    period. Treats and payouts are available in Revenue.
                   </p>
                 </div>
               )}
