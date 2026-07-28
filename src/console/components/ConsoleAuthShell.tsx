@@ -51,10 +51,7 @@ export function ConsoleAuthShell({
           <h1 className="text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
             Label & Management Console
           </h1>
-          <p className="mt-6 text-lg font-medium text-white/90 sm:text-xl">
-            Where music meets control.
-          </p>
-          <p className="mt-3 max-w-md text-base leading-relaxed text-white/70 sm:text-lg">
+          <p className="mt-6 max-w-md text-base leading-relaxed text-white/70 sm:text-lg">
             Manage artists, releases, and your roster from one secure console.
           </p>
         </div>
