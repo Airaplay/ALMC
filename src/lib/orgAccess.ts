@@ -1,4 +1,12 @@
 import { supabase } from './supabase';
+import {
+  ALMC_ARTIST_OVERRIDES_KEY,
+  ALMC_ORG_SPLIT_KEY,
+  applyRevenueSplit,
+  clampSplitPct,
+  parseOrgSettingsSplit,
+  resolveArtistSplit,
+} from '../console/lib/almcRevenueSplit';
 
 export type OrgType = 'label' | 'management' | 'distributor' | 'entertainment';
 
@@ -383,44 +391,140 @@ export async function getOrganizationRevenue(
   orgId: string,
   days = 30
 ): Promise<OrgRevenueData> {
-  const { data, error } = await supabase.rpc('get_organization_revenue', {
-    p_org_id: orgId,
-    p_days: days,
-  });
+  const [{ data, error }, settings] = await Promise.all([
+    supabase.rpc('get_organization_revenue', {
+      p_org_id: orgId,
+      p_days: days,
+    }),
+    readOrganizationSettings(orgId).catch(() => ({}) as Record<string, unknown>),
+  ]);
   if (error) throw error;
-  return data as OrgRevenueData;
+
+  const raw = (data ?? {}) as Partial<OrgRevenueData> & {
+    by_artist?: Array<Partial<OrgRevenueArtistRow> & { total_earnings?: number }>;
+  };
+  const parsed = parseOrgSettingsSplit(settings);
+  const defaultOrgPct = parsed.orgSplitPct;
+
+  const byArtist = (raw.by_artist ?? []).map((row) => {
+    const artistId = String(row.artist_profile_id ?? '');
+    const override =
+      artistId && artistId in parsed.overrides ? parsed.overrides[artistId] : null;
+    const effective = resolveArtistSplit(defaultOrgPct, override);
+    const gross = Number(
+      row.gross_total ?? row.total_earnings ?? 0
+    );
+    const split = applyRevenueSplit(gross, effective.orgSplitPct);
+    return {
+      artist_profile_id: artistId,
+      stage_name: String(row.stage_name ?? 'Artist'),
+      gross_total: split.gross,
+      org_share_total: split.orgShare,
+      artist_share_total: split.artistShare,
+      total_earnings: split.artistShare,
+      org_split_pct_override: effective.override,
+      org_split_pct: effective.orgSplitPct,
+      artist_split_pct: effective.artistSplitPct,
+      period_ads: Number(row.period_ads ?? 0),
+      pct_of_org: Number(row.pct_of_org ?? 0),
+    } satisfies OrgRevenueArtistRow;
+  });
+
+  const grossTotal = Number(
+    raw.gross_total ??
+      raw.total ??
+      byArtist.reduce((sum, row) => sum + row.gross_total, 0)
+  );
+  const orgShareTotal = byArtist.reduce((sum, row) => sum + row.org_share_total, 0);
+  const artistShareTotal = byArtist.reduce((sum, row) => sum + row.artist_share_total, 0);
+  // If by_artist is truncated, fall back to default split on gross total.
+  const orgShare =
+    byArtist.length > 0
+      ? orgShareTotal
+      : applyRevenueSplit(grossTotal, defaultOrgPct).orgShare;
+  const artistShare =
+    byArtist.length > 0
+      ? artistShareTotal
+      : applyRevenueSplit(grossTotal, defaultOrgPct).artistShare;
+
+  return {
+    period_days: Number(raw.period_days ?? days),
+    org_split_pct: defaultOrgPct,
+    artist_split_pct: 100 - defaultOrgPct,
+    gross_total: grossTotal,
+    org_share_total: orgShare,
+    artist_share_total: artistShare,
+    available: Number(raw.available ?? Math.max(grossTotal - Number(raw.pending ?? 0), 0)),
+    total: Number(raw.total ?? grossTotal),
+    treats: Number(raw.treats ?? 0),
+    ads: Number(raw.ads ?? 0),
+    pending: Number(raw.pending ?? 0),
+    by_artist: byArtist,
+    monthly_trend: (raw.monthly_trend ?? []) as Array<{ month: string; amount: number }>,
+  };
+}
+
+async function readOrganizationSettings(orgId: string): Promise<Record<string, unknown>> {
+  const { data, error } = await supabase
+    .from('organizations')
+    .select('settings')
+    .eq('id', orgId)
+    .maybeSingle();
+  if (error) throw error;
+  const settings = (data?.settings ?? {}) as Record<string, unknown>;
+  return settings && typeof settings === 'object' ? settings : {};
+}
+
+async function writeOrganizationSettings(
+  orgId: string,
+  settings: Record<string, unknown>
+): Promise<void> {
+  const { error } = await supabase
+    .from('organizations')
+    .update({ settings })
+    .eq('id', orgId);
+  if (error) throw error;
 }
 
 export async function getOrgSplitSettings(orgId: string): Promise<OrgSplitSettings> {
-  const { data, error } = await supabase.rpc('almc_get_org_split_settings', {
-    p_org_id: orgId,
-  });
-  if (error) throw error;
-  return data as OrgSplitSettings;
+  const settings = await readOrganizationSettings(orgId);
+  const parsed = parseOrgSettingsSplit(settings);
+  return {
+    org_split_pct: parsed.orgSplitPct,
+    artist_split_pct: 100 - parsed.orgSplitPct,
+  };
 }
 
 export async function setOrgSplitSettings(
   orgId: string,
   orgSplitPct: number
 ): Promise<OrgSplitSettings> {
-  const { data, error } = await supabase.rpc('almc_set_org_split_settings', {
-    p_org_id: orgId,
-    p_org_split_pct: orgSplitPct,
+  const settings = await readOrganizationSettings(orgId);
+  const nextPct = clampSplitPct(orgSplitPct, 0);
+  await writeOrganizationSettings(orgId, {
+    ...settings,
+    [ALMC_ORG_SPLIT_KEY]: nextPct,
   });
-  if (error) throw error;
-  return data as OrgSplitSettings;
+  return {
+    org_split_pct: nextPct,
+    artist_split_pct: 100 - nextPct,
+  };
 }
 
 export async function getArtistSplitSettings(
   orgId: string,
   artistProfileId: string
 ): Promise<ArtistSplitSettings> {
-  const { data, error } = await supabase.rpc('almc_get_artist_split_settings', {
-    p_org_id: orgId,
-    p_artist_profile_id: artistProfileId,
-  });
-  if (error) throw error;
-  return data as ArtistSplitSettings;
+  const settings = await readOrganizationSettings(orgId);
+  const parsed = parseOrgSettingsSplit(settings);
+  const override =
+    artistProfileId in parsed.overrides ? parsed.overrides[artistProfileId] : null;
+  const resolved = resolveArtistSplit(parsed.orgSplitPct, override);
+  return {
+    org_split_pct_override: resolved.override,
+    org_split_pct: resolved.orgSplitPct,
+    artist_split_pct: resolved.artistSplitPct,
+  };
 }
 
 export async function setArtistSplitOverride(
@@ -428,12 +532,42 @@ export async function setArtistSplitOverride(
   artistProfileId: string,
   orgSplitPctOverride: number | null
 ): Promise<void> {
-  const { error } = await supabase.rpc('almc_set_artist_split_override', {
-    p_org_id: orgId,
-    p_artist_profile_id: artistProfileId,
-    p_org_split_pct_override: orgSplitPctOverride,
+  const settings = await readOrganizationSettings(orgId);
+  const parsed = parseOrgSettingsSplit(settings);
+  const overrides = { ...parsed.overrides };
+  if (orgSplitPctOverride === null) {
+    delete overrides[artistProfileId];
+  } else {
+    overrides[artistProfileId] = clampSplitPct(orgSplitPctOverride, parsed.orgSplitPct);
+  }
+  await writeOrganizationSettings(orgId, {
+    ...settings,
+    [ALMC_ARTIST_OVERRIDES_KEY]: overrides,
   });
-  if (error) throw error;
+}
+
+/** Resolve effective org split % for an artist (org default or override). */
+export async function resolveEffectiveArtistSplitPct(
+  orgId: string,
+  artistProfileId?: string | null
+): Promise<{ orgSplitPct: number; artistSplitPct: number; override: number | null }> {
+  const settings = await readOrganizationSettings(orgId);
+  const parsed = parseOrgSettingsSplit(settings);
+  if (!artistProfileId) {
+    return {
+      orgSplitPct: parsed.orgSplitPct,
+      artistSplitPct: 100 - parsed.orgSplitPct,
+      override: null,
+    };
+  }
+  const override =
+    artistProfileId in parsed.overrides ? parsed.overrides[artistProfileId] : null;
+  const resolved = resolveArtistSplit(parsed.orgSplitPct, override);
+  return {
+    orgSplitPct: resolved.orgSplitPct,
+    artistSplitPct: resolved.artistSplitPct,
+    override: resolved.override,
+  };
 }
 
 export type OrgArtistSort = 'streams' | 'monthly_streams' | 'followers' | 'revenue' | 'stage_name' | 'linked_at';
@@ -500,19 +634,37 @@ export async function listOrganizationArtists(
     offset?: number;
   }
 ): Promise<{ items: OrgArtistItem[]; total: number }> {
-  const { data, error } = await supabase.rpc('list_organization_artists', {
-    p_org_id: orgId,
-    p_search: options?.search ?? null,
-    p_status: options?.status ?? 'active',
-    p_limit: options?.limit ?? 50,
-    p_offset: options?.offset ?? 0,
-    p_genre: options?.genre ?? null,
-    p_verified: options?.verified ?? 'all',
-    p_sort: options?.sort ?? 'streams',
-  });
+  const [{ data, error }, settings] = await Promise.all([
+    supabase.rpc('list_organization_artists', {
+      p_org_id: orgId,
+      p_search: options?.search ?? null,
+      p_status: options?.status ?? 'active',
+      p_limit: options?.limit ?? 50,
+      p_offset: options?.offset ?? 0,
+      p_genre: options?.genre ?? null,
+      p_verified: options?.verified ?? 'all',
+      p_sort: options?.sort ?? 'streams',
+    }),
+    readOrganizationSettings(orgId).catch(() => ({}) as Record<string, unknown>),
+  ]);
   if (error) throw error;
+
+  const parsed = parseOrgSettingsSplit(settings);
+  const items = ((data?.items ?? []) as OrgArtistItem[]).map((item) => {
+    const artistId = item.artist_profile_id;
+    const override =
+      artistId && artistId in parsed.overrides ? parsed.overrides[artistId] : null;
+    const resolved = resolveArtistSplit(parsed.orgSplitPct, override);
+    return {
+      ...item,
+      org_split_pct_override: resolved.override,
+      org_split_pct: resolved.orgSplitPct,
+      artist_split_pct: resolved.artistSplitPct,
+    };
+  });
+
   return {
-    items: (data?.items ?? []) as OrgArtistItem[],
+    items,
     total: (data?.total ?? 0) as number,
   };
 }
