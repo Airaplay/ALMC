@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from './supabase';
 import { clearAdminLoginTrustStorage } from './adminEmailOtpGate';
 import { clearAlmcPinGate } from '../console/lib/almcPinGate';
 import { cache } from './cache';
