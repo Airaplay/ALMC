@@ -108,7 +108,7 @@ export function RevenueSection() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               { label: 'Total', value: data.total },
               { label: 'Treats (pending)', value: data.treats },
@@ -189,7 +189,7 @@ export function RevenueSection() {
               <h3 className={consoleTheme.label}>By Artist</h3>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
+              <table className="min-w-[480px] w-full text-left text-sm">
                 <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-5 py-3 font-semibold">Artist</th>

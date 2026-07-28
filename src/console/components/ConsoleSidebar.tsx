@@ -147,7 +147,9 @@ export function ConsoleMobileHeader({
   title: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 border-b border-border/70 px-4 py-3 lg:hidden">
+    <div
+      className="flex items-center gap-3 border-b border-border/70 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] lg:hidden"
+    >
       <button type="button" onClick={onOpenSidebar} className="rounded-full p-2 text-muted-foreground hover:bg-card hover:text-foreground">
         <Menu className="h-5 w-5" strokeWidth={1.75} />
       </button>

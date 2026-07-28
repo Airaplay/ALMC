@@ -81,6 +81,47 @@ function ConsoleDashboardContent(): JSX.Element {
     </div>
   );
 
+  const orgSwitcher = organizations.length > 1 && (
+    <div className="relative min-w-0 max-w-full sm:max-w-[14rem]">
+      <button
+        type="button"
+        onClick={() => setShowOrgMenu((v) => !v)}
+        className="flex w-full max-w-full items-center gap-2 truncate rounded-full border border-border/70 bg-card px-3 py-2 text-sm shadow-[var(--almc-shadow-sm)] hover:bg-muted"
+      >
+        <span className="truncate">{organization?.name}</span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
+      </button>
+      {showOrgMenu && (
+        <>
+          <div
+            className="fixed inset-0 z-40 lg:hidden"
+            aria-hidden
+            onClick={() => setShowOrgMenu(false)}
+          />
+          <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[min(16rem,50vh)] overflow-y-auto rounded-2xl border border-border/70 bg-card py-1 shadow-[var(--almc-shadow)] sm:right-0 sm:left-auto sm:w-56">
+            {organizations.map((org) => (
+              <button
+                key={org.id}
+                type="button"
+                onClick={() => {
+                  setOrganizationId(org.id);
+                  setShowOrgMenu(false);
+                }}
+                className={`block w-full px-4 py-2.5 text-left text-sm hover:bg-muted ${
+                  org.id === organization?.id
+                    ? 'font-medium text-[var(--almc-lime-deep)]'
+                    : 'text-secondary-foreground'
+                }`}
+              >
+                {org.name}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   const handleLogout = async () => {
     await performCompleteLogout();
     navigate(almcRoutes.login, { replace: true });
@@ -194,37 +235,7 @@ function ConsoleDashboardContent(): JSX.Element {
         <header className="hidden items-center justify-between border-b border-border/70 px-6 py-5 lg:flex">
           {greetingBlock}
           <div className="flex items-center gap-3">
-            {organizations.length > 1 && (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowOrgMenu((v) => !v)}
-                  className="flex items-center gap-2 rounded-full border border-border/70 bg-card px-3.5 py-2 text-sm shadow-[var(--almc-shadow-sm)] hover:bg-muted"
-                >
-                  {organization?.name}
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
-                </button>
-                {showOrgMenu && (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border border-border/70 bg-card py-1 shadow-[var(--almc-shadow)]">
-                    {organizations.map((org) => (
-                      <button
-                        key={org.id}
-                        type="button"
-                        onClick={() => {
-                          setOrganizationId(org.id);
-                          setShowOrgMenu(false);
-                        }}
-                        className={`block w-full px-4 py-2.5 text-left text-sm hover:bg-muted ${
-                          org.id === organization?.id ? 'font-medium text-[var(--almc-lime-deep)]' : 'text-secondary-foreground'
-                        }`}
-                      >
-                        {org.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+            {orgSwitcher}
             <ArtistSwitcher
               onAddArtist={() => {
                 setActiveSection('artists');
@@ -249,18 +260,26 @@ function ConsoleDashboardContent(): JSX.Element {
           title={greetingBlockMobile}
         />
 
-        <div className="flex items-center justify-end gap-2 border-b border-border px-4 py-2 lg:hidden">
-          <ArtistSwitcher
-            onAddArtist={() => {
-              setActiveSection('artists');
-              setShowInviteArtist(true);
-            }}
-            onFocusArtist={() => setActiveSection('dashboard')}
-          />
-          <ConsoleThemeToggle compact />
-          <button type="button" onClick={handleLogout} className="rounded-lg p-2 text-muted-foreground hover:text-foreground">
-            <LogOut className="h-5 w-5" />
-          </button>
+        <div className="flex flex-col gap-2 border-b border-border px-4 py-2 lg:hidden">
+          {orgSwitcher ? <div className="w-full">{orgSwitcher}</div> : null}
+          <div className="flex items-center justify-end gap-2">
+            <ArtistSwitcher
+              onAddArtist={() => {
+                setActiveSection('artists');
+                setShowInviteArtist(true);
+              }}
+              onFocusArtist={() => setActiveSection('dashboard')}
+            />
+            <ConsoleThemeToggle compact />
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-lg p-2 text-muted-foreground hover:text-foreground"
+              aria-label="Sign out"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">{renderSection()}</main>

@@ -345,7 +345,7 @@ export function AddArtistModal({
         ) : (
           <>
             <div className="shrink-0 border-b border-border/60 px-6 pt-4">
-              <div className="grid grid-cols-2 gap-1 rounded-xl bg-secondary p-1 sm:grid-cols-4">
+              <div className="grid grid-cols-1 gap-1 rounded-xl bg-secondary p-1 sm:grid-cols-2 lg:grid-cols-4">
                 {ADD_ARTIST_TABS.map((item) => (
                   <button
                     key={item.id}

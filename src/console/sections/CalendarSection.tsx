@@ -85,7 +85,9 @@ function ReleaseCard({ item, compact = false }: { item: OrgReleaseCalendarItem; 
 
 export function CalendarSection({ onUpload }: CalendarSectionProps) {
   const { organization, artistProfileId, hasPermission } = useOrganization();
-  const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
+  const [viewMode, setViewMode] = useState<CalendarViewMode>(() =>
+    typeof window !== 'undefined' && window.innerWidth < 768 ? 'agenda' : 'month'
+  );
   const [statusFilter, setStatusFilter] = useState<ReleaseStatusFilter>('all');
   const [cursorDate, setCursorDate] = useState(() => new Date());
   const [items, setItems] = useState<OrgReleaseCalendarItem[]>([]);
@@ -191,8 +193,8 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="inline-flex rounded-full border border-border/80 bg-card p-1">
+      <div className="flex flex-wrap items-center gap-3 overflow-x-auto pb-1">
+        <div className="inline-flex shrink-0 rounded-full border border-border/80 bg-card p-1">
           {CALENDAR_VIEW_MODES.map(({ id, label }) => (
             <button
               key={id}
@@ -285,7 +287,8 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
       ) : (
         <>
           {viewMode === 'month' && (
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+              <div className="min-w-[560px]">
               <div className="grid grid-cols-7 border-b border-border bg-muted/40 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
                   <div key={d} className="px-2 py-3">
@@ -330,6 +333,7 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
                     </div>
                   );
                 })}
+              </div>
               </div>
             </div>
           )}

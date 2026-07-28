@@ -320,7 +320,7 @@ export function AnalyticsSection({
       ) : !data ? null : (
         <>
           {isArtistScope && selectedArtist && (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-2xl border border-border bg-card p-4">
                 <p className="text-xs text-muted-foreground">Followers</p>
                 <p className="mt-1 text-xl font-semibold tabular-nums text-foreground">
@@ -353,7 +353,7 @@ export function AnalyticsSection({
             <div className="space-y-4 rounded-2xl border border-border bg-card p-5 lg:col-span-2">
               {(tab === 'streams' || tab === 'listeners') && (
                 <>
-                  <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
                       <p className="text-xs text-muted-foreground">Streams</p>
                       <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
@@ -397,7 +397,7 @@ export function AnalyticsSection({
 
               {tab === 'revenue' && (
                 <div className="space-y-6">
-                  <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
                       <p className="text-xs text-muted-foreground">Period revenue</p>
                       <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
@@ -429,7 +429,7 @@ export function AnalyticsSection({
 
               {tab === 'retention' && (
                 <div className="space-y-6">
-                  <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
                       <p className="text-xs text-muted-foreground">Avg completion</p>
                       <p className="mt-1 text-3xl font-semibold tabular-nums text-foreground">

@@ -177,7 +177,7 @@ export function ArtistsSection({
   };
 
   const artistActions = (artist: OrgArtistItem, compact = false) => (
-    <div className={`flex items-center gap-2 ${compact ? 'justify-end' : 'flex-wrap'}`}>
+    <div className={`flex flex-wrap items-center gap-2 ${compact ? 'justify-end' : ''}`}>
       {artist.is_pending_invitation && hasPermission('artists.invite') && (
         <button
           type="button"
@@ -488,7 +488,7 @@ export function ArtistsSection({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-          <table className="min-w-full text-left text-sm">
+          <table className="min-w-[720px] w-full text-left text-sm">
             <thead className="border-b border-border bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 font-medium">Artist</th>

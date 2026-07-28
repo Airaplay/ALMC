@@ -41,8 +41,8 @@ export function ConsoleAuthShell({
         <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">{headerAction}</div>
       ) : null}
 
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col justify-center gap-12 px-6 py-12 lg:flex-row lg:items-center lg:justify-between lg:gap-16 lg:px-10">
-        <div className="max-w-xl text-white lg:flex-1">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col justify-center gap-8 px-4 py-8 sm:gap-10 sm:px-6 sm:py-10 lg:flex-row lg:items-center lg:justify-between lg:gap-16 lg:px-10 lg:py-12">
+        <div className="hidden max-w-xl text-white lg:block lg:flex-1">
           <img
             src="/airaplay-console-logo.png"
             alt="Airaplay"
@@ -59,10 +59,15 @@ export function ConsoleAuthShell({
         <div className={cn('w-full lg:flex lg:flex-1 lg:justify-end')}>
           <div
             className={cn(
-              'w-full rounded-[2rem] border border-white/30 bg-white/15 p-10 shadow-[0_8px_32px_rgba(0,0,0,0.25)] backdrop-blur-[22px] sm:p-12',
+              'w-full rounded-[1.5rem] border border-white/30 bg-white/15 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.25)] backdrop-blur-[22px] sm:rounded-[2rem] sm:p-10 lg:p-12',
               widthClass
             )}
           >
+            <img
+              src="/airaplay-console-logo.png"
+              alt="Airaplay"
+              className="mx-auto mb-6 h-10 object-contain brightness-0 invert lg:hidden"
+            />
             {title || subtitle ? (
               <div className="mb-6">
                 {title ? (
