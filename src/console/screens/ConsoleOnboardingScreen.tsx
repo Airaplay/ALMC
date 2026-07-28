@@ -47,6 +47,10 @@ export function ConsoleOnboardingScreen(): JSX.Element {
         return;
       }
       setSignedInEmail(session.user.email ?? null);
+      setForm((current) => ({
+        ...current,
+        email: current.email || session.user.email || '',
+      }));
 
       const metaType = session.user.user_metadata?.almc_org_type;
       if (
@@ -99,13 +103,15 @@ export function ConsoleOnboardingScreen(): JSX.Element {
         description: form.description || undefined,
       });
 
-      // Mirror selected organization type into the platform profile role.
-      // Uses a SECURITY DEFINER RPC because direct role updates are RLS-protected.
+      // Best-effort sync of org type into platform role. Do not block onboarding
+      // if the shared database has not received the latest migration yet.
       const { error: roleUpdateError } = await supabase.rpc('almc_set_platform_role', {
         p_org_id: result.organization_id,
         p_role: orgType,
       });
-      if (roleUpdateError) throw roleUpdateError;
+      if (roleUpdateError) {
+        console.warn('Failed to sync ALMC platform role after org creation:', roleUpdateError);
+      }
 
       setStoredOrgId(result.organization_id);
       navigate(almcRoutes.home, { replace: true });
