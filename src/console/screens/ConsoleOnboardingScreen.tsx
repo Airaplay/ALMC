@@ -47,6 +47,18 @@ export function ConsoleOnboardingScreen(): JSX.Element {
         return;
       }
       setSignedInEmail(session.user.email ?? null);
+
+      const metaType = session.user.user_metadata?.almc_org_type;
+      if (
+        metaType === 'label' ||
+        metaType === 'management' ||
+        metaType === 'distributor' ||
+        metaType === 'entertainment'
+      ) {
+        setOrgType(metaType);
+        setStep(2);
+      }
+
       const orgs = await getMyOrganizations();
       if (orgs.length > 0) {
         navigate(almcRoutes.home, { replace: true });
@@ -86,6 +98,14 @@ export function ConsoleOnboardingScreen(): JSX.Element {
         business_registration_number: form.businessRegistrationNumber || undefined,
         description: form.description || undefined,
       });
+
+      // Mirror selected organization type into the platform profile role.
+      // Uses a SECURITY DEFINER RPC because direct role updates are RLS-protected.
+      const { error: roleUpdateError } = await supabase.rpc('almc_set_platform_role', {
+        p_org_id: result.organization_id,
+        p_role: orgType,
+      });
+      if (roleUpdateError) throw roleUpdateError;
 
       setStoredOrgId(result.organization_id);
       navigate(almcRoutes.home, { replace: true });

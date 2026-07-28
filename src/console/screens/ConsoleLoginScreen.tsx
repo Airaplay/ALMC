@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { getMyOrganizations } from '../../lib/orgAccess';
+import { getMyOrganizations, OrgType } from '../../lib/orgAccess';
 import { almcRoutes } from '../../lib/almcRoutes';
 import { performCompleteLogout } from '../../lib/logoutService';
 import { toUserFacingAuthError } from '../../lib/criticalErrorMessages';
@@ -13,6 +13,56 @@ import {
   ConsolePasswordToggle,
 } from '../components/ConsoleFormControls';
 
+const ALMC_ORG_TYPE_OPTIONS: Array<{ value: OrgType; label: string }> = [
+  { value: 'label', label: 'Record Label' },
+  { value: 'management', label: 'Management Company' },
+  { value: 'distributor', label: 'Distributor' },
+  { value: 'entertainment', label: 'Entertainment Company' },
+];
+
+const ALMC_ORG_TYPE_VALUES = new Set<string>(ALMC_ORG_TYPE_OPTIONS.map((o) => o.value));
+
+function isOrgType(value: unknown): value is OrgType {
+  return typeof value === 'string' && ALMC_ORG_TYPE_VALUES.has(value);
+}
+
+async function ensureAlmcUserProfile(input: {
+  userId: string;
+  email: string;
+  displayName: string;
+  orgType: OrgType | null;
+}): Promise<void> {
+  const { error: insertError } = await supabase.from('users').insert({
+    id: input.userId,
+    email: input.email,
+    display_name: input.displayName || null,
+    // Platform consumer role — ALMC org roles live on organization_members.
+    // For ALMC accounts, mirror the selected organization type into the platform profile role.
+    role: input.orgType ?? 'listener',
+    country_last_changed_at: new Date().toISOString(),
+  });
+
+  if (
+    insertError &&
+    !insertError.message.includes('duplicate key') &&
+    !insertError.code?.includes('23505')
+  ) {
+    throw insertError;
+  }
+
+  if (input.orgType) {
+    const { error: metaError } = await supabase.auth.updateUser({
+      data: {
+        almc_org_type: input.orgType,
+        signup_source: 'almc',
+      },
+    });
+    if (metaError) {
+      console.error('Failed to persist ALMC org type metadata:', metaError);
+    }
+  }
+}
+
 export function ConsoleLoginScreen(): JSX.Element {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -20,6 +70,7 @@ export function ConsoleLoginScreen(): JSX.Element {
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
+  const [orgType, setOrgType] = useState<OrgType | ''>('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -32,6 +83,7 @@ export function ConsoleLoginScreen(): JSX.Element {
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
   const resendCooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pendingOrgTypeRef = useRef<OrgType | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -97,6 +149,8 @@ export function ConsoleLoginScreen(): JSX.Element {
       setPendingVerification(false);
       setOtpCode('');
       setIsSignUp(false);
+      setOrgType('');
+      pendingOrgTypeRef.current = null;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign out failed');
     } finally {
@@ -114,10 +168,17 @@ export function ConsoleLoginScreen(): JSX.Element {
           setError('Please enter your name.');
           return;
         }
+        if (!isOrgType(orgType)) {
+          setError('Please select your organization type.');
+          return;
+        }
         if (!agreedToTerms) {
           setError('Please accept the Terms & Conditions.');
           return;
         }
+
+        const selectedOrgType = orgType;
+        pendingOrgTypeRef.current = selectedOrgType;
 
         const authRedirectBase =
           (import.meta.env.VITE_AIRAPLAY_CONSUMER_URL as string | undefined)?.replace(/\/$/, '') ||
@@ -127,35 +188,29 @@ export function ConsoleLoginScreen(): JSX.Element {
           email: email.trim(),
           password,
           options: {
-            data: { display_name: displayName.trim() },
+            data: {
+              display_name: displayName.trim(),
+              almc_org_type: selectedOrgType,
+              signup_source: 'almc',
+            },
             emailRedirectTo: `${authRedirectBase}/auth/callback`,
           },
         });
         if (signUpError) throw signUpError;
 
-        if (data.user) {
-          const { error: insertError } = await supabase.from('users').insert({
-            id: data.user.id,
+        if (data.user && data.session) {
+          await ensureAlmcUserProfile({
+            userId: data.user.id,
             email: data.user.email || email.trim(),
-            display_name: displayName.trim(),
-            role: 'listener',
-            country_last_changed_at: new Date().toISOString(),
+            displayName: displayName.trim(),
+            orgType: selectedOrgType,
           });
-          if (
-            insertError &&
-            !insertError.message.includes('duplicate key') &&
-            !insertError.code?.includes('23505')
-          ) {
-            console.error('Failed to create user record:', insertError);
-          }
-        }
-
-        if (data.session) {
-          setSignedInEmail(data.user?.email ?? email.trim());
+          setSignedInEmail(data.user.email ?? email.trim());
           await routeAfterLogin();
           return;
         }
 
+        // Email confirmation required — profile is written after OTP verify (needs a session).
         setPendingVerification(true);
         setOtpCode('');
         startResendCooldown();
@@ -187,12 +242,28 @@ export function ConsoleLoginScreen(): JSX.Element {
     setIsVerifyingOtp(true);
     setError(null);
     try {
-      const { error: verifyError } = await supabase.auth.verifyOtp({
+      const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
         email: email.trim(),
         token: code,
         type: 'email',
       });
       if (verifyError) throw verifyError;
+
+      const verifiedUser = verifyData.user;
+      if (verifiedUser) {
+        const metaOrgType = verifiedUser.user_metadata?.almc_org_type;
+        const selectedOrgType = pendingOrgTypeRef.current
+          ?? (isOrgType(metaOrgType) ? metaOrgType : null);
+        await ensureAlmcUserProfile({
+          userId: verifiedUser.id,
+          email: verifiedUser.email || email.trim(),
+          displayName:
+            displayName.trim() ||
+            String(verifiedUser.user_metadata?.display_name ?? '').trim(),
+          orgType: selectedOrgType,
+        });
+      }
+
       setSignedInEmail(email.trim());
       setPendingVerification(false);
       await routeAfterLogin();
@@ -276,6 +347,7 @@ export function ConsoleLoginScreen(): JSX.Element {
                     setIsSignUp((value) => !value);
                     setError(null);
                     setPendingVerification(false);
+                    setOrgType('');
                   }}
                   className={glassLink}
                 >
@@ -360,6 +432,28 @@ export function ConsoleLoginScreen(): JSX.Element {
               </div>
             )}
 
+            {isSignUp && (
+              <div>
+                <label className={glassLabel} htmlFor="almc-org-type">Organization type</label>
+                <select
+                  id="almc-org-type"
+                  required
+                  value={orgType}
+                  onChange={(e) => setOrgType(e.target.value as OrgType | '')}
+                  className={glassInput}
+                >
+                  <option value="" disabled>
+                    Select your organization type
+                  </option>
+                  {ALMC_ORG_TYPE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div>
               <label className={glassLabel} htmlFor="almc-email">Email</label>
               <input
@@ -417,7 +511,7 @@ export function ConsoleLoginScreen(): JSX.Element {
 
             <button
               type="submit"
-              disabled={isSubmitting || (isSignUp && !agreedToTerms)}
+              disabled={isSubmitting || (isSignUp && (!agreedToTerms || !orgType))}
               className={glassBtn}
             >
               {isSubmitting
