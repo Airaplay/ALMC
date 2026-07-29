@@ -57,17 +57,55 @@ export function ArtistPromotePanel({ artist, onBack }: ArtistPromotePanelProps) 
 
   if (selected) {
     return (
-      <AlmcPromotionSetupModal
-        promotionType={selected.promotion_type}
-        targetId={selected.id}
-        targetTitle={selected.title}
-        targetCoverUrl={selected.cover_url}
-        onClose={() => setSelected(null)}
-        onSuccess={() => {
-          setSelected(null);
-          loadItems();
-        }}
-      />
+      <>
+        {/* Keep roster chrome mounted under the portal so closing modals never blanks the page */}
+        <div className="space-y-6" aria-hidden>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 space-y-3">
+              <button
+                type="button"
+                onClick={onBack}
+                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to artists
+              </button>
+              <div className="flex min-w-0 items-center gap-3">
+                {artist.profile_photo_url ? (
+                  <img
+                    src={artist.profile_photo_url}
+                    alt=""
+                    className="h-12 w-12 shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold">
+                    {artist.stage_name.charAt(0)}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <h2 className="break-words text-2xl font-semibold text-foreground">
+                    Promote {artist.stage_name}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Boost releases using treats from your wallet
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <AlmcPromotionSetupModal
+          promotionType={selected.promotion_type}
+          targetId={selected.id}
+          targetTitle={selected.title}
+          targetCoverUrl={selected.cover_url}
+          onClose={() => setSelected(null)}
+          onSuccess={() => {
+            setSelected(null);
+            loadItems();
+          }}
+        />
+      </>
     );
   }
 

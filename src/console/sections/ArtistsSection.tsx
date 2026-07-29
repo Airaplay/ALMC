@@ -417,7 +417,9 @@ export function ArtistsSection({
 
   if (promoteArtist) {
     return (
-      <ArtistPromotePanel artist={promoteArtist} onBack={() => setPromoteArtist(null)} />
+      <div className="min-h-[50vh]">
+        <ArtistPromotePanel artist={promoteArtist} onBack={() => setPromoteArtist(null)} />
+      </div>
     );
   }
 

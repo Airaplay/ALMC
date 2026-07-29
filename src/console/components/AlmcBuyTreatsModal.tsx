@@ -113,6 +113,7 @@ export function AlmcBuyTreatsModal({ onClose, onSuccess }: AlmcBuyTreatsModalPro
       onClose={onClose}
       footer={footer}
       size="lg"
+      layer="nested"
     >
       {loading ? (
         <div className="flex min-h-[200px] items-center justify-center">

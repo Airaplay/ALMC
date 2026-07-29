@@ -538,6 +538,7 @@ export const PromotionSetupModal = ({
           onClose={onClose}
           size="xl"
           footer={almcActionFooter}
+          inert={showTopUpModal || showConfirmation}
         >
           <div className="space-y-5">
             <div className={`${consoleTheme.banner} flex items-center gap-3 p-4`}>
