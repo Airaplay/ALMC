@@ -32,7 +32,7 @@ import { LoadingLogo } from '../../components/LoadingLogo';
 import { AddArtistModal } from '../components/AddArtistModal';
 import { ArtistContentPanel } from '../components/ArtistContentPanel';
 import { ArtistPromotePanel } from '../components/ArtistPromotePanel';
-import { almcRoutes } from '../../lib/almcRoutes';
+import { PurchaseTreatsModal } from '../../components/PurchaseStreatsModal';
 
 const PAGE_SIZE = 12;
 
@@ -108,6 +108,7 @@ export function ArtistsSection({
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [contentArtist, setContentArtist] = useState<OrgArtistItem | null>(null);
   const [promoteArtist, setPromoteArtist] = useState<OrgArtistItem | null>(null);
+  const [showBuyTreatsModal, setShowBuyTreatsModal] = useState(false);
   const [updatingSplitArtistId, setUpdatingSplitArtistId] = useState<string | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -429,15 +430,14 @@ export function ArtistsSection({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {hasPermission('treats.buy') && (
-            <a
-              href={almcRoutes.consumerBuyTreats()}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => setShowBuyTreatsModal(true)}
               className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
             >
               <Coins className="h-4 w-4" />
               Buy Treats
-            </a>
+            </button>
           )}
           {hasPermission('artists.invite') && (
             <button
@@ -663,6 +663,13 @@ export function ArtistsSection({
           onSuccess={loadArtists}
           initialEmail={verifyEmail}
           initialStep={verifyEmail ? 'verify' : 'details'}
+        />
+      )}
+
+      {showBuyTreatsModal && (
+        <PurchaseTreatsModal
+          onClose={() => setShowBuyTreatsModal(false)}
+          onSuccess={() => setShowBuyTreatsModal(false)}
         />
       )}
     </div>

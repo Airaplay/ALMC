@@ -18,6 +18,7 @@ import { Currency, CurrencyDetectionResult, formatCurrencyAmount } from '../lib/
 import { CurrencySelector } from './CurrencySelector';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
+import { isAlmcConsoleApp } from '../lib/almcPayments';
 
 interface PaymentChannelSelectorProps {
   /** Amount shown to the user and charged in their selected currency */
@@ -120,6 +121,13 @@ export const PaymentChannelSelector: React.FC<PaymentChannelSelectorProps> = ({
   const handlePayment = async () => {
     if (!selectedChannel) {
       onPaymentError('Please select a payment method');
+      return;
+    }
+
+    if (isAlmcConsoleApp() && selectedChannel.channel_type !== 'flutterwave') {
+      const msg = 'ALMC treat purchases are only available via Flutterwave.';
+      setError(msg);
+      onPaymentError(msg);
       return;
     }
 
@@ -684,6 +692,11 @@ export const PaymentChannelSelector: React.FC<PaymentChannelSelectorProps> = ({
   const hasOnlyGooglePlayChannel =
     paymentChannels.length === 1 && paymentChannels[0]?.channel_type === 'google_play';
 
+  const hasOnlyFlutterwaveChannel =
+    paymentChannels.length === 1 && paymentChannels[0]?.channel_type === 'flutterwave';
+
+  const hidePaymentMethodPicker = hasOnlyGooglePlayChannel || hasOnlyFlutterwaveChannel;
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -735,9 +748,11 @@ export const PaymentChannelSelector: React.FC<PaymentChannelSelectorProps> = ({
             No Payment Methods Available
           </h3>
           <p className="font-['Inter',sans-serif] text-white/70 text-sm">
-            {Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android'
-              ? 'Google Play Billing is not set up yet. Ask an admin to add and enable a Google Play payment channel with product IDs for each treat package.'
-              : 'Payment methods are currently being set up. Please try again later.'}
+            {isAlmcConsoleApp()
+              ? 'Flutterwave is not enabled yet. Ask an admin to enable the Flutterwave payment channel for treat purchases.'
+              : Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android'
+                ? 'Google Play Billing is not set up yet. Ask an admin to add and enable a Google Play payment channel with product IDs for each treat package.'
+                : 'Payment methods are currently being set up. Please try again later.'}
           </p>
         </div>
         <button
@@ -782,7 +797,7 @@ export const PaymentChannelSelector: React.FC<PaymentChannelSelectorProps> = ({
         />
       </div>
 
-      {!hasOnlyGooglePlayChannel && (
+      {!hidePaymentMethodPicker && (
         <div className="rounded-3xl border border-white/[0.07] bg-white/[0.03] p-5">
           <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 font-['Inter',sans-serif] mb-3">
             Choose Payment Method

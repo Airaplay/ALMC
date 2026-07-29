@@ -2,6 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { supabase } from './supabase';
 import { CurrencyDetectionResult } from './currencyDetection';
 import { configCache, CACHE_KEYS } from './configCache';
+import { filterTreatPaymentChannelsForAlmc, isAlmcConsoleApp } from './almcPayments';
 
 export interface PaymentChannel {
   id: string;
@@ -65,6 +66,9 @@ export const getEnabledPaymentChannels = async (): Promise<PaymentChannel[]> => 
  */
 export const getEnabledTreatPaymentChannels = async (): Promise<PaymentChannel[]> => {
   const rows = await getEnabledPaymentChannels();
+  if (isAlmcConsoleApp()) {
+    return filterTreatPaymentChannelsForAlmc(rows);
+  }
   const androidNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
   if (androidNative) {
     const play = rows.filter((c) => c.channel_type === 'google_play');
@@ -254,6 +258,13 @@ export const processPayment = async (
 
     if (!channel) {
       throw new Error('Payment channel not found or disabled');
+    }
+
+    if (isAlmcConsoleApp() && channel.channel_type !== 'flutterwave') {
+      return {
+        success: false,
+        error: 'ALMC treat purchases are only available via Flutterwave.',
+      };
     }
 
     if (channel.channel_type === 'google_play') {
