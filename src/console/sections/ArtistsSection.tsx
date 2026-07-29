@@ -290,7 +290,7 @@ export function ArtistsSection({
               onClick={() => void handleSetArtistSplit(artist)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs text-secondary-foreground hover:bg-muted disabled:opacity-50"
             >
-              {updatingSplitArtistId === artist.link_id ? 'Saving…' : 'Set split'}
+              {updatingSplitArtistId === artist.link_id ? 'Saving…' : 'Royalty Split'}
             </button>
           )}
         </>

@@ -803,6 +803,7 @@ export const PaymentChannelSelector: React.FC<PaymentChannelSelectorProps> = ({
       <div className={panelCls}>
         <p className={`${labelCls} mb-3`}>Payment currency</p>
         <CurrencySelector
+          theme={isAlmcTheme ? 'almc' : 'consumer'}
           selectedCurrency={currencyData.currency}
           onCurrencyChange={onCurrencyChange}
           detectedCountry={currencyData.country}
