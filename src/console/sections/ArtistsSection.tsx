@@ -32,7 +32,7 @@ import { LoadingLogo } from '../../components/LoadingLogo';
 import { AddArtistModal } from '../components/AddArtistModal';
 import { ArtistContentPanel } from '../components/ArtistContentPanel';
 import { ArtistPromotePanel } from '../components/ArtistPromotePanel';
-import { PurchaseTreatsModal } from '../../components/PurchaseStreatsModal';
+import { AlmcBuyTreatsModal } from '../components/AlmcBuyTreatsModal';
 
 const PAGE_SIZE = 12;
 
@@ -667,7 +667,7 @@ export function ArtistsSection({
       )}
 
       {showBuyTreatsModal && (
-        <PurchaseTreatsModal
+        <AlmcBuyTreatsModal
           onClose={() => setShowBuyTreatsModal(false)}
           onSuccess={() => setShowBuyTreatsModal(false)}
         />

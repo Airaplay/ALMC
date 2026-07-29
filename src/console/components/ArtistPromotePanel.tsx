@@ -7,7 +7,7 @@ import {
   OrgPromotableItem,
 } from '../../lib/orgAccess';
 import { LoadingLogo } from '../../components/LoadingLogo';
-import { PromotionSetupModal } from '../../components/PromotionSetupModal';
+import { AlmcPromotionSetupModal } from './AlmcPromotionSetupModal';
 import { consoleTheme } from '../consoleTheme';
 
 interface ArtistPromotePanelProps {
@@ -54,6 +54,22 @@ export function ArtistPromotePanel({ artist, onBack }: ArtistPromotePanelProps) 
   useEffect(() => {
     loadItems();
   }, [loadItems]);
+
+  if (selected) {
+    return (
+      <AlmcPromotionSetupModal
+        promotionType={selected.promotion_type}
+        targetId={selected.id}
+        targetTitle={selected.title}
+        targetCoverUrl={selected.cover_url}
+        onClose={() => setSelected(null)}
+        onSuccess={() => {
+          setSelected(null);
+          loadItems();
+        }}
+      />
+    );
+  }
 
   if (!hasPermission('content.promote')) {
     return (
@@ -164,19 +180,6 @@ export function ArtistPromotePanel({ artist, onBack }: ArtistPromotePanelProps) 
         </div>
       )}
 
-      {selected && (
-        <PromotionSetupModal
-          promotionType={selected.promotion_type}
-          targetId={selected.id}
-          targetTitle={selected.title}
-          targetCoverUrl={selected.cover_url}
-          onClose={() => setSelected(null)}
-          onSuccess={() => {
-            setSelected(null);
-            loadItems();
-          }}
-        />
-      )}
     </div>
   );
 }

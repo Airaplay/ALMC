@@ -19,6 +19,7 @@ import { CurrencySelector } from './CurrencySelector';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { isAlmcConsoleApp } from '../lib/almcPayments';
+import { consoleTheme } from '../console/consoleTheme';
 
 interface PaymentChannelSelectorProps {
   /** Amount shown to the user and charged in their selected currency */
@@ -32,6 +33,7 @@ interface PaymentChannelSelectorProps {
   onPaymentSuccess: React.Dispatch<Record<string, unknown>>;
   onPaymentError: React.Dispatch<string>;
   onCancel: () => void;
+  theme?: 'consumer' | 'almc';
 }
 
 interface PaymentProcessingState {
@@ -73,8 +75,33 @@ export const PaymentChannelSelector: React.FC<PaymentChannelSelectorProps> = ({
   onCurrencyChange,
   onPaymentSuccess,
   onPaymentError,
-  onCancel
+  onCancel,
+  theme = 'consumer',
 }) => {
+  const isAlmcTheme = theme === 'almc' || isAlmcConsoleApp();
+  const panelCls = isAlmcTheme
+    ? `${consoleTheme.card} p-5`
+    : 'rounded-3xl border border-white/[0.07] bg-white/[0.03] p-5';
+  const labelCls = isAlmcTheme
+    ? consoleTheme.label
+    : "text-[10px] font-bold uppercase tracking-widest text-white/30 font-['Inter',sans-serif]";
+  const cancelBtnCls = isAlmcTheme
+    ? `${consoleTheme.btnSecondary} flex-1 h-12`
+    : "flex-1 h-12 bg-white/[0.05] border border-white/[0.07] rounded-2xl font-['Inter',sans-serif] font-semibold text-white/60 active:bg-white/[0.08] transition-all duration-200 disabled:opacity-50";
+  const payBtnCls = isAlmcTheme
+    ? `${consoleTheme.btnPrimary} flex-1 h-12 disabled:opacity-40`
+    : "flex-1 h-12 bg-white text-black disabled:opacity-40 disabled:cursor-not-allowed rounded-2xl font-['Inter',sans-serif] font-black transition-all duration-200 active:scale-[0.98]";
+  const channelSelectedCls = isAlmcTheme
+    ? 'border-[var(--almc-lime-deep)]/40 bg-[var(--almc-lime)]/10'
+    : 'bg-[#00ad74]/10 border-[#00ad74]/20';
+  const channelDefaultCls = isAlmcTheme
+    ? 'border-border bg-card hover:bg-muted'
+    : 'bg-white/[0.04] border-white/[0.07] active:bg-white/[0.08]';
+  const summaryCls = isAlmcTheme
+    ? `${consoleTheme.card} p-4`
+    : 'p-4 bg-white/[0.03] border border-white/[0.07] rounded-3xl';
+  const spinnerBorder = isAlmcTheme ? 'border-[var(--almc-lime-deep)]' : 'border-[#00ad74]';
+  const mutedText = isAlmcTheme ? 'text-muted-foreground' : "text-white/60 font-['Inter',sans-serif]";
   const [paymentChannels, setPaymentChannels] = useState<PaymentChannel[]>([]);
   const [selectedChannel, setSelectedChannel] = useState<PaymentChannel | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -700,11 +727,9 @@ export const PaymentChannelSelector: React.FC<PaymentChannelSelectorProps> = ({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-center py-8 rounded-3xl border border-white/[0.07] bg-white/[0.03]">
-          <div className="w-5 h-5 border-2 border-[#00ad74] border-t-transparent rounded-full animate-spin"></div>
-          <p className="font-['Inter',sans-serif] text-white/60 text-sm ml-3">
-            Loading payment options...
-          </p>
+        <div className={`flex items-center justify-center py-8 ${isAlmcTheme ? consoleTheme.card : 'rounded-3xl border border-white/[0.07] bg-white/[0.03]'}`}>
+          <div className={`w-5 h-5 border-2 ${spinnerBorder} border-t-transparent rounded-full animate-spin`} />
+          <p className={`text-sm ml-3 ${mutedText}`}>Loading payment options...</p>
         </div>
       </div>
     );
@@ -720,16 +745,10 @@ export const PaymentChannelSelector: React.FC<PaymentChannelSelectorProps> = ({
           </div>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            className="flex-1 h-12 bg-white/[0.05] border border-white/[0.07] rounded-2xl font-['Inter',sans-serif] font-semibold text-white/60 active:bg-white/[0.08] transition-all duration-200"
-          >
+          <button onClick={onCancel} className={cancelBtnCls}>
             Cancel
           </button>
-          <button
-            onClick={loadPaymentChannels}
-            className="flex-1 h-12 bg-white rounded-2xl font-['Inter',sans-serif] font-black text-black active:scale-[0.98] transition-all duration-200"
-          >
+          <button onClick={loadPaymentChannels} className={payBtnCls}>
             Retry
           </button>
         </div>
@@ -755,10 +774,7 @@ export const PaymentChannelSelector: React.FC<PaymentChannelSelectorProps> = ({
                 : 'Payment methods are currently being set up. Please try again later.'}
           </p>
         </div>
-        <button
-          onClick={onCancel}
-          className="w-full h-12 bg-white rounded-2xl font-['Inter',sans-serif] font-black text-black active:scale-[0.98] transition-all duration-200"
-        >
+        <button onClick={onCancel} className={isAlmcTheme ? `${consoleTheme.btnPrimary} w-full h-12` : "w-full h-12 bg-white rounded-2xl font-['Inter',sans-serif] font-black text-black active:scale-[0.98] transition-all duration-200"}>
           Close
         </button>
       </div>
@@ -784,11 +800,8 @@ export const PaymentChannelSelector: React.FC<PaymentChannelSelectorProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Currency Selector */}
-      <div className="rounded-3xl border border-white/[0.07] bg-white/[0.03] p-5">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 font-['Inter',sans-serif] mb-3">
-          Payment Currency
-        </p>
+      <div className={panelCls}>
+        <p className={`${labelCls} mb-3`}>Payment currency</p>
         <CurrencySelector
           selectedCurrency={currencyData.currency}
           onCurrencyChange={onCurrencyChange}
@@ -798,10 +811,8 @@ export const PaymentChannelSelector: React.FC<PaymentChannelSelectorProps> = ({
       </div>
 
       {!hidePaymentMethodPicker && (
-        <div className="rounded-3xl border border-white/[0.07] bg-white/[0.03] p-5">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 font-['Inter',sans-serif] mb-3">
-            Choose Payment Method
-          </p>
+        <div className={panelCls}>
+          <p className={`${labelCls} mb-3`}>Payment method</p>
 
           <div className="space-y-3">
             {paymentChannels.map((channel) => (
@@ -809,41 +820,39 @@ export const PaymentChannelSelector: React.FC<PaymentChannelSelectorProps> = ({
                 key={channel.id}
                 onClick={() => setSelectedChannel(channel)}
                 className={`w-full text-left rounded-2xl px-4 py-4 transition-all duration-200 border ${
-                  selectedChannel?.id === channel.id
-                    ? 'bg-[#00ad74]/10 border-[#00ad74]/20'
-                    : 'bg-white/[0.04] border-white/[0.07] active:bg-white/[0.08]'
+                  selectedChannel?.id === channel.id ? channelSelectedCls : channelDefaultCls
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                       selectedChannel?.id === channel.id
-                        ? 'bg-[#00ad74]/15 text-[#00ad74]'
-                        : 'bg-white/[0.08] text-white/60'
+                        ? isAlmcTheme
+                          ? `${consoleTheme.iconWell}`
+                          : 'bg-[#00ad74]/15 text-[#00ad74]'
+                        : isAlmcTheme
+                          ? 'bg-muted text-muted-foreground'
+                          : 'bg-white/[0.08] text-white/60'
                     }`}>
                       {channel.icon_url ? (
-                        <img
-                          src={channel.icon_url}
-                          alt={channel.channel_name}
-                          className="w-6 h-6 object-contain"
-                        />
+                        <img src={channel.icon_url} alt={channel.channel_name} className="w-6 h-6 object-contain" />
                       ) : (
                         getChannelIcon(channel.channel_type)
                       )}
                     </div>
                     <div>
-                      <h4 className="font-['Inter',sans-serif] font-semibold text-white text-sm">
+                      <h4 className={`font-semibold text-sm ${isAlmcTheme ? 'text-foreground' : 'text-white'}`}>
                         {getChannelDisplayName(channel)}
                       </h4>
-                      <p className="font-['Inter',sans-serif] text-white/40 text-[11px]">
+                      <p className={`text-[11px] ${isAlmcTheme ? 'text-muted-foreground' : 'text-white/40'}`}>
                         {getChannelDescription(channel.channel_type)}
                       </p>
                     </div>
                   </div>
 
                   {selectedChannel?.id === channel.id && (
-                    <div className="w-5 h-5 bg-[#00ad74] rounded-full flex items-center justify-center">
-                      <Check className="w-3 h-3 text-black" />
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isAlmcTheme ? 'bg-[var(--almc-lime-deep)]' : 'bg-[#00ad74]'}`}>
+                      <Check className={`w-3 h-3 ${isAlmcTheme ? 'text-white' : 'text-black'}`} />
                     </div>
                   )}
                 </div>
@@ -854,29 +863,29 @@ export const PaymentChannelSelector: React.FC<PaymentChannelSelectorProps> = ({
       )}
 
       {error && (
-        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-2xl">
+        <div className={`p-3 rounded-2xl ${isAlmcTheme ? 'border border-red-500/30 bg-red-500/10' : 'bg-red-500/10 border border-red-500/20'}`}>
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-red-400" />
-            <p className="font-['Inter',sans-serif] text-red-400 text-sm">{error}</p>
+            <p className={`text-sm ${isAlmcTheme ? 'text-red-400' : 'text-red-400 font-[\'Inter\',sans-serif]'}`}>{error}</p>
           </div>
         </div>
       )}
 
       {selectedChannel && (
-        <div className="p-4 bg-white/[0.03] border border-white/[0.07] rounded-3xl">
-          <h4 className="font-['Inter',sans-serif] font-medium text-white/80 text-sm mb-3">
-            Payment Summary
+        <div className={summaryCls}>
+          <h4 className={`font-medium text-sm mb-3 ${isAlmcTheme ? 'text-foreground' : 'text-white/80'}`}>
+            Payment summary
           </h4>
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="font-['Inter',sans-serif] text-white/70 text-sm">Amount:</span>
-              <span className="font-['Inter',sans-serif] font-bold text-white text-lg">
+              <span className={`text-sm ${isAlmcTheme ? 'text-muted-foreground' : 'text-white/70'}`}>Amount:</span>
+              <span className={`font-bold text-lg tabular-nums ${isAlmcTheme ? 'text-foreground' : 'text-white'}`}>
                 {formatCurrencyAmount(amount, currencyData.currency)}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="font-['Inter',sans-serif] text-white/60 text-xs">Currency:</span>
-              <span className="font-['Inter',sans-serif] text-white/60 text-xs">
+              <span className={`text-xs ${isAlmcTheme ? 'text-muted-foreground' : 'text-white/60'}`}>Currency:</span>
+              <span className={`text-xs ${isAlmcTheme ? 'text-muted-foreground' : 'text-white/60'}`}>
                 {currencyData.currency.code} - {currencyData.currency.name}
               </span>
             </div>
@@ -885,21 +894,13 @@ export const PaymentChannelSelector: React.FC<PaymentChannelSelectorProps> = ({
       )}
 
       <div className="flex gap-3">
-        <button
-          onClick={onCancel}
-          disabled={isProcessing}
-          className="flex-1 h-12 bg-white/[0.05] border border-white/[0.07] rounded-2xl font-['Inter',sans-serif] font-semibold text-white/60 active:bg-white/[0.08] transition-all duration-200 disabled:opacity-50"
-        >
+        <button onClick={onCancel} disabled={isProcessing} className={cancelBtnCls}>
           Cancel
         </button>
-        <button
-          onClick={handlePayment}
-          disabled={!selectedChannel || isProcessing}
-          className="flex-1 h-12 bg-white text-black disabled:opacity-40 disabled:cursor-not-allowed rounded-2xl font-['Inter',sans-serif] font-black transition-all duration-200 active:scale-[0.98]"
-        >
+        <button onClick={handlePayment} disabled={!selectedChannel || isProcessing} className={payBtnCls}>
           {isProcessing ? (
             <div className="flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-black/70 border-t-transparent rounded-full animate-spin"></div>
+              <div className={`w-4 h-4 border-2 ${spinnerBorder} border-t-transparent rounded-full animate-spin`} />
               Processing...
             </div>
           ) : (

@@ -3,14 +3,18 @@ import { X, Calendar, Clock, Coins, TrendingUp, AlertCircle, Gift, Loader2, Chec
 import { supabase } from '../lib/supabase';
 import { PurchaseTreatsModal } from './PurchaseStreatsModal';
 import { CustomConfirmModal } from './CustomConfirmModal';
+import { AlmcModalShell } from '../console/components/AlmcModalShell';
+import { AlmcBuyTreatsModal } from '../console/components/AlmcBuyTreatsModal';
+import { consoleTheme } from '../console/consoleTheme';
 
-interface PromotionSetupModalProps {
+export interface PromotionSetupModalProps {
   promotionType: 'song' | 'video' | 'profile' | 'album' | 'short_clip' | 'playlist';
   targetId: string | null;
   targetTitle: string;
   targetCoverUrl?: string | null;
   onClose: () => void;
   onSuccess: () => void;
+  variant?: 'consumer' | 'almc';
 }
 
 interface PromotionSection {
@@ -36,8 +40,10 @@ export const PromotionSetupModal = ({
   targetTitle,
   targetCoverUrl,
   onClose,
-  onSuccess
+  onSuccess,
+  variant = 'consumer',
 }: PromotionSetupModalProps): JSX.Element => {
+  const isAlmc = variant === 'almc';
   const [promotionSections, setPromotionSections] = useState<PromotionSection[]>([]);
   const [selectedSection, setSelectedSection] = useState<PromotionSection | null>(null);
   const [durationDays, setDurationDays] = useState<number>(1);
@@ -355,9 +361,25 @@ export const PromotionSetupModal = ({
     return labels[promotionType] || 'Content';
   };
 
-  const inputCls = 'w-full h-11 bg-white/[0.04] border border-white/[0.07] rounded-2xl px-4 text-white/90 text-sm outline-none focus:border-[#00ad74]/40 focus:bg-white/[0.06] transition-all font-["Inter",sans-serif] [color-scheme:dark]';
+  const inputCls = isAlmc
+    ? `${consoleTheme.input} w-full [color-scheme:light] dark:[color-scheme:dark]`
+    : 'w-full h-11 bg-white/[0.04] border border-white/[0.07] rounded-2xl px-4 text-white/90 text-sm outline-none focus:border-[#00ad74]/40 focus:bg-white/[0.06] transition-all font-["Inter",sans-serif] [color-scheme:dark]';
 
   if (isLoading) {
+    if (isAlmc) {
+      return (
+        <AlmcModalShell
+          title="Setup boost"
+          subtitle="Promote your content on Airaplay."
+          onClose={onClose}
+          size="xl"
+        >
+          <div className="flex min-h-[220px] items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </AlmcModalShell>
+      );
+    }
     return (
       <div className="fixed inset-0 bg-[#0a0a0a] z-[110] flex flex-col">
         <header className="px-5 pt-6 pb-4 border-b border-white/[0.04] flex items-center gap-3">
@@ -377,6 +399,36 @@ export const PromotionSetupModal = ({
   }
 
   if (error && promotionSections.length === 0) {
+    if (isAlmc) {
+      return (
+        <AlmcModalShell
+          title="Setup boost"
+          subtitle="Promote your content on Airaplay."
+          onClose={onClose}
+          size="xl"
+        >
+          <div className="flex flex-col items-center gap-4 py-8 text-center">
+            <AlertCircle className="h-10 w-10 text-red-400" />
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <div className="flex w-full max-w-sm gap-3">
+              <button type="button" onClick={onClose} className={`${consoleTheme.btnSecondary} flex-1`}>
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  loadData();
+                }}
+                className={`${consoleTheme.btnPrimary} flex-1`}
+              >
+                Try again
+              </button>
+            </div>
+          </div>
+        </AlmcModalShell>
+      );
+    }
     return (
       <div className="fixed inset-0 bg-[#0a0a0a] z-[110] flex flex-col">
         <header className="px-5 pt-6 pb-4 border-b border-white/[0.04] flex items-center gap-3">
@@ -413,6 +465,265 @@ export const PromotionSetupModal = ({
           </div>
         </div>
       </div>
+    );
+  }
+
+  const topUpModal = showTopUpModal ? (
+    isAlmc ? (
+      <AlmcBuyTreatsModal
+        onClose={() => setShowTopUpModal(false)}
+        onSuccess={() => {
+          setShowTopUpModal(false);
+          void loadWallet();
+        }}
+      />
+    ) : (
+      <PurchaseTreatsModal
+        onClose={() => setShowTopUpModal(false)}
+        onSuccess={() => {
+          setShowTopUpModal(false);
+          void loadWallet();
+        }}
+      />
+    )
+  ) : null;
+
+  const confirmModal = (
+    <CustomConfirmModal
+      isOpen={showConfirmation}
+      title="Confirm promotion"
+      message={`You are about to boost "${targetTitle}" in ${selectedSection?.section_name} for ${durationDays} day${durationDays !== 1 ? 's' : ''} at a cost of ${calculateCost().toLocaleString()} treats. After this promotion, your balance will be ${((wallet?.balance || 0) - calculateCost()).toLocaleString()} treats. This action cannot be undone.`}
+      confirmText="Confirm boost"
+      cancelText="Cancel"
+      variant="warning"
+      onConfirm={handleConfirmPromotion}
+      onCancel={() => setShowConfirmation(false)}
+    />
+  );
+
+  const almcActionFooter = (
+    <div className="flex gap-3">
+      <button
+        type="button"
+        onClick={onClose}
+        disabled={isSubmitting}
+        className={`${consoleTheme.btnSecondary} flex-1 disabled:opacity-40`}
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        onClick={handleContinueClick}
+        disabled={isSubmitting || !startDate || !endDate || !startTime || !selectedSection || durationDays < 1}
+        className={`${consoleTheme.btnLime} flex-1 inline-flex items-center justify-center gap-2 disabled:opacity-40`}
+      >
+        {isSubmitting ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <>
+            <TrendingUp className="h-4 w-4" />
+            Start boost
+          </>
+        )}
+      </button>
+    </div>
+  );
+
+  if (isAlmc) {
+    return (
+      <>
+        <AlmcModalShell
+          title="Setup boost"
+          subtitle="Promote your content on Airaplay."
+          onClose={onClose}
+          size="xl"
+          footer={almcActionFooter}
+        >
+          <div className="space-y-5">
+            <div className={`${consoleTheme.banner} flex items-center gap-3 p-4`}>
+              {coverImageUrl ? (
+                <img
+                  src={coverImageUrl}
+                  alt={targetTitle}
+                  className="h-12 w-12 shrink-0 rounded-xl object-cover"
+                />
+              ) : (
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--almc-lime)]/20">
+                  <Gift className="h-6 w-6 text-[var(--almc-lime-deep)]" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className={consoleTheme.label}>Boosting {getPromotionTypeLabel()}</p>
+                <p className="mt-0.5 truncate font-semibold text-foreground">{targetTitle}</p>
+              </div>
+            </div>
+
+            {wallet ? (
+              <div className={`${consoleTheme.card} flex flex-wrap items-center gap-4 p-4`}>
+                <div className={consoleTheme.iconWell}>
+                  <Coins className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={consoleTheme.label}>Available balance</p>
+                  <p className="text-xl font-bold tabular-nums text-foreground">
+                    {wallet.balance.toLocaleString()}{' '}
+                    <span className="text-sm font-medium text-muted-foreground">treats</span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTopUpModal(true)}
+                  className={consoleTheme.btnSecondary}
+                >
+                  Top up
+                </button>
+              </div>
+            ) : null}
+
+            <div className={`${consoleTheme.card} p-5`}>
+              <p className={`${consoleTheme.label} mb-4`}>Duration</p>
+              <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="mb-1.5 text-xs text-muted-foreground">Start date</p>
+                  <div className="relative">
+                    <Calendar className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className={`${inputCls} pl-9`}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-1.5 text-xs text-muted-foreground">End date</p>
+                  <div className="relative">
+                    <Calendar className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      min={startDate || new Date().toISOString().split('T')[0]}
+                      className={`${inputCls} pl-9`}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <p className="mb-1.5 text-xs text-muted-foreground">Start time</p>
+                <div className="relative">
+                  <Clock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className={`${inputCls} pl-9`}
+                  />
+                </div>
+              </div>
+              {durationDays > 0 && selectedSection ? (
+                <div className="mt-4 space-y-2 border-t border-border/60 pt-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Duration</span>
+                    <span className="font-medium tabular-nums">
+                      {durationDays} day{durationDays !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Per day</span>
+                    <span className="font-medium tabular-nums">
+                      {Number(selectedSection.treats_cost).toLocaleString()} treats
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-border/60 pt-2">
+                    <span className="font-semibold">Total cost</span>
+                    <span className="flex items-center gap-1.5 text-lg font-bold tabular-nums">
+                      <Coins className="h-4 w-4 text-[var(--almc-lime-deep)]" />
+                      {calculateCost().toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className={`${consoleTheme.card} p-5`}>
+              <p className={`${consoleTheme.label} mb-4`}>Boost section</p>
+              {promotionSections.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  No sections available for this content type.
+                </p>
+              ) : (
+                <div className="space-y-2.5">
+                  {promotionSections.map((section) => {
+                    const isUnavailable = section.is_available === false;
+                    const isSelected = selectedSection?.id === section.id;
+                    return (
+                      <button
+                        key={section.id}
+                        type="button"
+                        onClick={() => !isUnavailable && setSelectedSection(section)}
+                        disabled={isUnavailable}
+                        className={`w-full rounded-2xl border p-4 text-left transition-all ${
+                          isUnavailable
+                            ? 'cursor-not-allowed border-red-500/20 bg-red-500/5 opacity-60'
+                            : isSelected
+                              ? 'border-[var(--almc-lime-deep)]/40 bg-[var(--almc-lime)]/10 ring-2 ring-[var(--almc-lime-deep)]/20'
+                              : `${consoleTheme.cardInner} hover:bg-muted/80`
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-foreground">{section.section_name}</p>
+                            {section.description ? (
+                              <p className="mt-0.5 text-xs text-muted-foreground">{section.description}</p>
+                            ) : null}
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="font-bold tabular-nums text-foreground">
+                              {Number(section.treats_cost).toLocaleString()}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">per day</p>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className={`${consoleTheme.cardInner} space-y-1.5 p-4`}>
+              <p className={consoleTheme.label}>How it works</p>
+              {[
+                'Boosts run in full 24-hour periods',
+                'Price is per day — multiply for longer runs',
+                'Treats are deducted upon confirmation',
+              ].map((item) => (
+                <p key={item} className="text-xs text-muted-foreground">
+                  · {item}
+                </p>
+              ))}
+            </div>
+
+            {error ? (
+              <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                {error}
+              </div>
+            ) : null}
+
+            {success ? (
+              <div className="flex items-center gap-2 rounded-xl border border-[var(--almc-lime)]/40 bg-[var(--almc-lime)]/15 p-4 text-sm text-foreground">
+                <CheckCircle className="h-4 w-4 text-[var(--almc-lime-deep)]" />
+                {success}
+              </div>
+            ) : null}
+          </div>
+        </AlmcModalShell>
+        {topUpModal}
+        {confirmModal}
+      </>
     );
   }
 
@@ -701,26 +1012,9 @@ export const PromotionSetupModal = ({
         </div>
       </div>
 
-      {showTopUpModal && (
-        <PurchaseTreatsModal
-          onClose={() => setShowTopUpModal(false)}
-          onSuccess={() => {
-            setShowTopUpModal(false);
-            loadWallet();
-          }}
-        />
-      )}
+      {topUpModal}
 
-      <CustomConfirmModal
-        isOpen={showConfirmation}
-        title="Confirm Promotion"
-        message={`You are about to boost "${targetTitle}" in ${selectedSection?.section_name} for ${durationDays} day${durationDays !== 1 ? 's' : ''} at a cost of ${calculateCost().toLocaleString()} treats. After this promotion, your balance will be ${((wallet?.balance || 0) - calculateCost()).toLocaleString()} treats. This action cannot be undone.`}
-        confirmText="Confirm Boost"
-        cancelText="Cancel"
-        variant="warning"
-        onConfirm={handleConfirmPromotion}
-        onCancel={() => setShowConfirmation(false)}
-      />
+      {confirmModal}
     </div>
   );
 };
