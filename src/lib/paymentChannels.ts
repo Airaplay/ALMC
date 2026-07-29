@@ -234,6 +234,46 @@ export const togglePaymentChannelStatus = async (channelId: string): Promise<Pay
   }
 };
 
+async function extractFunctionsInvokeError(
+  error: { message?: string; context?: Response } | null,
+  data: unknown
+): Promise<string> {
+  const fallback =
+    (data && typeof data === 'object' && 'message' in data && typeof (data as { message?: unknown }).message === 'string'
+      ? (data as { message: string }).message
+      : null) ||
+    (data && typeof data === 'object' && 'error' in data && typeof (data as { error?: unknown }).error === 'string'
+      ? (data as { error: string }).error
+      : null) ||
+    error?.message ||
+    'Payment processing failed';
+
+  if (!error?.context || typeof error.context.json !== 'function') {
+    return fallback;
+  }
+
+  try {
+    const body = (await error.context.json()) as {
+      error?: string;
+      message?: string;
+      details?: string | Array<{ field?: string; message?: string }>;
+    };
+    if (Array.isArray(body.details) && body.details.length > 0) {
+      return body.details
+        .map((d) => d.message || d.field)
+        .filter(Boolean)
+        .join('. ');
+    }
+    if (typeof body.details === 'string' && body.details.trim()) return body.details;
+    if (body.message) return body.message;
+    if (body.error) return body.error;
+  } catch {
+    /* keep fallback */
+  }
+
+  return fallback;
+}
+
 /**
  * Process payment through selected channel
  */
@@ -274,6 +314,11 @@ export const processPayment = async (
       };
     }
 
+    const redirectUrl =
+      typeof window !== 'undefined' && !Capacitor.isNativePlatform()
+        ? `${window.location.origin}${window.location.pathname}`
+        : undefined;
+
     // Call the payment processing edge function
     const { data, error } = await supabase.functions.invoke('process-payment', {
       body: {
@@ -289,19 +334,14 @@ export const processPayment = async (
         currency_name: currencyData.currency.name,
         exchange_rate: currencyData.currency.exchangeRate,
         detected_country: currencyData.country,
-        detected_country_code: currencyData.countryCode
+        detected_country_code: currencyData.countryCode,
+        ...(redirectUrl ? { redirect_url: redirectUrl } : {}),
       }
     });
 
     if (error) {
       console.error('Edge function invocation error:', error);
-
-      // Extract error details from the edge function response
-      let errorMessage = 'Payment processing failed';
-      if (error.message) {
-        errorMessage = error.message;
-      }
-
+      const errorMessage = await extractFunctionsInvokeError(error, data);
       return {
         success: false,
         error: errorMessage,

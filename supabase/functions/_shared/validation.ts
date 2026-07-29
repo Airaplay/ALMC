@@ -53,8 +53,22 @@ export function validatePaymentRequest(data: any): ValidationResult {
     errors.push({ field: 'amount', message: 'Valid amount between 0.01 and 1000000 is required' });
   }
 
-  // Special validation for USD equivalent with GBP/EUR exception
-  if (data.amount && data.exchange_rate && data.currency) {
+  // Special validation for USD equivalent with GBP/EUR exception.
+  // Prefer client-provided amount_usd (canonical package price) when present.
+  if (data.amount_usd !== undefined && validateAmount(data.amount_usd, 0.01, 1000000) && data.currency) {
+    const amountUSD = data.amount_usd;
+    const premiumCurrencies = ['GBP', 'EUR'];
+    const isPremiumCurrency = premiumCurrencies.includes(data.currency.toUpperCase());
+    const minimumUSD = isPremiumCurrency ? 0.10 : 1.00;
+
+    if (amountUSD < minimumUSD) {
+      const currencyNote = isPremiumCurrency ? ' (Premium currency exception: minimum $0.10 USD equivalent)' : '';
+      errors.push({
+        field: 'amount',
+        message: `Amount must be at least $${minimumUSD} USD equivalent${currencyNote}`
+      });
+    }
+  } else if (data.amount && data.exchange_rate && data.currency) {
     const amountUSD = data.exchange_rate > 0 ? data.amount / data.exchange_rate : data.amount;
     const premiumCurrencies = ['GBP', 'EUR'];
     const isPremiumCurrency = premiumCurrencies.includes(data.currency.toUpperCase());

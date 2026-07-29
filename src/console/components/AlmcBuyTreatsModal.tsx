@@ -158,9 +158,10 @@ export function AlmcBuyTreatsModal({ onClose, onSuccess }: AlmcBuyTreatsModalPro
         </div>
       ) : (
         <div className="space-y-5">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm leading-relaxed text-muted-foreground">
             Treats power boosts and promotions for artists linked to your organization. Checkout is
-            Flutterwave only in ALMC.
+            Flutterwave only in ALMC — pick a package, pay securely, and treats land in your wallet
+            once payment confirms.
           </p>
 
           {error ? (

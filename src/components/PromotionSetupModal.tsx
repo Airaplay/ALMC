@@ -554,7 +554,7 @@ export const PromotionSetupModal = ({
               )}
               <div className="min-w-0 flex-1">
                 <p className={consoleTheme.label}>Boosting {getPromotionTypeLabel()}</p>
-                <p className="mt-0.5 truncate font-semibold text-foreground">{targetTitle}</p>
+                <p className="mt-0.5 break-words font-semibold text-foreground">{targetTitle}</p>
               </div>
             </div>
 
@@ -657,6 +657,8 @@ export const PromotionSetupModal = ({
                 <div className="space-y-2.5">
                   {promotionSections.map((section) => {
                     const isUnavailable = section.is_available === false;
+                    const isAlreadyActive = section.unavailable_reason === 'already_active';
+                    const isInCooldown = section.unavailable_reason === 'cooldown_active';
                     const isSelected = selectedSection?.id === section.id;
                     return (
                       <button
@@ -674,16 +676,34 @@ export const PromotionSetupModal = ({
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-foreground">{section.section_name}</p>
+                            <div className="mb-0.5 flex flex-wrap items-center gap-2">
+                              <p className="font-semibold text-foreground">{section.section_name}</p>
+                              {isUnavailable ? (
+                                <span className="rounded-md border border-red-500/20 bg-red-500/15 px-1.5 py-0.5 text-[10px] font-bold text-red-400">
+                                  {isAlreadyActive ? 'Active' : 'Cooldown'}
+                                </span>
+                              ) : null}
+                            </div>
                             {section.description ? (
-                              <p className="mt-0.5 text-xs text-muted-foreground">{section.description}</p>
+                              <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
+                                {section.description}
+                              </p>
+                            ) : null}
+                            {isUnavailable ? (
+                              <p className="mt-1.5 text-sm text-red-400/80">
+                                {isAlreadyActive
+                                  ? 'Already promoted in this section'
+                                  : isInCooldown && section.cooldown_until
+                                    ? `Cooldown until ${new Date(section.cooldown_until).toLocaleString()}`
+                                    : 'Currently unavailable'}
+                              </p>
                             ) : null}
                           </div>
                           <div className="shrink-0 text-right">
                             <p className="font-bold tabular-nums text-foreground">
                               {Number(section.treats_cost).toLocaleString()}
                             </p>
-                            <p className="text-[10px] text-muted-foreground">per day</p>
+                            <p className="text-xs text-muted-foreground">per day</p>
                           </div>
                         </div>
                       </button>
@@ -693,14 +713,16 @@ export const PromotionSetupModal = ({
               )}
             </div>
 
-            <div className={`${consoleTheme.cardInner} space-y-1.5 p-4`}>
+            <div className={`${consoleTheme.cardInner} space-y-2 p-4`}>
               <p className={consoleTheme.label}>How it works</p>
               {[
                 'Boosts run in full 24-hour periods',
                 'Price is per day — multiply for longer runs',
+                'Goes live immediately when Auto-Approval is enabled',
+                'Track performance in the Campaigns tab',
                 'Treats are deducted upon confirmation',
               ].map((item) => (
-                <p key={item} className="text-xs text-muted-foreground">
+                <p key={item} className="text-sm leading-relaxed text-muted-foreground">
                   · {item}
                 </p>
               ))}

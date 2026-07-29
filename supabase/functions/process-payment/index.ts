@@ -19,6 +19,8 @@ const corsHeaders = {
 interface PaymentRequest {
   channel_id: string;
   amount: number;
+  /** Canonical USD price from treat_packages — used for minimum validation */
+  amount_usd?: number;
   package_id: string;
   user_email: string;
   currency: string;
@@ -27,6 +29,8 @@ interface PaymentRequest {
   exchange_rate: number;
   detected_country?: string;
   detected_country_code?: string;
+  /** Web return URL base (ALMC / browser checkout). Query params are appended server-side. */
+  redirect_url?: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -177,7 +181,12 @@ Deno.serve(async (req: Request) => {
       buyerEmail = user.email ?? user_email;
     }
 
-    const amountUSD = exchange_rate > 0 ? amount / exchange_rate : amount;
+    const amountUSD =
+      typeof requestData.amount_usd === 'number' && requestData.amount_usd > 0
+        ? requestData.amount_usd
+        : exchange_rate > 0
+          ? amount / exchange_rate
+          : amount;
 
     const premiumCurrencies = ['GBP', 'EUR'];
     const isPremiumCurrency = premiumCurrencies.includes(currency.toUpperCase());
@@ -242,7 +251,8 @@ Deno.serve(async (req: Request) => {
           buyerEmail,
           paymentData.id,
           configuration,
-          currency
+          currency,
+          requestData.redirect_url
         );
         break;
 
@@ -375,11 +385,27 @@ async function processFlutterwavePayment(
   email: string,
   paymentId: string,
   config: Record<string, unknown>,
-  currency: string = "USD"
+  currency: string = "USD",
+  redirectUrlBase?: string
 ) {
   const txRef = "treat_" + paymentId;
 
-  const redirectUrl = `airaplay://payment/success?provider=flutterwave&reference=${txRef}`;
+  let safeRedirectBase: string | undefined;
+  if (redirectUrlBase?.trim()) {
+    try {
+      const parsed = new URL(redirectUrlBase.trim());
+      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+        const path = parsed.pathname.replace(/\/$/, "") || "";
+        safeRedirectBase = `${parsed.origin}${path}`;
+      }
+    } catch {
+      /* ignore invalid redirect */
+    }
+  }
+
+  const redirectUrl = safeRedirectBase
+    ? `${safeRedirectBase}?payment=success&provider=flutterwave&reference=${encodeURIComponent(txRef)}`
+    : `airaplay://payment/success?provider=flutterwave&reference=${txRef}`;
 
   const apiVersion = (config.api_version as string) || "v3";
 

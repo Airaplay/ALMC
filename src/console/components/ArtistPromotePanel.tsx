@@ -112,7 +112,7 @@ export function ArtistPromotePanel({ artist, onBack }: ArtistPromotePanelProps) 
               </div>
             )}
             <div className="min-w-0">
-              <h2 className="truncate text-2xl font-semibold text-foreground">
+              <h2 className="break-words text-2xl font-semibold text-foreground">
                 Promote {artist.stage_name}
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -161,8 +161,8 @@ export function ArtistPromotePanel({ artist, onBack }: ArtistPromotePanelProps) 
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-foreground">{item.title}</p>
-                  <p className="text-xs capitalize text-muted-foreground">
+                  <p className="break-words font-medium text-foreground">{item.title}</p>
+                  <p className="text-sm capitalize text-muted-foreground">
                     {typeLabel(item.promotion_type)}
                   </p>
                 </div>
