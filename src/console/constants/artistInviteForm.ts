@@ -40,7 +40,7 @@ export const ARTIST_PERMISSION_PRESETS: Array<{
   {
     value: 'full_management',
     label: 'Full Management',
-    description: 'View catalog and upload content on behalf of the artist',
+    description: 'View catalog, upload, promote, and buy treats on behalf of the artist',
   },
   {
     value: 'upload_only',

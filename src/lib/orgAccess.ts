@@ -21,6 +21,8 @@ export type OrgPermission =
   | 'artists.revoke'
   | 'content.view'
   | 'content.upload'
+  | 'content.promote'
+  | 'treats.buy'
   | 'analytics.view';
 
 export interface OrganizationSummary {
@@ -588,6 +590,13 @@ export interface OrgContentItem {
   release_at: string | null;
 }
 
+export interface OrgPromotableItem {
+  id: string;
+  title: string;
+  promotion_type: 'song' | 'video' | 'profile' | 'album' | 'short_clip' | 'playlist';
+  cover_url: string | null;
+}
+
 export interface OrgContentListResult {
   items: OrgContentItem[];
   total: number;
@@ -620,6 +629,18 @@ export async function listOrganizationContent(
     limit: Number(data?.limit ?? 50),
     offset: Number(data?.offset ?? 0),
   };
+}
+
+export async function listOrgArtistPromotableContent(
+  orgId: string,
+  artistProfileId: string
+): Promise<OrgPromotableItem[]> {
+  const { data, error } = await supabase.rpc('list_org_artist_promotable_content', {
+    p_org_id: orgId,
+    p_artist_profile_id: artistProfileId,
+  });
+  if (error) throw error;
+  return (data?.items ?? []) as OrgPromotableItem[];
 }
 
 export async function listOrganizationArtists(

@@ -15,6 +15,8 @@ import {
   Eye,
   FileSpreadsheet,
   FolderOpen,
+  Megaphone,
+  Coins,
 } from 'lucide-react';
 import { useOrganization } from '../contexts/OrganizationContext';
 import {
@@ -29,6 +31,8 @@ import {
 import { LoadingLogo } from '../../components/LoadingLogo';
 import { AddArtistModal } from '../components/AddArtistModal';
 import { ArtistContentPanel } from '../components/ArtistContentPanel';
+import { ArtistPromotePanel } from '../components/ArtistPromotePanel';
+import { almcRoutes } from '../../lib/almcRoutes';
 
 const PAGE_SIZE = 12;
 
@@ -103,6 +107,7 @@ export function ArtistsSection({
   const [verifyEmail, setVerifyEmail] = useState<string | undefined>();
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [contentArtist, setContentArtist] = useState<OrgArtistItem | null>(null);
+  const [promoteArtist, setPromoteArtist] = useState<OrgArtistItem | null>(null);
   const [updatingSplitArtistId, setUpdatingSplitArtistId] = useState<string | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -267,6 +272,16 @@ export function ArtistsSection({
               Analytics
             </button>
           )}
+          {hasPermission('content.promote') && (
+            <button
+              type="button"
+              onClick={() => setPromoteArtist(artist)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs text-secondary-foreground hover:bg-muted"
+            >
+              <Megaphone className="h-3.5 w-3.5" />
+              Promote
+            </button>
+          )}
           {canEditSplit && (
             <button
               type="button"
@@ -399,6 +414,12 @@ export function ArtistsSection({
     );
   }
 
+  if (promoteArtist) {
+    return (
+      <ArtistPromotePanel artist={promoteArtist} onBack={() => setPromoteArtist(null)} />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -407,6 +428,17 @@ export function ArtistsSection({
           <p className="mt-1 text-sm text-muted-foreground">Manage your label roster</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {hasPermission('treats.buy') && (
+            <a
+              href={almcRoutes.consumerBuyTreats()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
+            >
+              <Coins className="h-4 w-4" />
+              Buy Treats
+            </a>
+          )}
           {hasPermission('artists.invite') && (
             <button
               type="button"

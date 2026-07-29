@@ -14,6 +14,8 @@ export const CUSTOM_ROLE_PERMISSION_OPTIONS: Array<{
   { key: 'artists.revoke', label: 'Revoke artists', hint: 'Remove artist access' },
   { key: 'content.view', label: 'View content', hint: 'Browse uploads & calendar' },
   { key: 'content.upload', label: 'Upload content', hint: 'Publish and schedule releases' },
+  { key: 'content.promote', label: 'Promote content', hint: 'Boost artist releases in app sections' },
+  { key: 'treats.buy', label: 'Buy treats', hint: 'Purchase treats to fund promotions' },
   { key: 'analytics.view', label: 'View analytics', hint: 'Streams, revenue, reports' },
 ];
 

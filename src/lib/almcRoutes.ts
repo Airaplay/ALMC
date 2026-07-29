@@ -33,4 +33,8 @@ export const almcRoutes = {
     const base = consumerBase();
     return base ? `${base}/terms/user-signup` : '/terms/user-signup';
   },
+  consumerBuyTreats: () => {
+    const base = consumerBase();
+    return base ? `${base}/buy-treats` : '/buy-treats';
+  },
 };
