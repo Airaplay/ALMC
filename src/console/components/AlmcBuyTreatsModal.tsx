@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AlertCircle, Check, CheckCircle, Coins, Loader2, Sparkles } from 'lucide-react';
-import { supabase, formatTreats, getMyAgeInfo } from '../../lib/supabase';
+import { supabase, formatTreats } from '../../lib/supabase';
 import { PaymentChannelSelector } from '../../components/PaymentChannelSelector';
 import {
   convertAmount,
@@ -37,13 +37,12 @@ export function AlmcBuyTreatsModal({ onClose, onSuccess }: AlmcBuyTreatsModalPro
   const [success, setSuccess] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState('');
   const [currencyData, setCurrencyData] = useState<CurrencyDetectionResult | null>(null);
-  const [isAdult, setIsAdult] = useState<boolean | null>(null);
 
   useEffect(() => {
     void (async () => {
       try {
         setLoading(true);
-        const [{ data: pkgs, error: pkgErr }, email, currency, age] = await Promise.all([
+        const [{ data: pkgs, error: pkgErr }, email, currency] = await Promise.all([
           supabase
             .from('treat_packages')
             .select('*')
@@ -51,7 +50,6 @@ export function AlmcBuyTreatsModal({ onClose, onSuccess }: AlmcBuyTreatsModalPro
             .order('display_order', { ascending: true }),
           supabase.auth.getUser().then((r) => r.data.user?.email ?? ''),
           getUserCurrency(),
-          getMyAgeInfo().then((a) => a.is_adult === true).catch(() => false),
         ]);
         if (pkgErr) throw pkgErr;
         const mapped: TreatPackage[] = (pkgs ?? []).map((pkg: Record<string, unknown>) => ({
@@ -66,7 +64,6 @@ export function AlmcBuyTreatsModal({ onClose, onSuccess }: AlmcBuyTreatsModalPro
         setSelected(mapped[0] ?? null);
         setUserEmail(email);
         setCurrencyData(currency);
-        setIsAdult(age);
       } catch (err) {
         setError(toUserFacingPaymentError(err, 'load'));
       } finally {
@@ -99,12 +96,7 @@ export function AlmcBuyTreatsModal({ onClose, onSuccess }: AlmcBuyTreatsModalPro
         <ConsolePrimaryButton
           type="button"
           className="flex-1"
-          disabled={isAdult === false}
           onClick={() => {
-            if (isAdult === false) {
-              setError('You must be 18 or older to purchase treats.');
-              return;
-            }
             setShowPayment(true);
             setError(null);
           }}
@@ -186,12 +178,6 @@ export function AlmcBuyTreatsModal({ onClose, onSuccess }: AlmcBuyTreatsModalPro
               <CheckCircle className="h-4 w-4 text-[var(--almc-lime-deep)]" />
               {success}
             </div>
-          ) : null}
-
-          {isAdult === false ? (
-            <p className="text-sm text-amber-600 dark:text-amber-300">
-              Purchases are only available to users aged 18+.
-            </p>
           ) : null}
 
           <div className="grid gap-3 sm:grid-cols-2">
