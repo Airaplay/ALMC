@@ -1,0 +1,152 @@
+/* Remap consumer upload-form dark utilities to ALMC design tokens
+   when forms are embedded inside the console wizard. */
+
+.almc-upload-embed {
+  color: hsl(var(--foreground));
+  background: transparent;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+/* Text */
+.almc-upload-embed .text-white {
+  color: hsl(var(--foreground)) !important;
+}
+.almc-upload-embed .text-white\/80 {
+  color: hsl(var(--foreground) / 0.85) !important;
+}
+.almc-upload-embed .text-white\/70 {
+  color: hsl(var(--muted-foreground)) !important;
+}
+.almc-upload-embed .text-white\/60 {
+  color: hsl(var(--muted-foreground)) !important;
+}
+.almc-upload-embed .text-white\/50 {
+  color: hsl(var(--muted-foreground) / 0.9) !important;
+}
+.almc-upload-embed .text-white\/40 {
+  color: hsl(var(--muted-foreground) / 0.8) !important;
+}
+.almc-upload-embed .text-white\/30 {
+  color: hsl(var(--muted-foreground) / 0.65) !important;
+}
+.almc-upload-embed .placeholder\:text-white\/40::placeholder {
+  color: hsl(var(--muted-foreground) / 0.7) !important;
+}
+.almc-upload-embed .hover\:text-white:hover {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Accent green → ALMC lime */
+.almc-upload-embed .text-\[\#00ad74\],
+.almc-upload-embed .text-\[\#00ad74\]\/80 {
+  color: var(--almc-lime-deep) !important;
+}
+.almc-upload-embed .bg-\[\#00ad74\],
+.almc-upload-embed .bg-\[\#009c68\],
+.almc-upload-embed .bg-\[\#008a5d\] {
+  background-color: var(--almc-lime) !important;
+}
+.almc-upload-embed .bg-\[\#00ad74\]\/5 {
+  background-color: color-mix(in srgb, var(--almc-lime) 12%, transparent) !important;
+}
+.almc-upload-embed .bg-\[\#00ad74\]\/10 {
+  background-color: color-mix(in srgb, var(--almc-lime) 18%, transparent) !important;
+}
+.almc-upload-embed .bg-\[\#00ad74\]\/20 {
+  background-color: color-mix(in srgb, var(--almc-lime) 28%, transparent) !important;
+}
+.almc-upload-embed .bg-\[\#00ad74\]\/40 {
+  background-color: color-mix(in srgb, var(--almc-lime) 40%, transparent) !important;
+}
+.almc-upload-embed .border-\[\#00ad74\],
+.almc-upload-embed .border-\[\#00ad74\]\/20,
+.almc-upload-embed .border-\[\#00ad74\]\/30,
+.almc-upload-embed .border-\[\#00ad74\]\/40 {
+  border-color: color-mix(in srgb, var(--almc-lime-deep) 45%, transparent) !important;
+}
+.almc-upload-embed .hover\:border-\[\#00ad74\]\/30:hover,
+.almc-upload-embed .hover\:border-\[\#00ad74\]\/40:hover {
+  border-color: color-mix(in srgb, var(--almc-lime-deep) 55%, transparent) !important;
+}
+.almc-upload-embed .ring-\[\#00ad74\]\/20,
+.almc-upload-embed .ring-\[\#00ad74\]\/30 {
+  --tw-ring-color: color-mix(in srgb, var(--almc-lime) 35%, transparent) !important;
+}
+.almc-upload-embed .ring-offset-\[\#0a0a0a\] {
+  --tw-ring-offset-color: hsl(var(--card)) !important;
+}
+
+/* Surfaces / borders */
+.almc-upload-embed .bg-white\/5,
+.almc-upload-embed .bg-white\/10,
+.almc-upload-embed .bg-white\/40 {
+  background-color: hsl(var(--secondary)) !important;
+}
+.almc-upload-embed .hover\:bg-white\/5:hover,
+.almc-upload-embed .hover\:bg-white\/10:hover,
+.almc-upload-embed .hover\:bg-white\/15:hover {
+  background-color: hsl(var(--muted)) !important;
+}
+.almc-upload-embed .border-white\/10,
+.almc-upload-embed .border-white\/20 {
+  border-color: hsl(var(--border)) !important;
+}
+.almc-upload-embed .bg-\[\#0d0d0d\],
+.almc-upload-embed .from-\[\#1a1a1a\],
+.almc-upload-embed .via-\[\#0d0d0d\],
+.almc-upload-embed .to-\[\#000000\] {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* Inputs inside upload forms */
+.almc-upload-embed input:not([type='file']):not([type='checkbox']):not([type='radio']),
+.almc-upload-embed select,
+.almc-upload-embed textarea {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+.almc-upload-embed input::placeholder,
+.almc-upload-embed textarea::placeholder {
+  color: hsl(var(--muted-foreground) / 0.7) !important;
+}
+
+/* Drop zones / cards */
+.almc-upload-embed .rounded-2xl.border-dashed,
+.almc-upload-embed .rounded-2xl.border,
+.almc-upload-embed .rounded-3xl.border {
+  background-color: hsl(var(--secondary) / 0.7);
+}
+
+/* Primary CTA buttons that used consumer green text-on-green */
+.almc-upload-embed button.bg-\[\#00ad74\],
+.almc-upload-embed button.bg-\[\#009c68\] {
+  color: #fff !important;
+  border-radius: 9999px !important;
+}
+
+/* Secondary / back actions */
+.almc-upload-embed button.border-white\/10 {
+  border-color: hsl(var(--border)) !important;
+  border-radius: 9999px !important;
+  color: hsl(var(--secondary-foreground)) !important;
+  background-color: hsl(var(--card)) !important;
+}
+.almc-upload-embed button.border-white\/10:hover {
+  background-color: hsl(var(--muted)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+.almc-upload-embed button.text-white\/60,
+.almc-upload-embed button.text-white\/80 {
+  color: hsl(var(--secondary-foreground)) !important;
+}
+
+/* Group hover accents on drop zones */
+.almc-upload-embed .group:hover .group-hover\:text-\[\#00ad74\] {
+  color: var(--almc-lime-deep) !important;
+}
+.almc-upload-embed .group:hover .group-hover\:bg-white\/10 {
+  background-color: hsl(var(--muted)) !important;
+}
+

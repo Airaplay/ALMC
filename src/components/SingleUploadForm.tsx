@@ -555,7 +555,9 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext, consoleEmbed
     return (
       <div className={cn(
         "flex flex-col items-center justify-center",
-        consoleEmbed?.hideChrome ? "py-16" : "min-h-screen min-h-[100dvh] bg-gradient-to-b from-[#1a1a1a] via-[#0d0d0d] to-[#000000]"
+        consoleEmbed?.hideChrome
+          ? "py-16"
+          : "min-h-screen min-h-[100dvh] bg-gradient-to-b from-[#1a1a1a] via-[#0d0d0d] to-[#000000]"
       )}>
         <LoadingLogo variant="pulse" size={48} />
       </div>
@@ -568,15 +570,40 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext, consoleEmbed
   }
 
   if (!artistProfile) {
+    const isAlmc = consoleEmbed?.theme === 'almc';
     return (
-      <div className="flex flex-col min-h-screen min-h-[100dvh] overflow-y-auto bg-gradient-to-b from-[#1a1a1a] via-[#0d0d0d] to-[#000000] text-white content-with-nav font-['Inter',sans-serif]">
-        <div className="flex-1 flex flex-col items-center justify-center gap-5 px-3">
-          <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center">
-            <Music2 className="w-7 h-7 text-white/60" />
+      <div
+        className={cn(
+          "flex flex-col font-['Inter',sans-serif]",
+          isAlmc || consoleEmbed?.hideChrome
+            ? 'items-center justify-center gap-5 px-3 py-10 text-foreground'
+            : "min-h-screen min-h-[100dvh] overflow-y-auto bg-gradient-to-b from-[#1a1a1a] via-[#0d0d0d] to-[#000000] text-white content-with-nav"
+        )}
+      >
+        <div className="flex flex-1 flex-col items-center justify-center gap-5 px-3">
+          <div
+            className={cn(
+              'flex h-16 w-16 items-center justify-center rounded-2xl',
+              isAlmc ? 'bg-muted' : 'bg-white/10'
+            )}
+          >
+            <Music2 className={cn('h-7 w-7', isAlmc ? 'text-muted-foreground' : 'text-white/60')} />
           </div>
-          <div className="text-center space-y-1.5">
-            <h2 className="text-xl font-semibold tracking-tight text-white">Artist Profile Required</h2>
-            <p className="text-sm text-white/60 max-w-xs">
+          <div className="space-y-1.5 text-center">
+            <h2
+              className={cn(
+                'text-xl font-semibold tracking-tight',
+                isAlmc ? 'text-foreground' : 'text-white'
+              )}
+            >
+              Artist Profile Required
+            </h2>
+            <p
+              className={cn(
+                'max-w-xs text-sm',
+                isAlmc ? 'text-muted-foreground' : 'text-white/60'
+              )}
+            >
               {adminUploadContext
                 ? `${adminUploadContext.targetDisplayName || 'This user'} needs an artist profile before content can be uploaded.`
                 : 'Register as an artist to start uploading your music.'}
@@ -585,14 +612,18 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext, consoleEmbed
           {adminUploadContext ? (
             <button
               onClick={() => onClose?.()}
-              className="px-6 py-3 bg-white/10 hover:bg-white/15 text-white rounded-full font-medium transition-all active:scale-95"
+              className={
+                isAlmc
+                  ? 'rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground hover:bg-muted'
+                  : 'rounded-full bg-white/10 px-6 py-3 font-medium text-white transition-all hover:bg-white/15 active:scale-95'
+              }
             >
               Go back
             </button>
           ) : (
             <button
-              onClick={() => navigate("/artist-registration")}
-              className="px-6 py-3 bg-[#00ad74] hover:bg-[#009c68] active:bg-[#008a5d] text-white rounded-full font-medium transition-all active:scale-95"
+              onClick={() => navigate('/artist-registration')}
+              className="rounded-full bg-[#00ad74] px-6 py-3 font-medium text-white transition-all hover:bg-[#009c68] active:scale-95 active:bg-[#008a5d]"
             >
               Register as Artist
             </button>
@@ -608,8 +639,12 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext, consoleEmbed
     ? (title && genreId ? 100 : title ? 50 : 0)
     : selectedMoods.length > 0 ? 60 : 20;
 
+  const isAlmcEmbed = consoleEmbed?.theme === 'almc';
   const shellClass = consoleEmbed?.hideChrome
-    ? "flex flex-col text-white font-['Inter',sans-serif]"
+    ? cn(
+        "flex flex-col font-['Inter',sans-serif]",
+        isAlmcEmbed ? 'text-foreground' : 'text-white'
+      )
     : "flex flex-col min-h-screen min-h-[100dvh] overflow-y-auto bg-gradient-to-b from-[#1a1a1a] via-[#0d0d0d] to-[#000000] text-white content-with-nav font-['Inter',sans-serif]";
 
   return (

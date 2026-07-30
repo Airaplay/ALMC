@@ -11,6 +11,8 @@ export interface ConsoleUploadEmbed {
   showReleaseActions?: boolean;
   /** Track title for org activity logging. */
   onTitleChange?: (title: string) => void;
+  /** When embedded in ALMC, restyle consumer dark UI to console tokens. */
+  theme?: 'consumer' | 'almc';
 }
 
 export function resolveContentUploadStatus(

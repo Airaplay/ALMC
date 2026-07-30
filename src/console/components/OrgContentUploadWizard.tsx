@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { X, Search, CheckCircle2 } from 'lucide-react';
+import { Search, CheckCircle2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { AdminUploadContext } from '../../lib/adminUploadContext';
 import type { OrgArtistItem } from '../../lib/orgAccess';
+import type { ConsoleUploadEmbed } from '../../lib/consoleUploadEmbed';
 import SingleUploadForm from '../../components/SingleUploadForm';
 import AlbumUploadForm from '../../components/AlbumUploadForm';
 import VideoUploadForm from '../../components/VideoUploadForm';
@@ -15,6 +16,8 @@ import {
   formStepToWizardStep,
 } from '../constants/contentUploadWizard';
 import { logOrgContentUpload } from '../utils/logOrgContentUpload';
+import { consoleTheme } from '../consoleTheme';
+import { AlmcModalShell } from './AlmcModalShell';
 
 interface OrgContentUploadWizardProps {
   organizationId: string;
@@ -48,6 +51,7 @@ export function OrgContentUploadWizard({
   const [formStep, setFormStep] = useState(0);
   const [artistSearch, setArtistSearch] = useState('');
   const [uploadTitle, setUploadTitle] = useState('');
+  const [contentType, setContentType] = useState<ContentUploadType | null>(null);
 
   useEffect(() => {
     if (resolvedInitial) {
@@ -56,10 +60,18 @@ export function OrgContentUploadWizard({
     }
   }, [resolvedInitial]);
 
-  const [contentType, setContentType] = useState<ContentUploadType | null>(null);
-
   const displayStep = wizardStep >= 2 ? formStepToWizardStep(formStep) : wizardStep;
   const stepLabel = CONTENT_WIZARD_STEPS[displayStep];
+
+  const subtitle = useMemo(() => {
+    if (selectedArtist && contentType) {
+      return `Upload for ${selectedArtist.stage_name} · ${CONTENT_TYPE_LABELS[contentType]}`;
+    }
+    if (selectedArtist) {
+      return `Upload for ${selectedArtist.stage_name}`;
+    }
+    return 'Select an artist to upload on their behalf.';
+  }, [selectedArtist, contentType]);
 
   const filteredArtists = useMemo(() => {
     const q = artistSearch.trim().toLowerCase();
@@ -133,45 +145,49 @@ export function OrgContentUploadWizard({
           value={artistSearch}
           onChange={(e) => setArtistSearch(e.target.value)}
           placeholder="Search artists…"
-          className="w-full rounded-xl border border-border bg-secondary py-2.5 pl-10 pr-4 text-sm text-foreground focus:border-[var(--almc-lime-deep)]/40 focus:outline-none focus:ring-2 focus:ring-[var(--almc-lime-deep)]/20"
+          className={cn(consoleTheme.input, 'w-full pl-10')}
         />
       </div>
       <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
         {filteredArtists.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">No active artists match your search.</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No active artists match your search.
+          </p>
         ) : (
-          filteredArtists.map((artist) => {
-            const selected = selectedArtist?.artist_profile_id === artist.artist_profile_id;
+          filteredArtists.map((row) => {
+            const selected = selectedArtist?.artist_profile_id === row.artist_profile_id;
             return (
               <button
-                key={artist.artist_profile_id ?? artist.link_id}
+                key={row.artist_profile_id ?? row.link_id}
                 type="button"
-                onClick={() => setSelectedArtist(artist)}
+                onClick={() => setSelectedArtist(row)}
                 className={cn(
-                  'flex w-full items-center gap-3 rounded-xl border p-3 text-left transition',
+                  'flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition',
                   selected
-                    ? 'border-[var(--almc-lime-deep)]/50 bg-[var(--almc-lime)]/35'
-                    : 'border-border bg-secondary hover:border-[var(--almc-lime-deep)]/30'
+                    ? 'border-[var(--almc-lime-deep)]/40 bg-[var(--almc-lime)]/10 ring-2 ring-[var(--almc-lime-deep)]/20'
+                    : `${consoleTheme.cardInner} hover:bg-muted/80`
                 )}
               >
-                {artist.profile_photo_url ? (
+                {row.profile_photo_url ? (
                   <img
-                    src={artist.profile_photo_url}
+                    src={row.profile_photo_url}
                     alt=""
                     className="h-10 w-10 rounded-full object-cover"
                   />
                 ) : (
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-sm font-semibold text-foreground">
-                    {artist.stage_name.charAt(0)}
+                    {row.stage_name.charAt(0)}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-foreground">{artist.stage_name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {[artist.genre, artist.country].filter(Boolean).join(' · ') || artist.email}
+                  <p className="break-words font-semibold text-foreground">{row.stage_name}</p>
+                  <p className="truncate text-sm text-muted-foreground">
+                    {[row.genre, row.country].filter(Boolean).join(' · ') || row.email}
                   </p>
                 </div>
-                {selected ? <CheckCircle2 className="h-5 w-5 shrink-0 text-[var(--almc-lime-deep)]" /> : null}
+                {selected ? (
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-[var(--almc-lime-deep)]" />
+                ) : null}
               </button>
             );
           })
@@ -191,9 +207,9 @@ export function OrgContentUploadWizard({
             disabled={!option.enabled}
             onClick={() => option.enabled && handleTypeSelect(option.id as ContentUploadType)}
             className={cn(
-              'relative flex flex-col items-start gap-3 rounded-xl border p-4 text-left transition',
+              'relative flex flex-col items-start gap-3 rounded-2xl border p-4 text-left transition',
               option.enabled
-                ? 'border-border bg-secondary hover:border-[var(--almc-lime-deep)]/40'
+                ? `${consoleTheme.cardInner} hover:border-[var(--almc-lime-deep)]/40 hover:bg-[var(--almc-lime)]/10`
                 : 'cursor-not-allowed border-border/60 bg-secondary/50 opacity-60'
             )}
           >
@@ -202,12 +218,12 @@ export function OrgContentUploadWizard({
                 {option.badge}
               </span>
             ) : null}
-            <div className="rounded-lg bg-[var(--almc-lime)]/40 p-2.5">
-              <Icon className="h-5 w-5 text-[var(--almc-lime-deep)]" />
+            <div className={consoleTheme.iconWell}>
+              <Icon className="h-5 w-5" />
             </div>
             <div>
               <p className="font-semibold text-foreground">{option.label}</p>
-              <p className="text-sm text-muted-foreground">{option.detail}</p>
+              <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">{option.detail}</p>
             </div>
           </button>
         );
@@ -218,8 +234,9 @@ export function OrgContentUploadWizard({
   const renderEmbeddedForm = () => {
     if (!uploadContext || !contentType) return null;
 
-    const embed = {
+    const embed: ConsoleUploadEmbed = {
       hideChrome: true,
+      theme: 'almc',
       onStepChange: handleFormStepChange,
       onExitFirstStep: () => {
         setWizardStep(1);
@@ -230,122 +247,82 @@ export function OrgContentUploadWizard({
       onTitleChange: setUploadTitle,
     };
 
-    if (contentType === 'single') {
-      return (
+    const form =
+      contentType === 'single' ? (
         <SingleUploadForm
           adminUploadContext={uploadContext}
           consoleEmbed={embed}
           onClose={goBack}
           onSuccess={handleUploadSuccess}
         />
-      );
-    }
-    if (contentType === 'album') {
-      return (
+      ) : contentType === 'album' ? (
         <AlbumUploadForm
           adminUploadContext={uploadContext}
           consoleEmbed={embed}
           onClose={goBack}
           onSuccess={handleUploadSuccess}
         />
+      ) : (
+        <VideoUploadForm
+          adminUploadContext={uploadContext}
+          consoleEmbed={embed}
+          onClose={goBack}
+          onSuccess={handleUploadSuccess}
+        />
       );
-    }
-    return (
-      <VideoUploadForm
-        adminUploadContext={uploadContext}
-        consoleEmbed={embed}
-        onClose={goBack}
-        onSuccess={handleUploadSuccess}
-      />
-    );
+
+    return <div className="almc-upload-embed">{form}</div>;
   };
 
-  return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4">
-      <div
-        className={cn(
-          'flex w-full flex-col rounded-2xl border border-border bg-card shadow-2xl',
-          wizardStep >= 2 ? 'max-h-[92vh] max-w-3xl' : 'max-w-lg'
-        )}
-      >
-        <div className="flex shrink-0 items-start justify-between border-b border-border p-5">
-          <div className="min-w-0 pr-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Step {displayStep + 1} of {CONTENT_WIZARD_STEPS.length} — {stepLabel}
-            </p>
-            <h3 className="mt-1 text-lg font-bold text-foreground">Upload content</h3>
-            {selectedArtist && contentType ? (
-              <p className="mt-1 text-sm text-muted-foreground">
-                Upload for:{' '}
-                <span className="font-medium text-foreground">{selectedArtist.stage_name}</span>
-                {' · '}
-                Type:{' '}
-                <span className="font-medium text-foreground">{CONTENT_TYPE_LABELS[contentType]}</span>
-              </p>
-            ) : selectedArtist ? (
-              <p className="mt-1 text-sm text-muted-foreground">
-                Upload for:{' '}
-                <span className="font-medium text-foreground">{selectedArtist.stage_name}</span>
-              </p>
-            ) : (
-              <p className="mt-1 text-sm text-muted-foreground">Select an artist to upload on their behalf.</p>
-            )}
-          </div>
-          <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground">
-            <X className="h-5 w-5" />
+  const footer =
+    wizardStep < 2 ? (
+      <div className="flex gap-3">
+        <button type="button" onClick={goBack} className={`${consoleTheme.btnSecondary} flex-1`}>
+          {wizardStep === 0 ? 'Cancel' : 'Back'}
+        </button>
+        {wizardStep === 0 ? (
+          <button
+            type="button"
+            disabled={!selectedArtist}
+            onClick={() => setWizardStep(1)}
+            className={`${consoleTheme.btnLime} flex-1`}
+          >
+            Next
           </button>
-        </div>
-
-        <div className="px-5 pt-4">
-          <div className="flex gap-1">
-            {CONTENT_WIZARD_STEPS.map((label, index) => (
-              <div key={label} className="flex-1">
-                <div
-                  className={cn(
-                    'h-1 rounded-full transition-colors',
-                    index <= displayStep ? 'bg-primary' : 'bg-border'
-                  )}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div
-          className={cn(
-            'flex-1 overflow-y-auto p-5',
-            wizardStep >= 2 && 'min-h-0 bg-[#0a0a0b] text-white'
-          )}
-        >
-          {wizardStep === 0 && renderArtistStep()}
-          {wizardStep === 1 && renderTypeStep()}
-          {wizardStep >= 2 && renderEmbeddedForm()}
-        </div>
-
-        {wizardStep < 2 && (
-          <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border p-5">
-            <button
-              type="button"
-              onClick={goBack}
-              className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary"
-            >
-              {wizardStep === 0 ? 'Cancel' : 'Back'}
-            </button>
-            {wizardStep === 0 ? (
-              <button
-                type="button"
-                disabled={!selectedArtist}
-                onClick={() => setWizardStep(1)}
-                className="rounded-full bg-[var(--almc-lime)] px-5 py-2.5 text-sm font-semibold text-white hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Next
-              </button>
-            ) : (
-              <p className="text-xs text-muted-foreground">Select a content type above to continue</p>
-            )}
-          </div>
+        ) : (
+          <p className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+            Select a content type above to continue
+          </p>
         )}
       </div>
-    </div>
+    ) : null;
+
+  return (
+    <AlmcModalShell
+      title="Upload content"
+      subtitle={`Step ${displayStep + 1} of ${CONTENT_WIZARD_STEPS.length} — ${stepLabel}. ${subtitle}`}
+      onClose={onClose}
+      size={wizardStep >= 2 ? 'xl' : 'lg'}
+      footer={footer}
+    >
+      <div className="mb-5">
+        <div className="flex gap-1.5">
+          {CONTENT_WIZARD_STEPS.map((label, index) => (
+            <div key={label} className="flex-1" title={label}>
+              <div
+                className={cn(
+                  'h-1.5 rounded-full transition-colors',
+                  index <= displayStep ? 'bg-[var(--almc-lime)]' : 'bg-border'
+                )}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {wizardStep === 0 && renderArtistStep()}
+      {wizardStep === 1 && renderTypeStep()}
+      {wizardStep >= 2 && renderEmbeddedForm()}
+    </AlmcModalShell>
   );
 }

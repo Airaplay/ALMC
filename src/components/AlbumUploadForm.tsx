@@ -442,7 +442,10 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
   return (
     <div className={cn(
       consoleEmbed?.hideChrome
-        ? "flex flex-col text-white font-['Inter',sans-serif]"
+        ? cn(
+            "flex flex-col font-['Inter',sans-serif]",
+            consoleEmbed?.theme === 'almc' ? 'text-foreground' : 'text-white'
+          )
         : "flex flex-col min-h-screen min-h-[100dvh] overflow-y-auto bg-gradient-to-b from-[#1a1a1a] via-[#0d0d0d] to-[#000000] text-white content-with-nav font-['Inter',sans-serif]"
     )}>
       {!consoleEmbed?.hideChrome && (
