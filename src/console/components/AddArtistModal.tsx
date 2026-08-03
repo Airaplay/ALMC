@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  X,
   Loader2,
   AlertCircle,
   Mail,
@@ -19,6 +18,7 @@ import {
   normalizeInvitationCode,
 } from '../../lib/orgAccess';
 import { consoleTheme } from '../consoleTheme';
+import { AlmcModalShell } from './AlmcModalShell';
 import { ConsolePrimaryButton, ConsoleSubmitArrow } from './ConsoleFormControls';
 import {
   ADD_ARTIST_TABS,
@@ -79,10 +79,20 @@ export function AddArtistModal({
   const [emailSent, setEmailSent] = useState(false);
   const profileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const profilePreviewRef = useRef<string | null>(null);
+  const coverPreviewRef = useRef<string | null>(null);
 
   const invitationType = tab === 'create_new' ? 'create_new' : 'link_existing';
 
+  const revokePreview = (url: string | null) => {
+    if (url) URL.revokeObjectURL(url);
+  };
+
   const resetForm = () => {
+    revokePreview(profilePreviewRef.current);
+    revokePreview(coverPreviewRef.current);
+    profilePreviewRef.current = null;
+    coverPreviewRef.current = null;
     setTab('create_new');
     setStep(initialStep);
     setForm({ ...EMPTY_FORM, email: initialEmail ?? '' });
@@ -98,7 +108,15 @@ export function AddArtistModal({
 
   useEffect(() => {
     if (!open) resetForm();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only when modal opens/closes or seed values change
   }, [open, initialEmail, initialStep]);
+
+  useEffect(() => {
+    return () => {
+      revokePreview(profilePreviewRef.current);
+      revokePreview(coverPreviewRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -140,9 +158,13 @@ export function AddArtistModal({
     if (!file) return;
     const url = URL.createObjectURL(file);
     if (kind === 'profile') {
+      revokePreview(profilePreviewRef.current);
+      profilePreviewRef.current = url;
       setProfileFile(file);
       setProfilePreview(url);
     } else {
+      revokePreview(coverPreviewRef.current);
+      coverPreviewRef.current = url;
       setCoverFile(file);
       setCoverPreview(url);
     }
@@ -166,6 +188,7 @@ export function AddArtistModal({
     }
     if (coverFile) {
       metadata.cover_image_url = await uploadInviteArtistImage(organizationId, coverFile, 'cover');
+      metadata.cover_photo_url = metadata.cover_image_url;
     }
 
     return metadata;
@@ -181,6 +204,9 @@ export function AddArtistModal({
     if (lookup?.link_status === 'active') return 'This artist is already linked to your organization.';
     if (tab === 'invite_existing' && lookup?.has_account && !lookup?.has_artist_profile) {
       return 'This account has no artist profile. Use Create New instead.';
+    }
+    if (tab === 'invite_existing' && lookup && !lookup.has_account) {
+      return 'No Airaplay account found for this email. Use Create New instead.';
     }
     return null;
   };
@@ -267,205 +293,130 @@ export function AddArtistModal({
   const submitDisabled =
     submitting ||
     lookup?.link_status === 'active' ||
-    (tab === 'invite_existing' && lookup?.has_account && !lookup?.has_artist_profile);
+    (tab === 'invite_existing' && lookup?.has_account && !lookup?.has_artist_profile) ||
+    (tab === 'invite_existing' && !!lookup && !lookup.has_account);
+
+  const footer =
+    step === 'verify' ? (
+      <ModalFooter
+        onCancel={() => {
+          setStep('details');
+          setVerificationCode('');
+          setError(null);
+        }}
+        cancelLabel="Back"
+        submitLabel="Confirm artist"
+        submitting={submitting}
+        submitDisabled={submitting || normalizeInvitationCode(verificationCode).length < 8}
+        formId="almc-add-artist-verify"
+      />
+    ) : (
+      <ModalFooter
+        onCancel={onClose}
+        cancelLabel="Cancel"
+        submitLabel={
+          lookup?.pending_invitation_id
+            ? 'Enter verification code'
+            : tab === 'create_new'
+              ? 'Create Artist'
+              : 'Send invitation'
+        }
+        submitting={submitting}
+        submitDisabled={submitDisabled}
+        formId={lookup?.pending_invitation_id ? undefined : 'almc-add-artist-details'}
+        onSubmitOverride={
+          lookup?.pending_invitation_id
+            ? () => {
+                setStep('verify');
+                setError(null);
+              }
+            : undefined
+        }
+      />
+    );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div
-        className="relative flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-white/20 bg-[#0d0d0d]/97 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="h-1.5 shrink-0 bg-[var(--almc-lime)]" />
+    <AlmcModalShell
+      title={step === 'verify' ? 'Verify artist' : 'Add Artist'}
+      subtitle={
+        step === 'verify'
+          ? 'Enter the verification code the artist received by email.'
+          : 'Create a new artist profile or invite an existing Airaplay artist.'
+      }
+      onClose={onClose}
+      footer={footer}
+      size="md"
+    >
+      {step === 'verify' ? (
+        <form id="almc-add-artist-verify" onSubmit={handleConfirmArtist} className="space-y-4">
+          {error && <ErrorBanner message={error} />}
 
-        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border px-6 py-5">
-          <div>
-            <h2 className="text-xl font-bold text-foreground">
-              {step === 'verify' ? 'Verify artist' : 'Add Artist'}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {step === 'verify'
-                ? 'Enter the verification code the artist received by email.'
-                : 'Create a new artist profile or invite an existing Airaplay artist.'}
+          <div className="rounded-2xl border border-[var(--almc-lime)]/30 bg-[var(--almc-lime)]/10 p-4">
+            <p className="text-sm text-foreground">
+              Verification code sent to <strong>{form.email.trim()}</strong>
             </p>
+            {emailSent && (
+              <p className="mt-2 flex items-center gap-2 text-xs text-[var(--almc-lime-deep)]">
+                <Mail className="h-3.5 w-3.5" />
+                Email queued — ask the artist to share their code with you
+              </p>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
 
-        {step === 'verify' ? (
-          <form onSubmit={handleConfirmArtist} className="space-y-4 overflow-y-auto px-6 py-6">
+          <Field label="Verification code from artist *">
+            <input
+              type="text"
+              inputMode="text"
+              autoComplete="off"
+              autoFocus
+              required
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(formatInvitationCodeInput(e.target.value))}
+              placeholder="Enter code"
+              className={cn(consoleTheme.input, 'w-full text-center font-mono text-lg tracking-[0.15em] uppercase')}
+            />
+          </Field>
+        </form>
+      ) : (
+        <>
+          <div className="mb-5 grid grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 sm:grid-cols-4">
+            {ADD_ARTIST_TABS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                disabled={item.disabled}
+                title={item.disabled ? item.disabledReason : undefined}
+                onClick={() => !item.disabled && setTab(item.id)}
+                className={cn(
+                  'rounded-lg px-2 py-2 text-xs font-medium transition-colors sm:text-sm',
+                  item.disabled && 'cursor-not-allowed opacity-40',
+                  tab === item.id
+                    ? 'bg-[var(--almc-lime)]/40 text-[var(--almc-lime-deep)]'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <form id="almc-add-artist-details" onSubmit={handleSendInvitation} className="space-y-4">
             {error && <ErrorBanner message={error} />}
 
-            <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
-              <p className="text-sm text-foreground">
-                Verification code sent to <strong>{form.email.trim()}</strong>
-              </p>
-              {emailSent && (
-                <p className="mt-2 flex items-center gap-2 text-xs text-emerald-400">
-                  <Mail className="h-3.5 w-3.5" />
-                  Email queued — ask the artist to share their code with you
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm text-secondary-foreground">
-                Verification code from artist *
-              </label>
-              <input
-                type="text"
-                inputMode="text"
-                autoComplete="off"
-                autoFocus
-                required
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(formatInvitationCodeInput(e.target.value))}
-                placeholder="Enter code"
-                className={cn(consoleTheme.input, 'w-full text-center font-mono text-lg tracking-[0.15em] uppercase')}
-              />
-            </div>
-
-            <ModalFooter
-              onCancel={() => {
-                setStep('details');
-                setVerificationCode('');
-                setError(null);
-              }}
-              cancelLabel="Back"
-              submitLabel="Confirm artist"
-              submitting={submitting}
-              submitDisabled={submitting || normalizeInvitationCode(verificationCode).length < 8}
-            />
-          </form>
-        ) : (
-          <>
-            <div className="shrink-0 border-b border-border/60 px-6 pt-4">
-              <div className="grid grid-cols-1 gap-1 rounded-xl bg-secondary p-1 sm:grid-cols-2 lg:grid-cols-4">
-                {ADD_ARTIST_TABS.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    disabled={item.disabled}
-                    title={item.disabled ? item.disabledReason : undefined}
-                    onClick={() => !item.disabled && setTab(item.id)}
-                    className={cn(
-                      'rounded-lg px-2 py-2 text-xs font-medium transition-colors sm:text-sm',
-                      item.disabled && 'cursor-not-allowed opacity-40',
-                      tab === item.id
-                        ? 'bg-card text-[var(--almc-lime-deep)] shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
-                    )}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <form onSubmit={handleSendInvitation} className="flex min-h-0 flex-1 flex-col">
-              <div className="space-y-4 overflow-y-auto px-6 py-6">
-                {error && <ErrorBanner message={error} />}
-
-                {tab === 'create_new' ? (
-                  <>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <Field label="Artist name *">
-                        <input
-                          type="text"
-                          required
-                          value={form.stageName}
-                          onChange={(e) => updateForm({ stageName: e.target.value })}
-                          placeholder="Stage name"
-                          className={cn(consoleTheme.input, 'w-full')}
-                        />
-                      </Field>
-                      <Field label="Email *">
-                        <input
-                          type="email"
-                          required
-                          value={form.email}
-                          onChange={(e) => updateForm({ email: e.target.value })}
-                          placeholder="artist@email.com"
-                          className={cn(consoleTheme.input, 'w-full')}
-                        />
-                      </Field>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <Field label="Phone">
-                        <input
-                          type="tel"
-                          value={form.phone}
-                          onChange={(e) => updateForm({ phone: e.target.value })}
-                          placeholder="+234..."
-                          className={cn(consoleTheme.input, 'w-full')}
-                        />
-                      </Field>
-                      <Field label="Genre *">
-                        <select
-                          required
-                          value={form.genre}
-                          onChange={(e) => updateForm({ genre: e.target.value })}
-                          className={cn(consoleTheme.input, 'w-full')}
-                        >
-                          <option value="">Select genre</option>
-                          {genres.map((genre) => (
-                            <option key={genre.id} value={genre.name}>
-                              {genre.name}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                    </div>
-
-                    <Field label="Country *">
-                      <select
-                        required
-                        value={form.country}
-                        onChange={(e) => updateForm({ country: e.target.value })}
-                        className={cn(consoleTheme.input, 'w-full')}
-                      >
-                        <option value="">Select country</option>
-                        {ARTIST_INVITE_COUNTRIES.map((country) => (
-                          <option key={country} value={country}>
-                            {country}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-
-                    <Field label="Biography">
-                      <textarea
-                        rows={3}
-                        value={form.biography}
-                        onChange={(e) => updateForm({ biography: e.target.value })}
-                        placeholder="Short artist bio"
-                        className={cn(consoleTheme.input, 'w-full resize-none')}
-                      />
-                    </Field>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <ImageUploadField
-                        label="Profile photo"
-                        preview={profilePreview}
-                        inputRef={profileInputRef}
-                        onSelect={(file) => handleImageSelect(file, 'profile')}
-                      />
-                      <ImageUploadField
-                        label="Cover image"
-                        preview={coverPreview}
-                        inputRef={coverInputRef}
-                        onSelect={(file) => handleImageSelect(file, 'cover')}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <Field label="Artist email *">
+            {tab === 'create_new' ? (
+              <>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field label="Artist name *">
+                    <input
+                      type="text"
+                      required
+                      value={form.stageName}
+                      onChange={(e) => updateForm({ stageName: e.target.value })}
+                      placeholder="Stage name"
+                      className={cn(consoleTheme.input, 'w-full')}
+                    />
+                  </Field>
+                  <Field label="Email *">
                     <input
                       type="email"
                       required
@@ -474,79 +425,124 @@ export function AddArtistModal({
                       placeholder="artist@email.com"
                       className={cn(consoleTheme.input, 'w-full')}
                     />
-                    {lookupHint && (
-                      <p
-                        className={cn(
-                          'mt-2 flex items-center gap-2 text-xs',
-                          lookup?.link_status === 'active' || lookup?.pending_invitation_id
-                            ? 'text-amber-400'
-                            : 'text-muted-foreground'
-                        )}
-                      >
-                        {lookupLoading && <Loader2 className="h-3 w-3 animate-spin" />}
-                        {lookupHint}
-                      </p>
-                    )}
+                    {lookupHint && <LookupHint text={lookupHint} lookup={lookup} loading={lookupLoading} />}
                   </Field>
-                )}
+                </div>
 
-                <Field label="Permissions preset">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field label="Phone">
+                    <input
+                      type="tel"
+                      value={form.phone}
+                      onChange={(e) => updateForm({ phone: e.target.value })}
+                      placeholder="+234..."
+                      className={cn(consoleTheme.input, 'w-full')}
+                    />
+                  </Field>
+                  <Field label="Genre *">
+                    <select
+                      required
+                      value={form.genre}
+                      onChange={(e) => updateForm({ genre: e.target.value })}
+                      className={cn(consoleTheme.input, 'w-full')}
+                    >
+                      <option value="">Select genre</option>
+                      {genres.map((genre) => (
+                        <option key={genre.id} value={genre.name}>
+                          {genre.name}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+
+                <Field label="Country *">
                   <select
-                    value={form.permissionPreset}
-                    onChange={(e) =>
-                      updateForm({ permissionPreset: e.target.value as ArtistPermissionPreset })
-                    }
+                    required
+                    value={form.country}
+                    onChange={(e) => updateForm({ country: e.target.value })}
                     className={cn(consoleTheme.input, 'w-full')}
                   >
-                    {ARTIST_PERMISSION_PRESETS.map((preset) => (
-                      <option key={preset.value} value={preset.value}>
-                        {preset.label}
+                    <option value="">Select country</option>
+                    {ARTIST_INVITE_COUNTRIES.map((country) => (
+                      <option key={country} value={country}>
+                        {country}
                       </option>
                     ))}
                   </select>
-                  <p className="mt-1.5 text-xs text-muted-foreground">
-                    {
-                      ARTIST_PERMISSION_PRESETS.find((p) => p.value === form.permissionPreset)
-                        ?.description
-                    }
-                  </p>
                 </Field>
 
-                <p className="flex items-start gap-2 text-xs text-muted-foreground">
-                  <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--almc-lime-deep)]" />
-                  A verification code is emailed only to the artist. Enter it on the next step to
-                  confirm them.
-                </p>
-              </div>
+                <Field label="Biography">
+                  <textarea
+                    rows={3}
+                    value={form.biography}
+                    onChange={(e) => updateForm({ biography: e.target.value })}
+                    placeholder="Short artist bio"
+                    className={cn(consoleTheme.input, 'w-full resize-none')}
+                  />
+                </Field>
 
-              <div className="shrink-0 border-t border-border/60 px-6 py-4">
-                <ModalFooter
-                  onCancel={onClose}
-                  cancelLabel="Cancel"
-                  submitLabel={
-                    lookup?.pending_invitation_id
-                      ? 'Enter verification code'
-                      : tab === 'create_new'
-                        ? 'Create Artist'
-                        : 'Send invitation'
-                  }
-                  submitting={submitting}
-                  submitDisabled={submitDisabled}
-                  onSubmitOverride={
-                    lookup?.pending_invitation_id
-                      ? () => {
-                          setStep('verify');
-                          setError(null);
-                        }
-                      : undefined
-                  }
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <ImageUploadField
+                    label="Profile photo"
+                    preview={profilePreview}
+                    inputRef={profileInputRef}
+                    onSelect={(file) => handleImageSelect(file, 'profile')}
+                  />
+                  <ImageUploadField
+                    label="Cover image"
+                    preview={coverPreview}
+                    inputRef={coverInputRef}
+                    onSelect={(file) => handleImageSelect(file, 'cover')}
+                  />
+                </div>
+              </>
+            ) : (
+              <Field label="Artist email *">
+                <input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(e) => updateForm({ email: e.target.value })}
+                  placeholder="artist@email.com"
+                  className={cn(consoleTheme.input, 'w-full')}
                 />
-              </div>
-            </form>
-          </>
-        )}
-      </div>
-    </div>
+                {lookupHint && <LookupHint text={lookupHint} lookup={lookup} loading={lookupLoading} />}
+              </Field>
+            )}
+
+            <Field label="Permissions preset">
+              <select
+                value={form.permissionPreset}
+                onChange={(e) =>
+                  updateForm({ permissionPreset: e.target.value as ArtistPermissionPreset })
+                }
+                className={cn(consoleTheme.input, 'w-full')}
+              >
+                {ARTIST_PERMISSION_PRESETS.map((preset) => (
+                  <option key={preset.value} value={preset.value}>
+                    {preset.label}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                {
+                  ARTIST_PERMISSION_PRESETS.find((p) => p.value === form.permissionPreset)
+                    ?.description
+                }
+              </p>
+            </Field>
+
+            <p className="flex items-start gap-2 text-xs text-muted-foreground">
+              <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--almc-lime-deep)]" />
+              {tab === 'create_new'
+                ? 'We’ll email the artist a verification code. After they create/sign into Airaplay, enter the code to create their profile and add them to your roster.'
+                : 'A verification code is emailed only to the artist. Enter it on the next step to confirm them.'}
+            </p>
+          </form>
+        </>
+      )}
+    </AlmcModalShell>
   );
 }
 
@@ -559,9 +555,33 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function LookupHint({
+  text,
+  lookup,
+  loading,
+}: {
+  text: string;
+  lookup: ArtistInviteCandidate | null;
+  loading: boolean;
+}) {
+  return (
+    <p
+      className={cn(
+        'mt-2 flex items-center gap-2 text-xs',
+        lookup?.link_status === 'active' || lookup?.pending_invitation_id
+          ? 'text-amber-600 dark:text-amber-400'
+          : 'text-muted-foreground'
+      )}
+    >
+      {loading && <Loader2 className="h-3 w-3 animate-spin" />}
+      {text}
+    </p>
+  );
+}
+
 function ErrorBanner({ message }: { message: string }) {
   return (
-    <div className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">
+    <div className="flex items-start gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300">
       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
       {message}
     </div>
@@ -592,12 +612,12 @@ function ImageUploadField({
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="flex w-full items-center gap-3 rounded-xl border border-dashed border-border bg-card/40 px-4 py-3 text-left hover:bg-muted/40"
+        className="flex w-full items-center gap-3 rounded-2xl border border-dashed border-border/80 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/40"
       >
         {preview ? (
-          <img src={preview} alt="" className="h-12 w-12 rounded-lg object-cover" />
+          <img src={preview} alt="" className="h-12 w-12 rounded-xl object-cover" />
         ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
             <ImageIcon className="h-5 w-5 text-muted-foreground" />
           </div>
         )}
@@ -618,6 +638,7 @@ function ModalFooter({
   submitting,
   submitDisabled,
   onSubmitOverride,
+  formId,
 }: {
   onCancel: () => void;
   cancelLabel: string;
@@ -625,14 +646,11 @@ function ModalFooter({
   submitting: boolean;
   submitDisabled?: boolean;
   onSubmitOverride?: () => void;
+  formId?: string;
 }) {
   return (
     <div className="flex gap-3">
-      <button
-        type="button"
-        onClick={onCancel}
-        className="flex-1 rounded-xl border border-border py-3 text-sm text-secondary-foreground hover:bg-muted"
-      >
+      <button type="button" onClick={onCancel} className={cn(consoleTheme.btnSecondary, 'flex-1')}>
         {cancelLabel}
       </button>
       {onSubmitOverride ? (
@@ -640,7 +658,13 @@ function ModalFooter({
           <ConsoleSubmitArrow label={submitLabel} />
         </ConsolePrimaryButton>
       ) : (
-        <ConsolePrimaryButton type="submit" disabled={submitDisabled} loading={submitting} className="flex-1">
+        <ConsolePrimaryButton
+          type="submit"
+          form={formId}
+          disabled={submitDisabled}
+          loading={submitting}
+          className="flex-1"
+        >
           <ConsoleSubmitArrow label={submitLabel} />
         </ConsolePrimaryButton>
       )}

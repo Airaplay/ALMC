@@ -84,7 +84,9 @@ export function ConsoleAcceptInvitationScreen({ type }: { type: AcceptType }): J
       if (result.requires_artist_profile) {
         setStatus('error');
         setMessage(
-          'Create your artist profile on Airaplay first, then return here and enter the same invitation code.'
+          result.invitation_type === 'create_new'
+            ? 'We could not create your artist profile from this invite. Contact the organization and ask them to resend a Create New invitation.'
+            : 'Create your artist profile on Airaplay first, then return here and enter the same invitation code.'
         );
         return;
       }

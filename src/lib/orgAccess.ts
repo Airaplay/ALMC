@@ -874,6 +874,7 @@ export function orgHasPermission(
 export async function acceptArtistOrganizationInvitation(code: string): Promise<{
   organization_id: string;
   requires_artist_profile?: boolean;
+  invitation_type?: string;
 }> {
   const normalized = normalizeInvitationCode(code);
   const { data, error } = await supabase.rpc('accept_artist_organization_invitation', {
@@ -884,9 +885,13 @@ export async function acceptArtistOrganizationInvitation(code: string): Promise<
     return {
       organization_id: data.organization_id as string,
       requires_artist_profile: true,
+      invitation_type: data.invitation_type as string | undefined,
     };
   }
-  return { organization_id: data.organization_id as string };
+  return {
+    organization_id: data.organization_id as string,
+    invitation_type: data.invitation_type as string | undefined,
+  };
 }
 
 export async function acceptOrganizationMemberInvitation(token: string): Promise<{ organization_id: string }> {
