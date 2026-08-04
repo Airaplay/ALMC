@@ -327,7 +327,7 @@ export default function VideoUploadForm({ onClose, onSuccess, initialData, admin
       let duration = initialData?.metadata?.duration_seconds ?? 0;
 
       if (selectedVideoFile) {
-        setUploadStep('Uploading…');
+        setUploadStep('Uploading in progress..');
         const uploadResult = await bunnyStreamService.uploadVideo(selectedVideoFile, {
           title: title.trim(),
           organizationId: adminUploadContext?.organizationId,
@@ -628,7 +628,7 @@ export default function VideoUploadForm({ onClose, onSuccess, initialData, admin
             {isSubmitting && (
               <div className="space-y-2.5 rounded-2xl border border-white/10 bg-white/5 p-5">
                 <div className="flex justify-between text-[12px]">
-                  <span className="text-white/60 font-medium">{uploadStep || 'Uploading…'}</span>
+                  <span className="text-white/60 font-medium">{uploadStep || 'Uploading in progress..'}</span>
                   <span className="font-bold text-white">{uploadProgress}%</span>
                 </div>
                 <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -660,12 +660,12 @@ export default function VideoUploadForm({ onClose, onSuccess, initialData, admin
                   <button type="button" onClick={() => handleSubmit('draft')} disabled={isSubmitting || !canSubmit} className="flex-1 min-h-[48px] rounded-xl border border-white/10 text-sm font-semibold text-white/80 hover:bg-white/5 disabled:opacity-50">Save Draft</button>
                   <button type="button" onClick={() => handleSubmit('schedule')} disabled={isSubmitting || !canSubmit} className="flex-1 min-h-[48px] rounded-xl border border-[#00ad74]/40 text-sm font-semibold text-[#00ad74] hover:bg-[#00ad74]/10 disabled:opacity-50">Schedule</button>
                   <button type="button" onClick={() => handleSubmit('publish')} disabled={isSubmitting || !canSubmit} className={cn('flex-1 min-h-[48px] py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 touch-manipulation', canSubmit && !isSubmitting ? 'bg-[#00ad74] text-white hover:bg-[#009c68]' : 'bg-white/10 text-white/40 cursor-not-allowed disabled:opacity-50')}>
-                    {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> {uploadStep || 'Uploading…'}</> : <><Upload className="w-4 h-4" /> Publish Now</>}
+                    {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> {uploadStep || 'Uploading in progress..'}</> : <><Upload className="w-4 h-4" /> Publish Now</>}
                   </button>
                 </>
               ) : (
               <button type="button" onClick={() => handleSubmit('publish')} disabled={isSubmitting || !canSubmit} className={cn('min-h-[48px] py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 touch-manipulation', isEditing ? 'flex-1' : 'flex-[2]', canSubmit && !isSubmitting ? 'bg-[#00ad74] text-white hover:bg-[#009c68]' : 'bg-white/10 text-white/40 cursor-not-allowed disabled:opacity-50')}>
-                {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> {uploadStep || 'Uploading…'}</> : isEditing ? <><CheckCircle2 className="w-4 h-4" /> Save changes</> : <><Upload className="w-4 h-4" /> Publish video</>}
+                {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> {uploadStep || 'Uploading in progress..'}</> : isEditing ? <><CheckCircle2 className="w-4 h-4" /> Save changes</> : <><Upload className="w-4 h-4" /> Publish video</>}
               </button>
               )}
             </div>

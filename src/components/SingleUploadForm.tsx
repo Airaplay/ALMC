@@ -1270,7 +1270,7 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext, consoleEmbed
               {uploading && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-white">Uploading to Bunny Storage…</p>
+                    <p className="text-xs font-semibold text-white">Uploading in progress..</p>
                     <p className="text-xs font-semibold text-white">{uploadProgress}%</p>
                   </div>
                   <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">

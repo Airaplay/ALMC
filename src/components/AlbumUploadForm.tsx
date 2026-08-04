@@ -828,7 +828,7 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
             {uploading && (
               <div className="space-y-2 rounded-xl border border-[#00ad74]/30 bg-[#00ad74]/10 p-4">
                 <div className="flex justify-between text-xs">
-                  <span className="text-white/80 font-medium">Uploading album…</span>
+                  <span className="text-white/80 font-medium">Uploading in progress..</span>
                   <span className="font-bold text-white">{uploadProgress}%</span>
                 </div>
                 <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -894,7 +894,7 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
                       canSubmit && !uploading ? 'bg-[#00ad74] hover:bg-[#009c68] text-white' : 'bg-white/10 text-white/40 cursor-not-allowed'
                     )}
                   >
-                    {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</> : <><Upload className="w-4 h-4" /> Publish Now</>}
+                    {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading in progress..</> : <><Upload className="w-4 h-4" /> Publish Now</>}
                   </button>
                 </>
               ) : (
@@ -907,7 +907,7 @@ export default function AlbumUploadForm({ onClose, onSuccess, initialData, admin
                   canSubmit && !uploading ? 'bg-[#00ad74] hover:bg-[#009c68] text-white' : 'bg-white/10 text-white/40 cursor-not-allowed'
                 )}
               >
-                {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</> : <><Upload className="w-4 h-4" /> Submit album</>}
+                {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading in progress..</> : <><Upload className="w-4 h-4" /> Submit album</>}
               </button>
               )}
             </div>
