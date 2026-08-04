@@ -125,23 +125,43 @@ async function clearIndexedDB(): Promise<void> {
 export async function performCompleteLogout(): Promise<{ success: boolean; error?: string }> {
   console.log('[logoutService] Starting complete logout process...');
 
+  let signOutError: string | undefined;
+
   try {
-    clearAdminLoginTrustStorage();
+    // Clear PIN gate first so protected routes cannot treat the user as verified.
     clearAlmcPinGate();
+    clearAdminLoginTrustStorage();
+
+    // Sign out while the client still has tokens — clearing storage first can leave
+    // an in-memory session alive and bounce users back into the app after navigate.
+    const { error } = await supabase.auth.signOut({ scope: 'global' });
+    if (error) {
+      console.error('[logoutService] Supabase signOut error:', error);
+      signOutError = error.message;
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (fallbackError) {
+        console.error('[logoutService] Fallback local signOut failed:', fallbackError);
+      }
+    }
+
     clearLocalStorage();
     clearSessionStorage();
+    // Explicit ALMC org/artist selection (may not match AUTH_RELATED_KEYS patterns).
+    try {
+      localStorage.removeItem('airaplay_console_org_id');
+      localStorage.removeItem('airaplay_console_artist_profile_id');
+    } catch {
+      /* ignore */
+    }
+    clearAlmcPinGate();
     await clearAllCaches();
     await clearIndexedDB();
 
-    const { error } = await supabase.auth.signOut({ scope: 'global' });
-
-    if (error) {
-      console.error('[logoutService] Supabase signOut error:', error);
-      return { success: false, error: error.message };
-    }
-
     console.log('[logoutService] Complete logout successful');
-    return { success: true };
+    return signOutError
+      ? { success: false, error: signOutError }
+      : { success: true };
   } catch (error) {
     console.error('[logoutService] Logout failed:', error);
 
@@ -151,9 +171,13 @@ export async function performCompleteLogout(): Promise<{ success: boolean; error
       console.error('[logoutService] Fallback signOut also failed:', fallbackError);
     }
 
+    clearAlmcPinGate();
+    clearLocalStorage();
+    clearSessionStorage();
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error during logout'
+      error: error instanceof Error ? error.message : 'Unknown error during logout',
     };
   }
 }

@@ -199,9 +199,9 @@ export function ConsoleLoginScreen(): JSX.Element {
       setAuthStep('credentials');
       setSessionUserId(null);
       pendingOrgTypeRef.current = null;
+      window.location.replace(almcRoutes.login);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign out failed');
-    } finally {
       setIsSigningOut(false);
     }
   };

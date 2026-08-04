@@ -124,7 +124,8 @@ function ConsoleDashboardContent(): JSX.Element {
 
   const handleLogout = async () => {
     await performCompleteLogout();
-    navigate(almcRoutes.login, { replace: true });
+    // Hard navigate so in-memory auth/org state cannot keep the console open.
+    window.location.replace(almcRoutes.login);
   };
 
   const handleUploadArtist = useCallback((artist: OrgArtistItem) => {

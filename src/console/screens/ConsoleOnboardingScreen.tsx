@@ -131,7 +131,7 @@ export function ConsoleOnboardingScreen(): JSX.Element {
     setError(null);
     try {
       await performCompleteLogout();
-      navigate(almcRoutes.login, { replace: true });
+      window.location.replace(almcRoutes.login);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign out failed');
       setIsSigningOut(false);
