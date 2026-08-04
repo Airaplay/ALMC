@@ -220,7 +220,9 @@ export function AddArtistModal({
       return;
     }
 
-    if (lookup?.pending_invitation_id) {
+    // Invite Existing with a pending invite → jump to verify.
+    // Create New provisions immediately and cancels any pending invite.
+    if (lookup?.pending_invitation_id && tab !== 'create_new') {
       setStep('verify');
       setError(null);
       return;
