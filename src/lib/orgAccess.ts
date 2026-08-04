@@ -733,24 +733,79 @@ export async function inviteArtistToOrganization(
   };
 }
 
+/** Create a new artist/creator from ALMC immediately (provisions account if needed). */
+export async function createArtistForOrganization(
+  orgId: string,
+  email: string,
+  artistMetadata: Record<string, unknown> = {}
+): Promise<{ artist_profile_id: string; user_id: string }> {
+  const { data, error } = await supabase.functions.invoke('almc-create-artist', {
+    body: {
+      action: 'create',
+      organizationId: orgId,
+      email,
+      metadata: artistMetadata,
+    },
+  });
+
+  if (error) {
+    const detail =
+      (data && typeof data === 'object' && 'error' in data && typeof (data as { error?: unknown }).error === 'string'
+        ? (data as { error: string }).error
+        : null) || rpcErrorMessage(error, 'Failed to create artist');
+    throw new Error(detail);
+  }
+  if (!data?.success || !data.artist_profile_id) {
+    throw new Error((data?.error as string) || 'Failed to create artist');
+  }
+  return {
+    artist_profile_id: data.artist_profile_id as string,
+    user_id: data.user_id as string,
+  };
+}
+
 export async function confirmArtistOrganizationInvitation(
   orgId: string,
   email: string,
   code: string
 ): Promise<{ artist_profile_id: string; invitation_id: string }> {
   const normalized = normalizeInvitationCode(code);
-  const { data, error } = await supabase.rpc('confirm_artist_organization_invitation', {
+
+  // Prefer edge function so Create New can provision accounts that do not exist yet.
+  const { data, error } = await supabase.functions.invoke('almc-create-artist', {
+    body: {
+      action: 'confirm',
+      organizationId: orgId,
+      email: email.trim(),
+      code: normalized || code.trim(),
+    },
+  });
+
+  if (!error && data?.success && data.artist_profile_id) {
+    return {
+      artist_profile_id: data.artist_profile_id as string,
+      invitation_id: (data.invitation_id as string) || '',
+    };
+  }
+
+  // Fallback to RPC for invite-existing flows if edge function is unavailable.
+  const { data: rpcData, error: rpcErr } = await supabase.rpc('confirm_artist_organization_invitation', {
     p_org_id: orgId,
     p_email: email.trim(),
     p_code: normalized || code.trim(),
   });
-  if (error) throw new Error(rpcErrorMessage(error, 'Verification failed'));
-  if (!data?.success) {
-    throw new Error((data?.message as string) || 'Verification failed');
+  if (rpcErr) {
+    throw new Error(
+      (data?.error as string) ||
+        rpcErrorMessage(error ?? rpcErr, 'Verification failed')
+    );
+  }
+  if (!rpcData?.success) {
+    throw new Error((rpcData?.message as string) || (data?.error as string) || 'Verification failed');
   }
   return {
-    artist_profile_id: data.artist_profile_id as string,
-    invitation_id: data.invitation_id as string,
+    artist_profile_id: rpcData.artist_profile_id as string,
+    invitation_id: rpcData.invitation_id as string,
   };
 }
 

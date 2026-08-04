@@ -12,6 +12,7 @@ import { supabase } from '../../lib/supabase';
 import {
   ArtistInviteCandidate,
   confirmArtistOrganizationInvitation,
+  createArtistForOrganization,
   formatInvitationCodeInput,
   inviteArtistToOrganization,
   lookupArtistInviteCandidate,
@@ -229,6 +230,15 @@ export function AddArtistModal({
     setError(null);
     try {
       const metadata = await buildMetadata();
+
+      // Create New: provision artist/creator immediately from the ALMC dashboard.
+      if (tab === 'create_new') {
+        await createArtistForOrganization(organizationId, form.email.trim(), metadata);
+        onSuccess();
+        onClose();
+        return;
+      }
+
       const result = await inviteArtistToOrganization(
         organizationId,
         form.email.trim(),
@@ -285,7 +295,7 @@ export function AddArtistModal({
     if (lookup.has_account) return 'Account exists but has no artist profile — use Create New.';
     return tab === 'invite_existing'
       ? 'No Airaplay account yet — switch to Create New.'
-      : 'No Airaplay account yet — a verification code will be emailed to them.';
+      : 'No Airaplay account yet — Create New will create one for them.';
   })();
 
   if (!open) return null;
@@ -536,7 +546,7 @@ export function AddArtistModal({
             <p className="flex items-start gap-2 text-xs text-muted-foreground">
               <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--almc-lime-deep)]" />
               {tab === 'create_new'
-                ? 'We’ll email the artist a verification code. After they create/sign into Airaplay, enter the code to create their profile and add them to your roster.'
+                ? 'Creates the artist profile on Airaplay and adds them to your roster immediately. We’ll email them so they can claim their account.'
                 : 'A verification code is emailed only to the artist. Enter it on the next step to confirm them.'}
             </p>
           </form>
