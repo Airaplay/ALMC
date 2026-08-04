@@ -1341,7 +1341,7 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext, consoleEmbed
                       {uploading ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          Uploading…
+                          Uploading in progress..
                         </>
                       ) : (
                         <>
@@ -1365,7 +1365,7 @@ const SingleUploadForm = ({ onClose, onSuccess, adminUploadContext, consoleEmbed
                   {uploading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Uploading…
+                      Uploading in progress..
                     </>
                   ) : (
                     <>
