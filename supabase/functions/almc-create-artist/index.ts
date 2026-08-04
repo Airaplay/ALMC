@@ -117,7 +117,7 @@ async function ensureAuthAndPublicUser(
       id: userId,
       email,
       display_name: stageName || email.split("@")[0],
-      role: "listener",
+      role: "creator",
       country_last_changed_at: new Date().toISOString(),
     },
     { onConflict: "id" },
