@@ -54,25 +54,30 @@ export function ConsoleSidebar({
   );
 
   const sidebarContent = (
-    <div className="flex h-full flex-col border-r border-sidebar-border bg-sidebar">
+    <div className="flex h-full flex-col border-r border-sidebar-border bg-card text-card-foreground">
       <div className="flex items-center gap-3 border-b border-sidebar-border px-3 py-4">
-        <img
-          src="/airaplay-console-logo.png"
-          alt="Airaplay"
-          className="h-12 w-auto max-w-[196px] object-contain object-left dark:invert"
-        />
+        <div className="min-w-0 flex-1">
+          <img
+            src="/airaplay-console-logo.png"
+            alt="Airaplay"
+            className="h-10 w-auto max-w-[160px] object-contain object-left dark:invert sm:h-12 sm:max-w-[196px]"
+          />
+          <p className="mt-1 truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            Label & Management Console
+          </p>
+        </div>
         {isMobile && (
           <button
             type="button"
             onClick={onCloseSidebar}
-            className="ml-auto rounded-full p-1.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            className="shrink-0 rounded-full p-1.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
             <X className="h-5 w-5" strokeWidth={1.75} />
           </button>
         )}
       </div>
 
-      <nav className="flex-1 space-y-0.5 p-3">
+      <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
         <p className="mb-2 px-3.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           Workspace
         </p>
@@ -95,7 +100,7 @@ export function ConsoleSidebar({
         ))}
       </nav>
 
-      <div className="space-y-0.5 border-t border-sidebar-border p-3">
+      <div className="space-y-0.5 border-t border-sidebar-border bg-card p-3">
         <a
           href={almcRoutes.consumerHome()}
           className="flex w-full items-center gap-3 rounded-full px-3.5 py-2.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -122,11 +127,11 @@ export function ConsoleSidebar({
     return (
       <>
         {sidebarOpen && (
-          <div className="fixed inset-0 z-40 bg-foreground/30 backdrop-blur-sm" onClick={onCloseSidebar} aria-hidden />
+          <div className="fixed inset-0 z-40 bg-black/60" onClick={onCloseSidebar} aria-hidden />
         )}
         <div
           className={cn(
-            'fixed inset-y-0 left-0 z-50 w-56 transform transition-transform',
+            'fixed inset-y-0 left-0 z-50 w-[min(18rem,85vw)] transform overflow-hidden bg-card shadow-2xl transition-transform',
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
@@ -136,7 +141,7 @@ export function ConsoleSidebar({
     );
   }
 
-  return <aside className="hidden w-52 shrink-0 lg:block">{sidebarContent}</aside>;
+  return <aside className="hidden w-52 shrink-0 bg-card lg:block">{sidebarContent}</aside>;
 }
 
 export function ConsoleMobileHeader({
