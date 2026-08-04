@@ -364,7 +364,7 @@ export function ConsoleLoginScreen(): JSX.Element {
     ? `Enter the 6-digit code sent to ${email}`
     : isSignUp
       ? 'Join Airaplay — manage artists and releases'
-      : 'Sign in with your Airaplay account';
+      : undefined;
 
   const glassLabel = 'mb-2 block text-sm font-medium text-white/85';
   const glassInput =

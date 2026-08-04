@@ -10,7 +10,10 @@ function almcPath(segment?: string): string {
 }
 
 function consumerBase(): string {
-  return (import.meta.env.VITE_AIRAPLAY_CONSUMER_URL as string | undefined)?.replace(/\/$/, '') || '';
+  return (
+    (import.meta.env.VITE_AIRAPLAY_CONSUMER_URL as string | undefined)?.replace(/\/$/, '') ||
+    'https://www.airaplay.com'
+  );
 }
 
 export const almcRoutes = {
@@ -23,18 +26,18 @@ export const almcRoutes = {
     `${window.location.origin}${almcPath('accept-artist')}?code=${encodeURIComponent(code)}`,
   acceptTeamInviteUrl: (token: string) =>
     `${window.location.origin}${almcPath('accept-team')}?token=${encodeURIComponent(token)}`,
-  consumerHome: () => consumerBase() || '/',
+  consumerHome: () => consumerBase(),
   consumerBecomeArtist: () => {
     const base = consumerBase();
-    return base ? `${base}/become-artist` : '/become-artist';
+    return `${base}/become-artist`;
   },
-  consumerProfile: () => `${consumerBase() || ''}/profile`.replace(/^\/\//, '/'),
+  consumerProfile: () => `${consumerBase()}/profile`,
   consumerTermsSignup: () => {
     const base = consumerBase();
-    return base ? `${base}/terms/user-signup` : '/terms/user-signup';
+    return `${base}/terms/user-signup`;
   },
   consumerBuyTreats: () => {
     const base = consumerBase();
-    return base ? `${base}/buy-treats` : '/buy-treats';
+    return `${base}/buy-treats`;
   },
 };

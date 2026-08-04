@@ -72,7 +72,7 @@ function releaseTypeLabel(type: string): string {
 
 function consumerArtistUrl(userId: string | null): string | null {
   if (!userId) return null;
-  const base = (import.meta.env.VITE_AIRAPLAY_CONSUMER_URL as string | undefined)?.replace(/\/$/, '');
+  const base = (import.meta.env.VITE_AIRAPLAY_CONSUMER_URL as string | undefined)?.replace(/\/$/, '') || 'https://www.airaplay.com';
   if (!base) return null;
   return `${base}/user/${userId}`;
 }
