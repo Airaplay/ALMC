@@ -7,7 +7,7 @@ import {
   OrgContentItem,
 } from '../../lib/orgAccess';
 import { OrgContentUploadWizard } from './OrgContentUploadWizard';
-import { LoadingLogo } from '../../components/LoadingLogo';
+import { AlmcLoader } from './AlmcLoader';
 import { consoleTheme } from '../consoleTheme';
 
 const TYPE_FILTERS = [
@@ -188,7 +188,7 @@ export function ArtistContentPanel({ artist, onBack }: ArtistContentPanelProps) 
 
       {loading ? (
         <div className="flex min-h-[280px] items-center justify-center">
-          <LoadingLogo />
+          <AlmcLoader />
         </div>
       ) : items.length === 0 ? (
         <div className={`${consoleTheme.card} p-10 text-center`}>

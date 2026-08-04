@@ -15,7 +15,7 @@ import { ArrowLeft, Download, TrendingDown, TrendingUp, Minus } from 'lucide-rea
 import { cn } from '../../lib/utils';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { getOrganizationAnalytics, OrgAnalyticsData } from '../../lib/orgAccess';
-import { LoadingLogo } from '../../components/LoadingLogo';
+import { AlmcLoader } from '../components/AlmcLoader';
 import { pctChange } from '../utils/formatOrgActivity';
 import { exportAnalyticsCsv } from '../utils/exportAnalyticsCsv';
 
@@ -313,7 +313,7 @@ export function AnalyticsSection({
 
       {loading ? (
         <div className="flex min-h-[280px] items-center justify-center">
-          <LoadingLogo />
+          <AlmcLoader />
         </div>
       ) : error ? (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">{error}</div>

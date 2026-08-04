@@ -9,7 +9,7 @@ import {
 } from '../../lib/orgAccess';
 import { almcRoutes } from '../../lib/almcRoutes';
 import { supabase } from '../../lib/supabase';
-import { LoadingLogo } from '../../components/LoadingLogo';
+import { AlmcLoader } from '../components/AlmcLoader';
 import { ConsoleAuthShell } from '../components/ConsoleAuthShell';
 import { ConsolePrimaryButton, ConsoleSubmitArrow } from '../components/ConsoleFormControls';
 import { consoleTheme } from '../consoleTheme';
@@ -101,7 +101,7 @@ export function ConsoleAcceptInvitationScreen({ type }: { type: AcceptType }): J
   if (type === 'team' && status === 'loading') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <LoadingLogo />
+        <AlmcLoader />
       </div>
     );
   }

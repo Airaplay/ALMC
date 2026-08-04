@@ -28,7 +28,7 @@ import {
   revokeOrganizationArtistAccess,
   setArtistSplitOverride,
 } from '../../lib/orgAccess';
-import { LoadingLogo } from '../../components/LoadingLogo';
+import { AlmcLoader } from '../components/AlmcLoader';
 import { AddArtistModal } from '../components/AddArtistModal';
 import { ArtistContentPanel } from '../components/ArtistContentPanel';
 import { ArtistPromotePanel } from '../components/ArtistPromotePanel';
@@ -545,7 +545,7 @@ export function ArtistsSection({
 
       {loading ? (
         <div className="flex min-h-[240px] items-center justify-center">
-          <LoadingLogo />
+          <AlmcLoader />
         </div>
       ) : artists.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center">

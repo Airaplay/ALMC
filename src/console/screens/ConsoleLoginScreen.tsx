@@ -7,7 +7,7 @@ import { almcRoutes } from '../../lib/almcRoutes';
 import { performCompleteLogout } from '../../lib/logoutService';
 import { fetchHasSecurityPin, setSecurityPinRpc, verifySecurityPinForSession } from '../../lib/supabase';
 import { toUserFacingAuthError } from '../../lib/criticalErrorMessages';
-import { LoadingLogo } from '../../components/LoadingLogo';
+import { AlmcLoader } from '../components/AlmcLoader';
 import { ConsoleAuthShell } from '../components/ConsoleAuthShell';
 import { ConsolePinStep, ConsolePinStepMode } from '../components/ConsolePinStep';
 import {
@@ -378,7 +378,7 @@ export function ConsoleLoginScreen(): JSX.Element {
     return (
       <ConsoleAuthShell subtitle="Loading…">
         <div className="flex items-center justify-center gap-3 py-6">
-          <LoadingLogo />
+          <AlmcLoader />
         </div>
       </ConsoleAuthShell>
     );

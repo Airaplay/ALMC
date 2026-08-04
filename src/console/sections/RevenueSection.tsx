@@ -13,7 +13,7 @@ import {
 import { DollarSign } from 'lucide-react';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { getOrganizationRevenue, OrgRevenueData } from '../../lib/orgAccess';
-import { LoadingLogo } from '../../components/LoadingLogo';
+import { AlmcLoader } from '../components/AlmcLoader';
 import { consoleTheme } from '../consoleTheme';
 
 const PERIOD_OPTIONS = [
@@ -85,7 +85,7 @@ export function RevenueSection() {
 
       {loading ? (
         <div className="flex min-h-[240px] items-center justify-center">
-          <LoadingLogo />
+          <AlmcLoader />
         </div>
       ) : error ? (
         <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-500">{error}</div>

@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { getOrganizationDashboard, OrgDashboardData } from '../../lib/orgAccess';
-import { LoadingLogo } from '../../components/LoadingLogo';
+import { AlmcLoader } from '../components/AlmcLoader';
 import {
   Users,
   Play,
@@ -169,7 +169,7 @@ export function DashboardSection() {
   if (loading) {
     return (
       <div className="flex min-h-[320px] items-center justify-center">
-        <LoadingLogo />
+        <AlmcLoader />
       </div>
     );
   }

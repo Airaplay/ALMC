@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, ChevronDown } from 'lucide-react';
 import { performCompleteLogout } from '../../lib/logoutService';
 import { almcRoutes } from '../../lib/almcRoutes';
-import { LoadingLogo } from '../../components/LoadingLogo';
+import { AlmcLoader } from '../components/AlmcLoader';
 import { OrganizationProvider, useOrganization } from '../contexts/OrganizationContext';
 import {
   ConsoleSidebar,
@@ -143,7 +143,7 @@ function ConsoleDashboardContent(): JSX.Element {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <LoadingLogo />
+        <AlmcLoader />
       </div>
     );
   }
@@ -160,7 +160,7 @@ function ConsoleDashboardContent(): JSX.Element {
     navigate(almcRoutes.onboarding, { replace: true });
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <LoadingLogo />
+        <AlmcLoader />
       </div>
     );
   }
@@ -304,7 +304,7 @@ export function ConsoleDashboardScreen(): JSX.Element {
   if (!authChecked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <LoadingLogo />
+        <AlmcLoader />
       </div>
     );
   }

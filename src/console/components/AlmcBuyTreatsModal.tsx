@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { AlertCircle, Check, CheckCircle, Coins, Loader2, Sparkles } from 'lucide-react';
+import { AlertCircle, Check, CheckCircle, Coins, Sparkles } from 'lucide-react';
+import { AlmcLoader } from './AlmcLoader';
 import { supabase, formatTreats } from '../../lib/supabase';
 import { PaymentChannelSelector } from '../../components/PaymentChannelSelector';
 import {
@@ -117,7 +118,7 @@ export function AlmcBuyTreatsModal({ onClose, onSuccess }: AlmcBuyTreatsModalPro
     >
       {loading ? (
         <div className="flex min-h-[200px] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <AlmcLoader size={36} />
         </div>
       ) : showPayment && selected && currencyData ? (
         <div className="space-y-4">

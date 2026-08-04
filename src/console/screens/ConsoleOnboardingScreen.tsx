@@ -5,7 +5,7 @@ import { createOrganization, getMyOrganizations, OrgType, setStoredOrgId } from 
 import { almcRoutes } from '../../lib/almcRoutes';
 import { supabase } from '../../lib/supabase';
 import { performCompleteLogout } from '../../lib/logoutService';
-import { LoadingLogo } from '../../components/LoadingLogo';
+import { AlmcLoader } from '../components/AlmcLoader';
 import { ConsoleAuthShell } from '../components/ConsoleAuthShell';
 import {
   ConsoleErrorAlert,
@@ -79,7 +79,7 @@ export function ConsoleOnboardingScreen(): JSX.Element {
   if (!authChecked || !onboardingReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <LoadingLogo />
+        <AlmcLoader />
       </div>
     );
   }

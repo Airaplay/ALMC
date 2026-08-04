@@ -14,7 +14,7 @@ import {
   updateOrganizationMember,
 } from '../../lib/orgAccess';
 import { almcRoutes } from '../../lib/almcRoutes';
-import { LoadingLogo } from '../../components/LoadingLogo';
+import { AlmcLoader } from '../components/AlmcLoader';
 import { CUSTOM_ROLE_PERMISSION_OPTIONS, INVITE_ROLE_FALLBACKS } from '../constants/teamManagement';
 import { consoleTheme } from '../consoleTheme';
 
@@ -169,7 +169,7 @@ export function TeamSection() {
   if (loading) {
     return (
       <div className="flex min-h-[280px] items-center justify-center">
-        <LoadingLogo />
+        <AlmcLoader />
       </div>
     );
   }

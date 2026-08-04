@@ -17,7 +17,7 @@ import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { getOrganizationReleaseCalendar, OrgReleaseCalendarItem } from '../../lib/orgAccess';
-import { LoadingLogo } from '../../components/LoadingLogo';
+import { AlmcLoader } from '../components/AlmcLoader';
 import {
   CALENDAR_VIEW_MODES,
   CalendarViewMode,
@@ -261,7 +261,7 @@ export function CalendarSection({ onUpload }: CalendarSectionProps) {
 
       {loading ? (
         <div className="flex min-h-[280px] items-center justify-center">
-          <LoadingLogo />
+          <AlmcLoader />
         </div>
       ) : error ? (
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">

@@ -6,7 +6,7 @@ import {
   OrgArtistItem,
   OrgPromotableItem,
 } from '../../lib/orgAccess';
-import { LoadingLogo } from '../../components/LoadingLogo';
+import { AlmcLoader } from './AlmcLoader';
 import { AlmcPromotionSetupModal } from './AlmcPromotionSetupModal';
 import { consoleTheme } from '../consoleTheme';
 
@@ -169,7 +169,7 @@ export function ArtistPromotePanel({ artist, onBack }: ArtistPromotePanelProps) 
 
       {loading ? (
         <div className="flex min-h-[280px] items-center justify-center">
-          <LoadingLogo />
+          <AlmcLoader />
         </div>
       ) : items.length === 0 ? (
         <div className={`${consoleTheme.card} p-10 text-center`}>
