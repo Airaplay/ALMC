@@ -41,17 +41,17 @@ export function ConsoleAuthShell({
         <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">{headerAction}</div>
       ) : null}
 
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col justify-center gap-8 px-4 py-8 sm:gap-10 sm:px-6 sm:py-10 lg:flex-row lg:items-center lg:justify-between lg:gap-16 lg:px-10 lg:py-12">
-        <div className="hidden max-w-xl text-white lg:block lg:flex-1">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col justify-center gap-6 px-4 py-8 sm:gap-10 sm:px-6 sm:py-10 lg:flex-row lg:items-center lg:justify-between lg:gap-16 lg:px-10 lg:py-12">
+        <div className="mx-auto max-w-xl text-center text-white lg:mx-0 lg:flex-1 lg:text-left">
           <img
             src="/airaplay-console-logo.png"
             alt="Airaplay"
-            className="mb-7 h-14 object-contain brightness-0 invert sm:h-16 lg:h-20"
+            className="mx-auto mb-4 h-12 object-contain brightness-0 invert sm:mb-7 sm:h-16 lg:mx-0 lg:h-20"
           />
-          <h1 className="text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
+          <h1 className="text-3xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
             Label & Management Console
           </h1>
-          <p className="mt-6 max-w-md text-base leading-relaxed text-white/70 sm:text-lg">
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/70 sm:mt-6 sm:text-lg lg:mx-0">
             Manage artists, releases, and your roster on Airaplay from one secure console.
           </p>
         </div>
@@ -63,11 +63,6 @@ export function ConsoleAuthShell({
               widthClass
             )}
           >
-            <img
-              src="/airaplay-console-logo.png"
-              alt="Airaplay"
-              className="mx-auto mb-6 h-10 object-contain brightness-0 invert lg:hidden"
-            />
             {title || subtitle ? (
               <div className="mb-6">
                 {title ? (
