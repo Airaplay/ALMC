@@ -707,6 +707,28 @@ function rpcErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
+/** FunctionsHttpError often hides the JSON body; surface `error` from the response when present. */
+async function edgeFunctionErrorMessage(
+  error: unknown,
+  data: unknown,
+  fallback: string
+): Promise<string> {
+  if (data && typeof data === 'object' && 'error' in data && typeof (data as { error?: unknown }).error === 'string') {
+    return (data as { error: string }).error;
+  }
+  const ctx = error as { context?: Response; message?: string } | null;
+  try {
+    if (ctx?.context && typeof ctx.context.json === 'function') {
+      const body = (await ctx.context.json()) as { error?: string; message?: string };
+      if (body?.error) return body.error;
+      if (body?.message) return body.message;
+    }
+  } catch {
+    /* keep fallback */
+  }
+  return rpcErrorMessage(error, fallback);
+}
+
 export async function inviteArtistToOrganization(
   orgId: string,
   email: string,
@@ -749,11 +771,7 @@ export async function createArtistForOrganization(
   });
 
   if (error) {
-    const detail =
-      (data && typeof data === 'object' && 'error' in data && typeof (data as { error?: unknown }).error === 'string'
-        ? (data as { error: string }).error
-        : null) || rpcErrorMessage(error, 'Failed to create artist');
-    throw new Error(detail);
+    throw new Error(await edgeFunctionErrorMessage(error, data, 'Failed to create artist'));
   }
   if (!data?.success || !data.artist_profile_id) {
     throw new Error((data?.error as string) || 'Failed to create artist');
@@ -788,6 +806,12 @@ export async function confirmArtistOrganizationInvitation(
     };
   }
 
+  const edgeDetail = error
+    ? await edgeFunctionErrorMessage(error, data, '')
+    : typeof data?.error === 'string'
+      ? data.error
+      : '';
+
   // Fallback to RPC for invite-existing flows if edge function is unavailable.
   const { data: rpcData, error: rpcErr } = await supabase.rpc('confirm_artist_organization_invitation', {
     p_org_id: orgId,
@@ -795,13 +819,10 @@ export async function confirmArtistOrganizationInvitation(
     p_code: normalized || code.trim(),
   });
   if (rpcErr) {
-    throw new Error(
-      (data?.error as string) ||
-        rpcErrorMessage(error ?? rpcErr, 'Verification failed')
-    );
+    throw new Error(edgeDetail || rpcErrorMessage(rpcErr, 'Verification failed'));
   }
   if (!rpcData?.success) {
-    throw new Error((rpcData?.message as string) || (data?.error as string) || 'Verification failed');
+    throw new Error((rpcData?.message as string) || edgeDetail || 'Verification failed');
   }
   return {
     artist_profile_id: rpcData.artist_profile_id as string,
