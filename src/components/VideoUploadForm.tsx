@@ -330,6 +330,8 @@ export default function VideoUploadForm({ onClose, onSuccess, initialData, admin
         setUploadStep('Uploading…');
         const uploadResult = await bunnyStreamService.uploadVideo(selectedVideoFile, {
           title: title.trim(),
+          organizationId: adminUploadContext?.organizationId,
+          targetUserId: contentOwnerId,
           onProgress: (p) => { if (mountedRef.current) { setUploadProgress(Math.round(p * 0.7)); updateUploadProgress(taskId, p); } },
         });
         if (!uploadResult.success || !uploadResult.publicUrl || !uploadResult.videoGuid) throw new Error(uploadResult.error ?? 'Video upload failed');

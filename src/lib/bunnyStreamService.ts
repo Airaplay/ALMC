@@ -17,6 +17,9 @@ export interface BunnyUploadOptions {
   title?: string;
   collectionId?: string;
   onProgress?: UploadProgressCallback;
+  /** ALMC org-delegated upload */
+  organizationId?: string;
+  targetUserId?: string;
 }
 
 /** In-memory cache for built Bunny URLs to avoid recomputing the same URLs repeatedly */
@@ -74,6 +77,12 @@ export class BunnyStreamService {
 
       if (options.collectionId) {
         formData.append('collectionId', options.collectionId);
+      }
+      if (options.organizationId) {
+        formData.append('organizationId', options.organizationId);
+      }
+      if (options.targetUserId) {
+        formData.append('targetUserId', options.targetUserId);
       }
 
       const uploadUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bunny-stream-upload`;

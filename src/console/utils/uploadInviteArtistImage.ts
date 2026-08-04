@@ -14,7 +14,8 @@ export async function uploadInviteArtistImage(
   if (!session?.user) throw new Error('You must be signed in to upload images.');
 
   const fileExt = file.name.split('.').pop() || 'jpg';
-  const filePath = `almc-invites/${organizationId}/${kind}-${Date.now()}.${fileExt}`;
+  // profile-photos RLS requires foldername[1] === auth.uid()
+  const filePath = `${session.user.id}/almc-invites/${organizationId}/${kind}-${Date.now()}.${fileExt}`;
 
   const { error: uploadError } = await supabase.storage
     .from('profile-photos')
