@@ -31,8 +31,10 @@ export const UserManagementSection = (): JSX.Element => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'recent' | 'earnings_high' | 'earnings_low'>('recent');
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [newRole, setNewRole] = useState<string>('');
   const [isUpdating, setIsUpdating] = useState(false);
@@ -82,7 +84,7 @@ export const UserManagementSection = (): JSX.Element => {
     } else {
       fetchUsers();
     }
-  }, [activeTab, currentPage, roleFilter, statusFilter]);
+  }, [activeTab, currentPage, roleFilter, statusFilter, sortBy, appliedSearch]);
 
   const fetchMetrics = async () => {
     try {
@@ -202,6 +204,14 @@ export const UserManagementSection = (): JSX.Element => {
         .from('users')
         .select('id, email, username, display_name, role, country, created_at, avatar_url, is_active, total_earnings', { count: 'exact' });
 
+      // Server-side search across email, display name, and username
+      const trimmedSearch = appliedSearch.trim().replace(/[%_,]/g, '');
+      if (trimmedSearch) {
+        query = query.or(
+          `email.ilike.%${trimmedSearch}%,display_name.ilike.%${trimmedSearch}%,username.ilike.%${trimmedSearch}%`
+        );
+      }
+
       // Apply role filter if not 'all'
       if (roleFilter !== 'all') {
         query = query.eq('role', roleFilter);
@@ -212,20 +222,53 @@ export const UserManagementSection = (): JSX.Element => {
         query = query.eq('is_active', statusFilter === 'active');
       }
 
+      // Apply sort
+      if (sortBy === 'earnings_high') {
+        query = query.order('total_earnings', { ascending: false, nullsFirst: false });
+      } else if (sortBy === 'earnings_low') {
+        query = query.order('total_earnings', { ascending: true, nullsFirst: true });
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
+
       // Apply pagination
       const from = (currentPage - 1) * usersPerPage;
       const to = from + usersPerPage - 1;
-      
-      // Execute the query
-      const { data, count, error } = await query
-        .order('created_at', { ascending: false })
-        .range(from, to);
+
+      const { data, count, error } = await query.range(from, to);
 
       if (error) {
         throw error;
       }
 
-      setUsers(data || []);
+      const usersData = data || [];
+
+      // Attach listener scores (LS) for the current page
+      if (usersData.length > 0) {
+        const userIds = usersData.map((u) => u.id);
+        const { data: scoresData } = await supabase
+          .from('listener_contribution_scores')
+          .select('user_id, current_period_points, total_points')
+          .in('user_id', userIds);
+
+        const scoresByUser = new Map(
+          (scoresData || []).map((s) => [s.user_id, s])
+        );
+
+        setUsers(
+          usersData.map((user) => {
+            const score = scoresByUser.get(user.id);
+            return {
+              ...user,
+              listener_score: score?.current_period_points ?? 0,
+              listener_score_total: score?.total_points ?? 0,
+            };
+          })
+        );
+      } else {
+        setUsers([]);
+      }
+
       setTotalUsers(count || 0);
     } catch (err) {
       console.error('Error fetching users:', err);
@@ -267,19 +310,8 @@ export const UserManagementSection = (): JSX.Element => {
   };
 
   const handleSearch = () => {
-    if (!searchQuery.trim()) {
-      fetchUsers();
-      return;
-    }
-
-    // Filter users locally based on search query (including username)
-    const filteredUsers = users.filter(user =>
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.display_name && user.display_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (user.username && user.username.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-
-    setUsers(filteredUsers);
+    setAppliedSearch(searchQuery.trim());
+    setCurrentPage(1);
   };
 
   const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
@@ -876,7 +908,10 @@ export const UserManagementSection = (): JSX.Element => {
 
         <select
           value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
+          onChange={(e) => {
+            setRoleFilter(e.target.value);
+            setCurrentPage(1);
+          }}
           className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#309605]"
         >
           <option value="all">All Roles</option>
@@ -890,12 +925,28 @@ export const UserManagementSection = (): JSX.Element => {
 
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setCurrentPage(1);
+          }}
           className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#309605]"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
+        </select>
+
+        <select
+          value={sortBy}
+          onChange={(e) => {
+            setSortBy(e.target.value as 'recent' | 'earnings_high' | 'earnings_low');
+            setCurrentPage(1);
+          }}
+          className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#309605]"
+        >
+          <option value="recent">Recently Joined</option>
+          <option value="earnings_high">Earnings: High to Low</option>
+          <option value="earnings_low">Earnings: Low to High</option>
         </select>
       </div>
 
@@ -931,6 +982,7 @@ export const UserManagementSection = (): JSX.Element => {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Role</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Earnings</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide" title="Listener Score (current period)">LS</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Joined</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
               </tr>
@@ -1004,7 +1056,12 @@ export const UserManagementSection = (): JSX.Element => {
                       {user.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="p-4 text-gray-700">{formatCurrency(user.total_earnings)}</td>
+                  <td className="p-4 text-gray-700 text-right">{formatCurrency(user.total_earnings)}</td>
+                  <td className="p-4 text-right" title={`Total LS: ${(user.listener_score_total ?? 0).toLocaleString()}`}>
+                    <span className="font-medium text-gray-900">
+                      {(user.listener_score ?? 0).toLocaleString()}
+                    </span>
+                  </td>
                   <td className="p-4 text-gray-700">{formatDate(user.created_at)}</td>
                   <td className="p-4">
                     <div className="flex space-x-2">

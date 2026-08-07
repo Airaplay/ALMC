@@ -277,7 +277,7 @@ Deno.serve(async (req: Request) => {
     // Sanitize filename: remove special characters, keep alphanumeric, hyphens, underscores, and dots
     const sanitizeFilename = (filename: string): string => {
       const nameParts = filename.split('.');
-      const extension = nameParts.pop() || '';
+      const extension = (nameParts.pop() || '').toLowerCase();
       const nameWithoutExt = nameParts.join('.');
 
       // Replace spaces with hyphens, remove special characters except hyphens and underscores
@@ -289,15 +289,50 @@ Deno.serve(async (req: Request) => {
       return extension ? `${sanitized}.${extension}` : sanitized;
     };
 
+    /** Browsers often leave File.type empty for WAV; octet-stream breaks HTMLAudioElement playback. */
+    const resolveUploadContentType = (uploadFile: File, storageFileName: string): string => {
+      const fromBrowser = (uploadFile.type || '').toLowerCase().trim();
+      if (
+        fromBrowser &&
+        fromBrowser !== 'application/octet-stream' &&
+        fromBrowser !== 'binary/octet-stream'
+      ) {
+        return fromBrowser;
+      }
+
+      const ext = storageFileName.split('.').pop()?.toLowerCase() || '';
+      const byExt: Record<string, string> = {
+        mp3: 'audio/mpeg',
+        wav: 'audio/wav',
+        wave: 'audio/wav',
+        m4a: 'audio/mp4',
+        aac: 'audio/aac',
+        ogg: 'audio/ogg',
+        webm: 'audio/webm',
+        flac: 'audio/flac',
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        webp: 'image/webp',
+        gif: 'image/gif',
+        mp4: 'video/mp4',
+        mov: 'video/quicktime',
+        mkv: 'video/x-matroska',
+      };
+      return byExt[ext] || fromBrowser || 'application/octet-stream';
+    };
+
     // Always use original filename with timestamp prefix for readability
     console.log('⚡ Using original filename with timestamp prefix');
     const sanitizedName = sanitizeFilename(file.name);
     const timestamp = Date.now();
     const fileName = `${timestamp}_${sanitizedName}`;
+    const resolvedContentType = resolveUploadContentType(file, fileName);
 
     const storagePath = `${customPath || contentType}/${fileName}`;
 
     console.log(`📂 Storage path: ${storagePath}`);
+    console.log(`🧾 Content-Type: ${resolvedContentType} (browser reported: ${file.type || 'empty'})`);
 
     console.log(`Uploading new file: ${fileName} (${file.size} bytes)`);
     const uploadUrl = `https://${BUNNY_STORAGE_ENDPOINT}/${BUNNY_STORAGE_ZONE}/${storagePath}`;
@@ -316,7 +351,7 @@ Deno.serve(async (req: Request) => {
         method: "PUT",
         headers: {
           "AccessKey": BUNNY_STORAGE_API_KEY,
-          "Content-Type": file.type || "application/octet-stream",
+          "Content-Type": resolvedContentType,
           "Content-Length": file.size.toString(),
           "Cache-Control": "public, max-age=2592000",
           "CDN-Cache-Control": "public, max-age=2592000",
@@ -332,7 +367,7 @@ Deno.serve(async (req: Request) => {
         method: "PUT",
         headers: {
           "AccessKey": BUNNY_STORAGE_API_KEY,
-          "Content-Type": file.type || "application/octet-stream",
+          "Content-Type": resolvedContentType,
           "Cache-Control": "public, max-age=2592000",
           "CDN-Cache-Control": "public, max-age=2592000",
         },

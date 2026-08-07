@@ -298,12 +298,18 @@ BEGIN
           au.raw_user_meta_data->>'full_name',
           split_part(au.email, '@', 1)
         ),
-        'listener',
+        'creator',
         now()
       FROM auth.users au
       WHERE au.id = v_user_id
       ON CONFLICT (id) DO UPDATE
-        SET email = EXCLUDED.email;
+        SET
+          email = EXCLUDED.email,
+          role = CASE
+            WHEN lower(COALESCE(public.users.role, '')) IN ('admin', 'manager', 'editor', 'account', 'creator')
+              THEN public.users.role
+            ELSE 'creator'
+          END;
     END IF;
   END IF;
 
