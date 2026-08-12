@@ -189,7 +189,7 @@ export function DashboardSection() {
           <div>
             <h2 className="text-2xl font-semibold text-foreground">{selectedArtist.stage_name}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Artist performance · last {periodDays} days
+              Artist performance · lifetime totals (org rank uses last {periodDays} days)
             </p>
           </div>
           <button
@@ -228,7 +228,7 @@ export function DashboardSection() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <KpiCard label="Total Streams" value={formatNumber(Number(selectedArtist.streams))} icon={Play} />
+          <KpiCard label="Lifetime streams" value={formatNumber(Number(selectedArtist.streams))} icon={Play} />
           <KpiCard label="Followers" value={formatNumber(Number(selectedArtist.followers))} icon={Heart} />
           <KpiCard label="Revenue" value={formatRevenueUsd(Number(selectedArtist.revenue))} icon={DollarSign} />
           <KpiCard

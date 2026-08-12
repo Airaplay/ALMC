@@ -374,6 +374,7 @@ export function ArtistsSection({
             {!artist.is_pending_invitation && (
               <p className="mt-2 text-sm text-secondary-foreground">
                 {formatNum(Number(artist.followers))} followers ·{' '}
+                {formatNum(Number(artist.streams ?? 0))} plays ·{' '}
                 {formatNum(Number(artist.monthly_streams ?? 0))} monthly ·{' '}
                 {formatRevenueUsd(Number(artist.revenue))} revenue
               </p>
@@ -578,6 +579,7 @@ export function ArtistsSection({
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Genre</th>
                 <th className="px-4 py-3 font-medium">Followers</th>
+                <th className="px-4 py-3 font-medium">Plays</th>
                 <th className="px-4 py-3 font-medium">Monthly</th>
                 <th className="px-4 py-3 font-medium">Revenue</th>
                 <th className="px-4 py-3 font-medium">Split</th>
@@ -608,6 +610,9 @@ export function ArtistsSection({
                   <td className="px-4 py-3 capitalize text-muted-foreground">{statusLabel(artist)}</td>
                   <td className="px-4 py-3 text-muted-foreground">{artist.genre || '—'}</td>
                   <td className="px-4 py-3 tabular-nums">{formatNum(Number(artist.followers))}</td>
+                  <td className="px-4 py-3 tabular-nums">
+                    {formatNum(Number(artist.streams ?? 0))}
+                  </td>
                   <td className="px-4 py-3 tabular-nums">
                     {formatNum(Number(artist.monthly_streams ?? 0))}
                   </td>
