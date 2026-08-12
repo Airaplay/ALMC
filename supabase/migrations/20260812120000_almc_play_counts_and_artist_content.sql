@@ -203,34 +203,36 @@ BEGIN
         OR title ILIKE '%' || v_search || '%'
       )
   )
-  SELECT COUNT(*)::int INTO v_total FROM filtered;
-
-  SELECT COALESCE(jsonb_agg(
-    jsonb_build_object(
-      'id', t.id,
-      'title', t.title,
-      'content_type', t.content_type,
-      'status', t.status,
-      'play_count', t.play_count,
-      'created_at', t.created_at,
-      'updated_at', t.updated_at,
-      'artist_profile_id', t.artist_profile_id,
-      'stage_name', t.stage_name,
-      'profile_photo_url', t.profile_photo_url,
-      'cover_url', t.cover_url,
-      'release_status', t.release_status,
-      'release_at', t.release_at
-    )
-    ORDER BY t.created_at DESC
-  ), '[]'::jsonb)
-  INTO v_items
-  FROM (
-    SELECT *
-    FROM filtered
-    ORDER BY created_at DESC
-    LIMIT v_limit
-    OFFSET v_offset
-  ) t;
+  SELECT
+    (SELECT COUNT(*)::int FROM filtered),
+    COALESCE((
+      SELECT jsonb_agg(
+        jsonb_build_object(
+          'id', p.id,
+          'title', p.title,
+          'content_type', p.content_type,
+          'status', p.status,
+          'play_count', p.play_count,
+          'created_at', p.created_at,
+          'updated_at', p.updated_at,
+          'artist_profile_id', p.artist_profile_id,
+          'stage_name', p.stage_name,
+          'profile_photo_url', p.profile_photo_url,
+          'cover_url', p.cover_url,
+          'release_status', p.release_status,
+          'release_at', p.release_at
+        )
+        ORDER BY p.created_at DESC
+      )
+      FROM (
+        SELECT *
+        FROM filtered
+        ORDER BY created_at DESC
+        LIMIT v_limit
+        OFFSET v_offset
+      ) p
+    ), '[]'::jsonb)
+  INTO v_total, v_items;
 
   RETURN jsonb_build_object(
     'items', v_items,

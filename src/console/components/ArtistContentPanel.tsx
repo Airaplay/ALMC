@@ -71,7 +71,13 @@ export function ArtistContentPanel({ artist, onBack }: ArtistContentPanelProps) 
       setItems(result.items);
       setTotal(result.total);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load content');
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'object' && err !== null && 'message' in err
+            ? String((err as { message?: unknown }).message)
+            : 'Failed to load content';
+      setError(message);
       setItems([]);
       setTotal(0);
     } finally {
