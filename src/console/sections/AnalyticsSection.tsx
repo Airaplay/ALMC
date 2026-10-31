@@ -421,8 +421,10 @@ export function AnalyticsSection({
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Revenue attributed to this {isArtistScope ? 'artist' : 'organization'} for the selected
-                    period. Treats and payouts are available in Revenue.
+                    Period revenue is the sum of database credits for this{' '}
+                    {isArtistScope ? 'artist' : 'organization'}: AdMob creator payouts, content-sale
+                    creator payouts, and positive admin live-balance adjustments. Lifetime balance is
+                    on Revenue.
                   </p>
                 </div>
               )}

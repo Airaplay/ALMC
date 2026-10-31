@@ -404,18 +404,54 @@ export async function getOrganizationRevenue(
 
   const raw = (data ?? {}) as Partial<OrgRevenueData> & {
     by_artist?: Array<Partial<OrgRevenueArtistRow> & { total_earnings?: number }>;
+    period_revenue?: number;
   };
   const parsed = parseOrgSettingsSplit(settings);
-  const defaultOrgPct = parsed.orgSplitPct;
+  const defaultOrgPct =
+    raw.org_split_pct != null && Number.isFinite(Number(raw.org_split_pct))
+      ? clampSplitPct(raw.org_split_pct, parsed.orgSplitPct)
+      : parsed.orgSplitPct;
 
+  // Prefer server-computed rows (users.total_earnings + DB split columns).
+  // Only re-split client-side when RPC omitted share fields.
   const byArtist = (raw.by_artist ?? []).map((row) => {
     const artistId = String(row.artist_profile_id ?? '');
+    const gross = Number(row.gross_total ?? row.total_earnings ?? 0);
+    const hasServerSplit =
+      row.org_share_total != null &&
+      row.artist_share_total != null &&
+      Number.isFinite(Number(row.org_share_total)) &&
+      Number.isFinite(Number(row.artist_share_total));
+
+    if (hasServerSplit) {
+      const orgSplitPct =
+        row.org_split_pct != null
+          ? clampSplitPct(row.org_split_pct, defaultOrgPct)
+          : defaultOrgPct;
+      return {
+        artist_profile_id: artistId,
+        stage_name: String(row.stage_name ?? 'Artist'),
+        gross_total: gross,
+        org_share_total: Number(row.org_share_total),
+        artist_share_total: Number(row.artist_share_total),
+        total_earnings: gross,
+        org_split_pct_override:
+          row.org_split_pct_override === null || row.org_split_pct_override === undefined
+            ? null
+            : clampSplitPct(row.org_split_pct_override, orgSplitPct),
+        org_split_pct: orgSplitPct,
+        artist_split_pct:
+          row.artist_split_pct != null
+            ? clampSplitPct(row.artist_split_pct, 100 - orgSplitPct)
+            : 100 - orgSplitPct,
+        period_ads: Number(row.period_ads ?? 0),
+        pct_of_org: Number(row.pct_of_org ?? 0),
+      } satisfies OrgRevenueArtistRow;
+    }
+
     const override =
       artistId && artistId in parsed.overrides ? parsed.overrides[artistId] : null;
     const effective = resolveArtistSplit(defaultOrgPct, override);
-    const gross = Number(
-      row.gross_total ?? row.total_earnings ?? 0
-    );
     const split = applyRevenueSplit(gross, effective.orgSplitPct);
     return {
       artist_profile_id: artistId,
@@ -423,7 +459,7 @@ export async function getOrganizationRevenue(
       gross_total: split.gross,
       org_share_total: split.orgShare,
       artist_share_total: split.artistShare,
-      total_earnings: split.artistShare,
+      total_earnings: split.gross,
       org_split_pct_override: effective.override,
       org_split_pct: effective.orgSplitPct,
       artist_split_pct: effective.artistSplitPct,
@@ -437,17 +473,18 @@ export async function getOrganizationRevenue(
       raw.total ??
       byArtist.reduce((sum, row) => sum + row.gross_total, 0)
   );
-  const orgShareTotal = byArtist.reduce((sum, row) => sum + row.org_share_total, 0);
-  const artistShareTotal = byArtist.reduce((sum, row) => sum + row.artist_share_total, 0);
-  // If by_artist is truncated, fall back to default split on gross total.
   const orgShare =
-    byArtist.length > 0
-      ? orgShareTotal
-      : applyRevenueSplit(grossTotal, defaultOrgPct).orgShare;
+    raw.org_share_total != null && Number.isFinite(Number(raw.org_share_total))
+      ? Number(raw.org_share_total)
+      : byArtist.length > 0
+        ? byArtist.reduce((sum, row) => sum + row.org_share_total, 0)
+        : applyRevenueSplit(grossTotal, defaultOrgPct).orgShare;
   const artistShare =
-    byArtist.length > 0
-      ? artistShareTotal
-      : applyRevenueSplit(grossTotal, defaultOrgPct).artistShare;
+    raw.artist_share_total != null && Number.isFinite(Number(raw.artist_share_total))
+      ? Number(raw.artist_share_total)
+      : byArtist.length > 0
+        ? byArtist.reduce((sum, row) => sum + row.artist_share_total, 0)
+        : applyRevenueSplit(grossTotal, defaultOrgPct).artistShare;
 
   return {
     period_days: Number(raw.period_days ?? days),
@@ -459,7 +496,7 @@ export async function getOrganizationRevenue(
     available: Number(raw.available ?? Math.max(grossTotal - Number(raw.pending ?? 0), 0)),
     total: Number(raw.total ?? grossTotal),
     treats: Number(raw.treats ?? 0),
-    ads: Number(raw.ads ?? 0),
+    ads: Number(raw.ads ?? raw.period_revenue ?? 0),
     pending: Number(raw.pending ?? 0),
     by_artist: byArtist,
     monthly_trend: (raw.monthly_trend ?? []) as Array<{ month: string; amount: number }>,

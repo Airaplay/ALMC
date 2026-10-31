@@ -67,7 +67,8 @@ export function RevenueSection() {
         <div>
           <h2 className="text-2xl font-semibold text-foreground">Revenue</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Read-only rollup across linked artists. Revenue is broken into org share and artist share.
+            Gross uses each linked artist&apos;s live balance in Supabase (`users.total_earnings`).
+            Period and monthly trend sum AdMob payouts, content sales, and admin credits from the database.
           </p>
         </div>
         <select
@@ -185,7 +186,8 @@ export function RevenueSection() {
                 )}
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
-                Trend reflects linked artist payout activity before any ALMC share is applied.
+                Monthly totals match database credits (AdMob daily payouts + locked-content creator
+                payouts + positive admin live-balance adjustments), before any ALMC share split.
               </p>
             </div>
           </div>

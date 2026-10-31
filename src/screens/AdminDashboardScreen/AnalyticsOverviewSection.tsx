@@ -98,8 +98,10 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
       const admobGrossUSD = Number(overviewTotals?.admob_total_revenue_usd || 0);
       const treatRevenueUSD = Number(overviewTotals?.total_treat_revenue_usd || 0);
       const externalRevenueUSD = Number(overviewTotals?.external_revenue_gross_usd || 0);
+      const lockedContentGrossUSD = Number(overviewTotals?.locked_content_gross_usd || 0);
       const grossRevenueUSD = Number(
-        overviewTotals?.platform_revenue_gross_usd ?? (admobGrossUSD + treatRevenueUSD + externalRevenueUSD)
+        overviewTotals?.platform_revenue_gross_usd
+          ?? (admobGrossUSD + treatRevenueUSD + externalRevenueUSD + lockedContentGrossUSD)
       );
       const platformShareComponents = overviewTotals?.platform_share_components || {};
       const netRevenueUSD = Number(
@@ -414,7 +416,7 @@ export const AnalyticsOverviewSection = (): JSX.Element => {
         <StatCard
           title="Gross USD Revenue"
           value={formatCurrency(stats.grossRevenueUSD)}
-          sub="AdMob + Treat purchases + External revenue"
+          sub="AdMob + Treats + External + Locked content (from DB)"
           icon={DollarSign}
           iconBg="bg-amber-50"
           iconColor="text-amber-500"
