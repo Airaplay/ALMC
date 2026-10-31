@@ -39,8 +39,7 @@ async function ensureAlmcUserProfile(input: {
     id: input.userId,
     email: input.email,
     display_name: input.displayName || null,
-    // Platform consumer role — ALMC org roles live on organization_members.
-    // For ALMC accounts, mirror the selected organization type into the platform profile role.
+    // Auth trigger usually creates this row first. Prefer selected org type when we win the race.
     role: input.orgType ?? 'listener',
     country_last_changed_at: new Date().toISOString(),
   });
@@ -62,6 +61,15 @@ async function ensureAlmcUserProfile(input: {
     });
     if (metaError) {
       console.error('Failed to persist ALMC org type metadata:', metaError);
+    }
+
+    // SECURITY DEFINER RPC — client RLS blocks role updates; trigger may have inserted listener.
+    const { error: roleError } = await supabase.rpc('almc_apply_signup_org_type', {
+      p_org_type: input.orgType,
+    });
+    if (roleError) {
+      console.error('Failed to apply ALMC signup org type role:', roleError);
+      throw roleError;
     }
   }
 }

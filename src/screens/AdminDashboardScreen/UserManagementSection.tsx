@@ -638,6 +638,11 @@ export const UserManagementSection = (): JSX.Element => {
         return 'bg-cyan-100 text-cyan-700 border-cyan-200';
       case 'listener':
         return 'bg-green-100 text-green-700 border-green-200';
+      case 'label':
+      case 'management':
+      case 'distributor':
+      case 'entertainment':
+        return 'bg-violet-100 text-violet-700 border-violet-200';
       default:
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }

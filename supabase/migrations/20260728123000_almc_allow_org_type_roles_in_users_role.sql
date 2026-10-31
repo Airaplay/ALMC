@@ -5,19 +5,20 @@
 --   label | management | distributor | entertainment
 -- we mirror that choice into public.users.role (for profile display / downstream logic).
 --
--- Security:
--- This only extends the CHECK constraint. RLS for role updates remains the same.
--- The ALMC UI should set these values at account/profile creation time.
+-- Note: production constraint is named users_role_valid (not users_role_check).
 
 DO $$
 BEGIN
   ALTER TABLE public.users
     DROP CONSTRAINT IF EXISTS users_role_check;
+  ALTER TABLE public.users
+    DROP CONSTRAINT IF EXISTS users_role_valid;
 
   ALTER TABLE public.users
-    ADD CONSTRAINT users_role_check
+    ADD CONSTRAINT users_role_valid
     CHECK (
-      role = ANY (
+      role IS NULL
+      OR role = ANY (
         ARRAY[
           'listener'::text,
           'creator'::text,
@@ -25,6 +26,7 @@ BEGIN
           'manager'::text,
           'editor'::text,
           'account'::text,
+          'waitlist_admin'::text,
           -- ALMC org-type roles (mirrored into platform role)
           'label'::text,
           'management'::text,
@@ -34,4 +36,3 @@ BEGIN
       )
     );
 END $$;
-
