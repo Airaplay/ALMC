@@ -50,12 +50,14 @@ function formatNum(n: number): string {
 }
 
 function formatRevenueUsd(n: number): string {
-  if (!Number.isFinite(n)) return '$0';
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
+  if (!Number.isFinite(n)) return '$0.00';
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(2)}K`;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(n);
 }
 

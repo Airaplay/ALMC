@@ -397,7 +397,18 @@ export function AnalyticsSection({
 
               {tab === 'revenue' && (
                 <div className="space-y-6">
-                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    {isArtistScope && selectedArtist && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Lifetime revenue</p>
+                        <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
+                          {formatUsd(Number(selectedArtist.revenue))}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Same as Artists · live balance in DB
+                        </p>
+                      </div>
+                    )}
                     <div>
                       <p className="text-xs text-muted-foreground">Period revenue</p>
                       <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
@@ -421,10 +432,9 @@ export function AnalyticsSection({
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Period revenue is the sum of database credits for this{' '}
-                    {isArtistScope ? 'artist' : 'organization'}: AdMob creator payouts, content-sale
-                    creator payouts, and positive admin live-balance adjustments. Lifetime balance is
-                    on Revenue.
+                    Lifetime revenue matches Artists (users.total_earnings). Period revenue is credits
+                    in the selected window: AdMob payouts + content-sale creator payouts + positive
+                    admin live-balance adjustments.
                   </p>
                 </div>
               )}
